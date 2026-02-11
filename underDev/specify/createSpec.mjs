@@ -403,16 +403,6 @@ class DocletEx extends Doclet {
       // returns他、typedef/interfaceで定義した型を展開
 
       dev.step(9);  // md - メソッドで対応？
-      // アンカーの作り方
-      if( this.docletType !== 'unknown' ){
-        dev.step(99.407,{
-          type: this.docletType,
-          parent: this.parent,  // nullはルート？
-          comment: this.comment,
-          name: this.name,
-          longname: this.longname,
-        });
-      }
 
       dev.end();
 
@@ -943,11 +933,20 @@ async function createSpec(opt={}) {
                 孫要素なら子要素名-孫要素名_拡張子
                 子孫要素名が'prop'等、拡張子と一致する場合は先頭に'-'を付ける
                 ⇒ #-prop_prop
-
-              アンカーの作り方：DocletEx.constructor.step.9でテスト
             */
             label: doc.map[id].label,
           }
+        });
+      }
+
+      // アンカーの作り方
+      if( v.d.docletType !== 'unknown' ){
+        dev.step(99.944,{
+          type: v.d.docletType,
+          parent: v.d.parent,  // nullはルート？
+          comment: v.d.comment,
+          name: v.d.name,
+          longname: v.d.longname,
         });
       }
 

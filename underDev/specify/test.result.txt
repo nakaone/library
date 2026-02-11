@@ -1,4 +1,4 @@
-16:44:19.559 [0001]createSpec start
+11:31:00.708 [0001]createSpec start
 == [0001]createSpec step.1 {
   jsdocJson:"jsdoc.json", // string
   dummyDir:"./dummy", // string
@@ -16,433 +16,255 @@
     unknown:"_", // string
   }
 }
-16:44:19.560 [0002]createSpec.listSource start
-16:44:19.560 [0002]createSpec.listSource normal end
-16:44:19.561 [0003]createSpec.getFile start
+11:31:00.712 [0002]createSpec.listSource start
+11:31:00.712 [0002]createSpec.listSource normal end
+11:31:00.712 [0003]createSpec.getFile start
 {}
-16:44:19.722 [0004]DocletEx.constructor start
-16:44:19.723 [0005]DocletEx.determineType start
-16:44:19.723 [0005]DocletEx.determineType normal end
-16:44:19.723 [0006]PropList.constructor start
-16:44:19.723 [0006]PropList.constructor normal end
-16:44:19.723 [0007]PropList.constructor start
-16:44:19.723 [0007]PropList.constructor normal end
-16:44:19.723 [0008]PropList.constructor start
-16:44:19.723 [0008]PropList.constructor normal end
-== [0004]DocletEx.constructor step.99.407 {
-  type:"description", // string
-  parent:null, // object
-  comment:"/** ダミータイトル
- * @name JSDoc.v001.jsonテスト
- * @desc グローバル領域での概要説明
- * - desc 2行目
- * 
- * @example
- *   `node ./test.js`
- *   exampleの2行目
- * 
- * @history
- * - rev.1.1 2026/01/31
- * - rev.1.0 2026/01/27
- */", // string
-  name:"jsonテスト", // string
-  longname:"JSDoc.v001.jsonテスト", // string
-}
-16:44:19.723 [0004]DocletEx.constructor normal end
-16:44:19.723 [0009]DocletEx.constructor start
-16:44:19.723 [0010]DocletEx.determineType start
-16:44:19.723 [0010]DocletEx.determineType normal end
-16:44:19.723 [0011]PropList.constructor start
-16:44:19.732 [0011]PropList.constructor normal end
-16:44:19.732 [0012]PropList.constructor start
-16:44:19.732 [0012]PropList.constructor normal end
-16:44:19.732 [0013]PropList.constructor start
-16:44:19.732 [0013]PropList.constructor normal end
-== [0009]DocletEx.constructor step.99.407 {
-  type:"typedef", // string
-  parent:null, // object
-  comment:"/** globalDef: テスト用定義①
- * - typedef前の補足説明
- *   - サブ項目
- * @typedef {Object} globalDef
- * - typedef後の補足説明
- * @property {typeDef[]|columnDef[]} [main=[]] - グローバル領域にあるJSDoc
- * @property {Object} class - クラス定義にかかるJSDoc
- * @property {columnDef[]} [class.method] - 任意項目確認用
- * 
- * @desc
- * - 末尾にある補足説明
- */", // string
-  name:"globalDef", // string
-  longname:"globalDef", // string
-}
-16:44:19.732 [0009]DocletEx.constructor normal end
-16:44:19.732 [0014]DocletEx.constructor start
-16:44:19.732 [0015]DocletEx.determineType start
-16:44:19.732 [0015]DocletEx.determineType normal end
-16:44:19.732 [0016]PropList.constructor start
-16:44:19.732 [0016]PropList.constructor normal end
-16:44:19.732 [0017]PropList.constructor start
-16:44:19.733 [0017]PropList.constructor normal end
-16:44:19.733 [0018]PropList.constructor start
-16:44:19.733 [0018]PropList.constructor normal end
-== [0014]DocletEx.constructor step.99.407 {
-  type:"interface", // string
-  parent:null, // object
-  comment:"/**
- * @interface User
- * @property {string} name
- * @property {number} age
- * @property {boolean} isAdmin
- */", // string
-  name:"User", // string
-  longname:"User", // string
-}
-16:44:19.733 [0014]DocletEx.constructor normal end
-16:44:19.733 [0019]DocletEx.constructor start
-16:44:19.733 [0020]DocletEx.determineType start
-16:44:19.733 [0020]DocletEx.determineType normal end
-16:44:19.733 [0021]PropList.constructor start
-16:44:19.733 [0021]PropList.constructor normal end
-16:44:19.733 [0022]PropList.constructor start
-16:44:19.733 [0022]PropList.constructor normal end
-16:44:19.733 [0023]PropList.constructor start
-16:44:19.733 [0023]PropList.constructor normal end
-== [0019]DocletEx.constructor step.99.407 {
-  type:"objectFunc", // string
-  parent:null, // object
-  comment:"/**
- * @function
- * @name User#test
- * @desc オブジェクト内関数の説明
- * @param {string} arg
- * @returns {boolean|Error}
- * @example オブジェクト内関数の使用例
- */", // string
-  name:"test", // string
-  longname:"User#test", // string
-}
-16:44:19.733 [0019]DocletEx.constructor normal end
-16:44:19.733 [0024]DocletEx.constructor start
-16:44:19.733 [0025]DocletEx.determineType start
-16:44:19.733 [0025]DocletEx.determineType normal end
-16:44:19.733 [0026]PropList.constructor start
-16:44:19.733 [0026]PropList.constructor normal end
-16:44:19.733 [0027]PropList.constructor start
-16:44:19.733 [0027]PropList.constructor normal end
-16:44:19.733 [0028]PropList.constructor start
-16:44:19.733 [0028]PropList.constructor normal end
-16:44:19.733 [0024]DocletEx.constructor normal end
-16:44:19.733 [0029]DocletEx.constructor start
-16:44:19.733 [0030]DocletEx.determineType start
-16:44:19.733 [0031]PropList.constructor start
-16:44:19.733 [0031]PropList.constructor normal end
-16:44:19.733 [0032]PropList.constructor start
-16:44:19.733 [0032]PropList.constructor normal end
-16:44:19.733 [0033]PropList.constructor start
-16:44:19.733 [0033]PropList.constructor normal end
-16:44:19.733 [0029]DocletEx.constructor normal end
-16:44:19.733 [0034]DocletEx.constructor start
-16:44:19.733 [0035]DocletEx.determineType start
-16:44:19.733 [0036]PropList.constructor start
-16:44:19.734 [0036]PropList.constructor normal end
-16:44:19.734 [0037]PropList.constructor start
-16:44:19.734 [0037]PropList.constructor normal end
-16:44:19.734 [0038]PropList.constructor start
-16:44:19.734 [0038]PropList.constructor normal end
-16:44:19.734 [0034]DocletEx.constructor normal end
-16:44:19.734 [0039]DocletEx.constructor start
-16:44:19.734 [0040]DocletEx.determineType start
-16:44:19.734 [0041]PropList.constructor start
-16:44:19.734 [0041]PropList.constructor normal end
-16:44:19.734 [0042]PropList.constructor start
-16:44:19.734 [0042]PropList.constructor normal end
-16:44:19.734 [0043]PropList.constructor start
-16:44:19.734 [0043]PropList.constructor normal end
-16:44:19.734 [0039]DocletEx.constructor normal end
-16:44:19.734 [0044]DocletEx.constructor start
-16:44:19.734 [0045]DocletEx.determineType start
-16:44:19.734 [0046]PropList.constructor start
-16:44:19.734 [0046]PropList.constructor normal end
-16:44:19.734 [0047]PropList.constructor start
-16:44:19.734 [0047]PropList.constructor normal end
-16:44:19.734 [0048]PropList.constructor start
-16:44:19.734 [0048]PropList.constructor normal end
-16:44:19.734 [0044]DocletEx.constructor normal end
-16:44:19.734 [0049]DocletEx.constructor start
-16:44:19.734 [0050]DocletEx.determineType start
-16:44:19.734 [0050]DocletEx.determineType normal end
-16:44:19.734 [0051]PropList.constructor start
-16:44:19.734 [0051]PropList.constructor normal end
-16:44:19.734 [0052]PropList.constructor start
-16:44:19.734 [0052]PropList.constructor normal end
-16:44:19.734 [0053]PropList.constructor start
-16:44:19.734 [0053]PropList.constructor normal end
-== [0049]DocletEx.constructor step.99.407 {
-  type:"function", // string
-  parent:null, // object
-  comment:"/** func01: 関数テスト
- * 関数テスト説明文
- * @param {number} arg - 引数
- * @returns {object} 戻り値
- */", // string
-  name:"func01", // string
-  longname:"func01", // string
-}
-16:44:19.734 [0049]DocletEx.constructor normal end
-16:44:19.734 [0054]DocletEx.constructor start
-16:44:19.734 [0055]DocletEx.determineType start
-16:44:19.734 [0055]DocletEx.determineType normal end
-16:44:19.734 [0056]PropList.constructor start
-16:44:19.734 [0056]PropList.constructor normal end
-16:44:19.734 [0057]PropList.constructor start
-16:44:19.734 [0057]PropList.constructor normal end
-16:44:19.734 [0058]PropList.constructor start
-16:44:19.734 [0058]PropList.constructor normal end
-== [0054]DocletEx.constructor step.99.407 {
-  type:"innerFunc", // string
-  parent:null, // object
-  comment:"/** arrow01: アローテスト
-   * @param {string} arg - 引数
-   * @returns {string} 戻り値
-   */", // string
-  name:"arrow01", // string
-  longname:"func01~arrow01", // string
-}
-16:44:19.734 [0054]DocletEx.constructor normal end
-16:44:19.735 [0059]DocletEx.constructor start
-16:44:19.735 [0060]DocletEx.determineType start
-16:44:19.735 [0060]DocletEx.determineType normal end
-16:44:19.735 [0061]PropList.constructor start
-16:44:19.735 [0061]PropList.constructor normal end
-16:44:19.735 [0062]PropList.constructor start
-16:44:19.735 [0062]PropList.constructor normal end
-16:44:19.735 [0063]PropList.constructor start
-16:44:19.735 [0063]PropList.constructor normal end
-== [0059]DocletEx.constructor step.99.407 {
-  type:"typedef", // string
-  parent:null, // object
-  comment:"/**
-     * @memberof func01
-     * @typedef {Object} arrowDef - JSDocの関数・メソッド単位のオブジェクト
-     * @property {string} name - 関数・メソッド名
-     * @property {arrowDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc
-     */", // string
-  name:"arrowDef", // string
-  longname:"func01.arrowDef", // string
-}
-16:44:19.735 [0059]DocletEx.constructor normal end
-16:44:19.735 [0064]DocletEx.constructor start
-16:44:19.735 [0065]DocletEx.determineType start
-16:44:19.735 [0065]DocletEx.determineType normal end
-16:44:19.735 [0066]PropList.constructor start
-16:44:19.735 [0066]PropList.constructor normal end
-16:44:19.735 [0067]PropList.constructor start
-16:44:19.735 [0067]PropList.constructor normal end
-16:44:19.735 [0068]PropList.constructor start
-16:44:19.735 [0068]PropList.constructor normal end
-16:44:19.735 [0064]DocletEx.constructor normal end
-16:44:19.735 [0069]DocletEx.constructor start
-16:44:19.735 [0070]DocletEx.determineType start
-16:44:19.735 [0070]DocletEx.determineType normal end
-16:44:19.735 [0071]PropList.constructor start
-16:44:19.735 [0071]PropList.constructor normal end
-16:44:19.735 [0072]PropList.constructor start
-16:44:19.735 [0072]PropList.constructor normal end
-16:44:19.735 [0073]PropList.constructor start
-16:44:19.735 [0073]PropList.constructor normal end
-== [0069]DocletEx.constructor step.99.407 {
-  type:"description", // string
-  parent:null, // object
-  comment:"/**
-   * @name 関数内説明文
-   * @memberof func01
-   * @description 関数内部での説明文
-   * DocletEx.id="/func01"の子要素になっているか確認
-   */", // string
-  name:"関数内説明文", // string
-  longname:"func01.関数内説明文", // string
-}
-16:44:19.735 [0069]DocletEx.constructor normal end
-16:44:19.735 [0074]DocletEx.constructor start
-16:44:19.735 [0075]DocletEx.determineType start
-16:44:19.735 [0075]DocletEx.determineType normal end
-16:44:19.735 [0076]PropList.constructor start
-16:44:19.735 [0076]PropList.constructor normal end
-16:44:19.735 [0077]PropList.constructor start
-16:44:19.735 [0077]PropList.constructor normal end
-16:44:19.735 [0078]PropList.constructor start
-16:44:19.735 [0078]PropList.constructor normal end
-== [0074]DocletEx.constructor step.99.407 {
-  type:"typedef", // string
-  parent:null, // object
-  comment:"/**
-   * @typedef {Object} funcDef - JSDocの関数・メソッド単位のオブジェクト
-   * @property {string} name - 関数・メソッド名
-   * @property {funcDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc
-   */", // string
-  name:"funcDef", // string
-  longname:"funcDef", // string
-}
-16:44:19.735 [0074]DocletEx.constructor normal end
-16:44:19.735 [0079]DocletEx.constructor start
-16:44:19.735 [0080]DocletEx.determineType start
-16:44:19.735 [0080]DocletEx.determineType normal end
-16:44:19.735 [0081]PropList.constructor start
-16:44:19.735 [0081]PropList.constructor normal end
-16:44:19.735 [0082]PropList.constructor start
-16:44:19.735 [0082]PropList.constructor normal end
-16:44:19.735 [0083]PropList.constructor start
-16:44:19.735 [0083]PropList.constructor normal end
-16:44:19.735 [0079]DocletEx.constructor normal end
-16:44:19.735 [0084]DocletEx.constructor start
-16:44:19.735 [0085]DocletEx.determineType start
-16:44:19.735 [0086]PropList.constructor start
-16:44:19.735 [0086]PropList.constructor normal end
-16:44:19.735 [0087]PropList.constructor start
-16:44:19.735 [0087]PropList.constructor normal end
-16:44:19.735 [0088]PropList.constructor start
-16:44:19.735 [0088]PropList.constructor normal end
-16:44:19.735 [0084]DocletEx.constructor normal end
-16:44:19.736 [0089]DocletEx.constructor start
-16:44:19.736 [0090]DocletEx.determineType start
-16:44:19.736 [0091]PropList.constructor start
-16:44:19.736 [0091]PropList.constructor normal end
-16:44:19.736 [0092]PropList.constructor start
-16:44:19.736 [0092]PropList.constructor normal end
-16:44:19.736 [0093]PropList.constructor start
-16:44:19.736 [0093]PropList.constructor normal end
-16:44:19.736 [0089]DocletEx.constructor normal end
-16:44:19.736 [0094]DocletEx.constructor start
-16:44:19.736 [0095]DocletEx.determineType start
-16:44:19.736 [0095]DocletEx.determineType normal end
-16:44:19.736 [0096]PropList.constructor start
-16:44:19.736 [0096]PropList.constructor normal end
-16:44:19.736 [0097]PropList.constructor start
-16:44:19.736 [0097]PropList.constructor normal end
-16:44:19.736 [0098]PropList.constructor start
-16:44:19.736 [0098]PropList.constructor normal end
-== [0094]DocletEx.constructor step.99.407 {
-  type:"class", // string
-  parent:null, // object
-  comment:"/**
- * @class
- * @desc テスト用クラス(desc)
- * @classdesc テスト用クラス(classdesc)
- * @extends BaseClass
- * @prop {Object} opt - 起動時オプション
- */", // string
-  name:"class01", // string
-  longname:"class01", // string
-}
-16:44:19.736 [0094]DocletEx.constructor normal end
-16:44:19.736 [0099]DocletEx.constructor start
-16:44:19.736 [0100]DocletEx.determineType start
-16:44:19.736 [0100]DocletEx.determineType normal end
-16:44:19.736 [0101]PropList.constructor start
-16:44:19.736 [0101]PropList.constructor normal end
-16:44:19.736 [0102]PropList.constructor start
-16:44:19.736 [0102]PropList.constructor normal end
-16:44:19.736 [0103]PropList.constructor start
-16:44:19.736 [0103]PropList.constructor normal end
-== [0099]DocletEx.constructor step.99.407 {
-  type:"typedef", // string
-  parent:null, // object
-  comment:"/**
-   * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト
-   * @property {string} name - データ型の定義名
-   * @property {columnDef[]} list - 項目(メンバ)のリスト
-   */", // string
-  name:"typeDef", // string
-  longname:"typeDef", // string
-}
-16:44:19.736 [0099]DocletEx.constructor normal end
-16:44:19.736 [0104]DocletEx.constructor start
-16:44:19.736 [0105]DocletEx.determineType start
-16:44:19.736 [0105]DocletEx.determineType normal end
-16:44:19.736 [0106]PropList.constructor start
-16:44:19.736 [0106]PropList.constructor normal end
-16:44:19.736 [0107]PropList.constructor start
-16:44:19.736 [0107]PropList.constructor normal end
-16:44:19.736 [0108]PropList.constructor start
-16:44:19.736 [0108]PropList.constructor normal end
-== [0104]DocletEx.constructor step.99.407 {
-  type:"constructor", // string
-  parent:null, // object
-  comment:"/** class01のconstructor
-   * - constructorの説明
-   * @constructor
-   * @param {bigint} arg - typeはテスト用
-   */", // string
-  name:"class01", // string
-  longname:"class01", // string
-}
-16:44:19.736 [0104]DocletEx.constructor normal end
-16:44:19.736 [0109]DocletEx.constructor start
-16:44:19.736 [0110]DocletEx.determineType start
-16:44:19.736 [0110]DocletEx.determineType normal end
-16:44:19.736 [0111]PropList.constructor start
-16:44:19.736 [0111]PropList.constructor normal end
-16:44:19.736 [0112]PropList.constructor start
-16:44:19.736 [0112]PropList.constructor normal end
-16:44:19.736 [0113]PropList.constructor start
-16:44:19.736 [0113]PropList.constructor normal end
-== [0109]DocletEx.constructor step.99.407 {
-  type:"class", // string
-  parent:null, // object
-  comment:"/**
- * @class
- * @desc テスト用クラス(desc)
- * @classdesc テスト用クラス(classdesc)
- * @extends BaseClass
- * @prop {Object} opt - 起動時オプション
- */", // string
-  name:"class01", // string
-  longname:"class01", // string
-}
-16:44:19.736 [0109]DocletEx.constructor normal end
-16:44:19.736 [0114]DocletEx.constructor start
-16:44:19.736 [0115]DocletEx.determineType start
-16:44:19.736 [0116]PropList.constructor start
-16:44:19.736 [0116]PropList.constructor normal end
-16:44:19.736 [0117]PropList.constructor start
-16:44:19.736 [0117]PropList.constructor normal end
-16:44:19.736 [0118]PropList.constructor start
-16:44:19.736 [0118]PropList.constructor normal end
-16:44:19.736 [0114]DocletEx.constructor normal end
-16:44:19.736 [0119]DocletEx.constructor start
-16:44:19.736 [0120]DocletEx.determineType start
-16:44:19.736 [0120]DocletEx.determineType normal end
-16:44:19.737 [0121]PropList.constructor start
-16:44:19.737 [0121]PropList.constructor normal end
-16:44:19.737 [0122]PropList.constructor start
-16:44:19.737 [0122]PropList.constructor normal end
-16:44:19.737 [0123]PropList.constructor start
-16:44:19.737 [0123]PropList.constructor normal end
-== [0119]DocletEx.constructor step.99.407 {
-  type:"method", // string
-  parent:null, // object
-  comment:"/** method01: メソッドテスト
-   * @memberof class01
-   * @param {number} arg - method01の引数
-   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる
-   */", // string
-  name:"method01", // string
-  longname:"class01#method01", // string
-}
-16:44:19.737 [0119]DocletEx.constructor normal end
-16:44:19.737 [0124]DocletEx.constructor start
-16:44:19.737 [0125]DocletEx.determineType start
-16:44:19.737 [0126]PropList.constructor start
-16:44:19.737 [0126]PropList.constructor normal end
-16:44:19.737 [0127]PropList.constructor start
-16:44:19.737 [0127]PropList.constructor normal end
-16:44:19.737 [0128]PropList.constructor start
-16:44:19.737 [0128]PropList.constructor normal end
-16:44:19.737 [0124]DocletEx.constructor normal end
-16:44:19.737 [0003]createSpec.getFile normal end
-16:44:19.737 [0129]createSpec.determineParent start
-16:44:19.737 [0129]createSpec.determineParent normal end
+11:31:00.880 [0004]DocletEx.constructor start
+11:31:00.880 [0005]DocletEx.determineType start
+11:31:00.880 [0005]DocletEx.determineType normal end
+11:31:00.880 [0006]PropList.constructor start
+11:31:00.881 [0006]PropList.constructor normal end
+11:31:00.881 [0007]PropList.constructor start
+11:31:00.881 [0007]PropList.constructor normal end
+11:31:00.881 [0008]PropList.constructor start
+11:31:00.881 [0008]PropList.constructor normal end
+11:31:00.881 [0004]DocletEx.constructor normal end
+11:31:00.881 [0009]DocletEx.constructor start
+11:31:00.881 [0010]DocletEx.determineType start
+11:31:00.881 [0010]DocletEx.determineType normal end
+11:31:00.881 [0011]PropList.constructor start
+11:31:00.905 [0011]PropList.constructor normal end
+11:31:00.905 [0012]PropList.constructor start
+11:31:00.905 [0012]PropList.constructor normal end
+11:31:00.905 [0013]PropList.constructor start
+11:31:00.905 [0013]PropList.constructor normal end
+11:31:00.905 [0009]DocletEx.constructor normal end
+11:31:00.906 [0014]DocletEx.constructor start
+11:31:00.906 [0015]DocletEx.determineType start
+11:31:00.906 [0015]DocletEx.determineType normal end
+11:31:00.906 [0016]PropList.constructor start
+11:31:00.906 [0016]PropList.constructor normal end
+11:31:00.906 [0017]PropList.constructor start
+11:31:00.906 [0017]PropList.constructor normal end
+11:31:00.906 [0018]PropList.constructor start
+11:31:00.906 [0018]PropList.constructor normal end
+11:31:00.906 [0014]DocletEx.constructor normal end
+11:31:00.906 [0019]DocletEx.constructor start
+11:31:00.906 [0020]DocletEx.determineType start
+11:31:00.906 [0020]DocletEx.determineType normal end
+11:31:00.906 [0021]PropList.constructor start
+11:31:00.906 [0021]PropList.constructor normal end
+11:31:00.906 [0022]PropList.constructor start
+11:31:00.906 [0022]PropList.constructor normal end
+11:31:00.906 [0023]PropList.constructor start
+11:31:00.906 [0023]PropList.constructor normal end
+11:31:00.906 [0019]DocletEx.constructor normal end
+11:31:00.906 [0024]DocletEx.constructor start
+11:31:00.906 [0025]DocletEx.determineType start
+11:31:00.906 [0025]DocletEx.determineType normal end
+11:31:00.906 [0026]PropList.constructor start
+11:31:00.906 [0026]PropList.constructor normal end
+11:31:00.906 [0027]PropList.constructor start
+11:31:00.906 [0027]PropList.constructor normal end
+11:31:00.906 [0028]PropList.constructor start
+11:31:00.906 [0028]PropList.constructor normal end
+11:31:00.906 [0024]DocletEx.constructor normal end
+11:31:00.906 [0029]DocletEx.constructor start
+11:31:00.906 [0030]DocletEx.determineType start
+11:31:00.906 [0031]PropList.constructor start
+11:31:00.906 [0031]PropList.constructor normal end
+11:31:00.906 [0032]PropList.constructor start
+11:31:00.906 [0032]PropList.constructor normal end
+11:31:00.906 [0033]PropList.constructor start
+11:31:00.906 [0033]PropList.constructor normal end
+11:31:00.906 [0029]DocletEx.constructor normal end
+11:31:00.906 [0034]DocletEx.constructor start
+11:31:00.906 [0035]DocletEx.determineType start
+11:31:00.906 [0036]PropList.constructor start
+11:31:00.906 [0036]PropList.constructor normal end
+11:31:00.906 [0037]PropList.constructor start
+11:31:00.906 [0037]PropList.constructor normal end
+11:31:00.906 [0038]PropList.constructor start
+11:31:00.906 [0038]PropList.constructor normal end
+11:31:00.906 [0034]DocletEx.constructor normal end
+11:31:00.906 [0039]DocletEx.constructor start
+11:31:00.907 [0040]DocletEx.determineType start
+11:31:00.907 [0041]PropList.constructor start
+11:31:00.907 [0041]PropList.constructor normal end
+11:31:00.907 [0042]PropList.constructor start
+11:31:00.907 [0042]PropList.constructor normal end
+11:31:00.907 [0043]PropList.constructor start
+11:31:00.907 [0043]PropList.constructor normal end
+11:31:00.907 [0039]DocletEx.constructor normal end
+11:31:00.907 [0044]DocletEx.constructor start
+11:31:00.907 [0045]DocletEx.determineType start
+11:31:00.907 [0046]PropList.constructor start
+11:31:00.907 [0046]PropList.constructor normal end
+11:31:00.907 [0047]PropList.constructor start
+11:31:00.907 [0047]PropList.constructor normal end
+11:31:00.907 [0048]PropList.constructor start
+11:31:00.907 [0048]PropList.constructor normal end
+11:31:00.907 [0044]DocletEx.constructor normal end
+11:31:00.907 [0049]DocletEx.constructor start
+11:31:00.907 [0050]DocletEx.determineType start
+11:31:00.907 [0050]DocletEx.determineType normal end
+11:31:00.907 [0051]PropList.constructor start
+11:31:00.907 [0051]PropList.constructor normal end
+11:31:00.907 [0052]PropList.constructor start
+11:31:00.907 [0052]PropList.constructor normal end
+11:31:00.907 [0053]PropList.constructor start
+11:31:00.907 [0053]PropList.constructor normal end
+11:31:00.907 [0049]DocletEx.constructor normal end
+11:31:00.907 [0054]DocletEx.constructor start
+11:31:00.907 [0055]DocletEx.determineType start
+11:31:00.907 [0055]DocletEx.determineType normal end
+11:31:00.907 [0056]PropList.constructor start
+11:31:00.907 [0056]PropList.constructor normal end
+11:31:00.907 [0057]PropList.constructor start
+11:31:00.907 [0057]PropList.constructor normal end
+11:31:00.907 [0058]PropList.constructor start
+11:31:00.908 [0058]PropList.constructor normal end
+11:31:00.908 [0054]DocletEx.constructor normal end
+11:31:00.908 [0059]DocletEx.constructor start
+11:31:00.908 [0060]DocletEx.determineType start
+11:31:00.908 [0060]DocletEx.determineType normal end
+11:31:00.908 [0061]PropList.constructor start
+11:31:00.908 [0061]PropList.constructor normal end
+11:31:00.908 [0062]PropList.constructor start
+11:31:00.908 [0062]PropList.constructor normal end
+11:31:00.908 [0063]PropList.constructor start
+11:31:00.908 [0063]PropList.constructor normal end
+11:31:00.908 [0059]DocletEx.constructor normal end
+11:31:00.908 [0064]DocletEx.constructor start
+11:31:00.908 [0065]DocletEx.determineType start
+11:31:00.908 [0065]DocletEx.determineType normal end
+11:31:00.908 [0066]PropList.constructor start
+11:31:00.908 [0066]PropList.constructor normal end
+11:31:00.908 [0067]PropList.constructor start
+11:31:00.908 [0067]PropList.constructor normal end
+11:31:00.908 [0068]PropList.constructor start
+11:31:00.908 [0068]PropList.constructor normal end
+11:31:00.908 [0064]DocletEx.constructor normal end
+11:31:00.908 [0069]DocletEx.constructor start
+11:31:00.908 [0070]DocletEx.determineType start
+11:31:00.908 [0070]DocletEx.determineType normal end
+11:31:00.908 [0071]PropList.constructor start
+11:31:00.908 [0071]PropList.constructor normal end
+11:31:00.908 [0072]PropList.constructor start
+11:31:00.908 [0072]PropList.constructor normal end
+11:31:00.908 [0073]PropList.constructor start
+11:31:00.908 [0073]PropList.constructor normal end
+11:31:00.908 [0069]DocletEx.constructor normal end
+11:31:00.908 [0074]DocletEx.constructor start
+11:31:00.908 [0075]DocletEx.determineType start
+11:31:00.908 [0075]DocletEx.determineType normal end
+11:31:00.908 [0076]PropList.constructor start
+11:31:00.908 [0076]PropList.constructor normal end
+11:31:00.908 [0077]PropList.constructor start
+11:31:00.908 [0077]PropList.constructor normal end
+11:31:00.908 [0078]PropList.constructor start
+11:31:00.908 [0078]PropList.constructor normal end
+11:31:00.908 [0074]DocletEx.constructor normal end
+11:31:00.908 [0079]DocletEx.constructor start
+11:31:00.908 [0080]DocletEx.determineType start
+11:31:00.908 [0080]DocletEx.determineType normal end
+11:31:00.908 [0081]PropList.constructor start
+11:31:00.908 [0081]PropList.constructor normal end
+11:31:00.908 [0082]PropList.constructor start
+11:31:00.908 [0082]PropList.constructor normal end
+11:31:00.908 [0083]PropList.constructor start
+11:31:00.908 [0083]PropList.constructor normal end
+11:31:00.908 [0079]DocletEx.constructor normal end
+11:31:00.908 [0084]DocletEx.constructor start
+11:31:00.908 [0085]DocletEx.determineType start
+11:31:00.908 [0086]PropList.constructor start
+11:31:00.908 [0086]PropList.constructor normal end
+11:31:00.908 [0087]PropList.constructor start
+11:31:00.908 [0087]PropList.constructor normal end
+11:31:00.908 [0088]PropList.constructor start
+11:31:00.908 [0088]PropList.constructor normal end
+11:31:00.908 [0084]DocletEx.constructor normal end
+11:31:00.908 [0089]DocletEx.constructor start
+11:31:00.908 [0090]DocletEx.determineType start
+11:31:00.908 [0091]PropList.constructor start
+11:31:00.909 [0091]PropList.constructor normal end
+11:31:00.909 [0092]PropList.constructor start
+11:31:00.909 [0092]PropList.constructor normal end
+11:31:00.909 [0093]PropList.constructor start
+11:31:00.909 [0093]PropList.constructor normal end
+11:31:00.909 [0089]DocletEx.constructor normal end
+11:31:00.909 [0094]DocletEx.constructor start
+11:31:00.909 [0095]DocletEx.determineType start
+11:31:00.909 [0095]DocletEx.determineType normal end
+11:31:00.909 [0096]PropList.constructor start
+11:31:00.909 [0096]PropList.constructor normal end
+11:31:00.909 [0097]PropList.constructor start
+11:31:00.909 [0097]PropList.constructor normal end
+11:31:00.909 [0098]PropList.constructor start
+11:31:00.909 [0098]PropList.constructor normal end
+11:31:00.909 [0094]DocletEx.constructor normal end
+11:31:00.909 [0099]DocletEx.constructor start
+11:31:00.909 [0100]DocletEx.determineType start
+11:31:00.909 [0100]DocletEx.determineType normal end
+11:31:00.909 [0101]PropList.constructor start
+11:31:00.909 [0101]PropList.constructor normal end
+11:31:00.909 [0102]PropList.constructor start
+11:31:00.909 [0102]PropList.constructor normal end
+11:31:00.909 [0103]PropList.constructor start
+11:31:00.909 [0103]PropList.constructor normal end
+11:31:00.909 [0099]DocletEx.constructor normal end
+11:31:00.909 [0104]DocletEx.constructor start
+11:31:00.909 [0105]DocletEx.determineType start
+11:31:00.909 [0105]DocletEx.determineType normal end
+11:31:00.909 [0106]PropList.constructor start
+11:31:00.909 [0106]PropList.constructor normal end
+11:31:00.909 [0107]PropList.constructor start
+11:31:00.909 [0107]PropList.constructor normal end
+11:31:00.909 [0108]PropList.constructor start
+11:31:00.909 [0108]PropList.constructor normal end
+11:31:00.909 [0104]DocletEx.constructor normal end
+11:31:00.909 [0109]DocletEx.constructor start
+11:31:00.909 [0110]DocletEx.determineType start
+11:31:00.909 [0110]DocletEx.determineType normal end
+11:31:00.909 [0111]PropList.constructor start
+11:31:00.909 [0111]PropList.constructor normal end
+11:31:00.909 [0112]PropList.constructor start
+11:31:00.909 [0112]PropList.constructor normal end
+11:31:00.909 [0113]PropList.constructor start
+11:31:00.909 [0113]PropList.constructor normal end
+11:31:00.909 [0109]DocletEx.constructor normal end
+11:31:00.909 [0114]DocletEx.constructor start
+11:31:00.909 [0115]DocletEx.determineType start
+11:31:00.909 [0116]PropList.constructor start
+11:31:00.909 [0116]PropList.constructor normal end
+11:31:00.909 [0117]PropList.constructor start
+11:31:00.909 [0117]PropList.constructor normal end
+11:31:00.909 [0118]PropList.constructor start
+11:31:00.909 [0118]PropList.constructor normal end
+11:31:00.909 [0114]DocletEx.constructor normal end
+11:31:00.909 [0119]DocletEx.constructor start
+11:31:00.909 [0120]DocletEx.determineType start
+11:31:00.909 [0120]DocletEx.determineType normal end
+11:31:00.909 [0121]PropList.constructor start
+11:31:00.909 [0121]PropList.constructor normal end
+11:31:00.909 [0122]PropList.constructor start
+11:31:00.910 [0122]PropList.constructor normal end
+11:31:00.910 [0123]PropList.constructor start
+11:31:00.910 [0123]PropList.constructor normal end
+11:31:00.910 [0119]DocletEx.constructor normal end
+11:31:00.910 [0124]DocletEx.constructor start
+11:31:00.910 [0125]DocletEx.determineType start
+11:31:00.910 [0126]PropList.constructor start
+11:31:00.910 [0126]PropList.constructor normal end
+11:31:00.910 [0127]PropList.constructor start
+11:31:00.910 [0127]PropList.constructor normal end
+11:31:00.910 [0128]PropList.constructor start
+11:31:00.910 [0128]PropList.constructor normal end
+11:31:00.910 [0124]DocletEx.constructor normal end
+11:31:00.910 [0003]createSpec.getFile normal end
+11:31:00.910 [0129]createSpec.determineParent start
+11:31:00.910 [0129]createSpec.determineParent normal end
 == [0001]createSpec step.99.994 [
   {
     comment:"/** ダミータイトル
@@ -1914,94 +1736,274 @@ DocletEx.id="/func01"の子要素になっているか確認", // string
     children:    [ /* Array, length 0 */ ], // object
   }
 ], // Array
-16:44:19.738 [0130]createSpec.output start
-16:44:19.738 [0131]createSpec.markdown start
-16:44:19.738 [0131]createSpec.markdown normal end
-16:44:19.738 [0132]createSpec.markdown start
-16:44:19.738 [0133]PropList.makeTable start
-16:44:19.738 [0133]PropList.makeTable normal end
-16:44:19.738 [0132]createSpec.markdown normal end
-16:44:19.738 [0134]createSpec.markdown start
-16:44:19.738 [0135]PropList.makeTable start
-16:44:19.738 [0135]PropList.makeTable normal end
-16:44:19.738 [0134]createSpec.markdown normal end
-16:44:19.738 [0136]createSpec.markdown start
-16:44:19.738 [0137]PropList.makeTable start
-16:44:19.738 [0137]PropList.makeTable normal end
-16:44:19.738 [0138]PropList.makeTable start
-16:44:19.738 [0138]PropList.makeTable normal end
-16:44:19.738 [0136]createSpec.markdown normal end
-16:44:19.738 [0139]createSpec.markdown start
-16:44:19.738 [0139]createSpec.markdown normal end
-16:44:19.738 [0140]createSpec.markdown start
-16:44:19.738 [0140]createSpec.markdown normal end
-16:44:19.738 [0141]createSpec.markdown start
-16:44:19.738 [0141]createSpec.markdown normal end
-16:44:19.738 [0142]createSpec.markdown start
-16:44:19.738 [0142]createSpec.markdown normal end
-16:44:19.738 [0143]createSpec.markdown start
-16:44:19.738 [0143]createSpec.markdown normal end
-16:44:19.739 [0144]createSpec.markdown start
-16:44:19.739 [0145]PropList.makeTable start
-16:44:19.739 [0145]PropList.makeTable normal end
-16:44:19.739 [0146]PropList.makeTable start
-16:44:19.739 [0146]PropList.makeTable normal end
-16:44:19.739 [0144]createSpec.markdown normal end
-16:44:19.739 [0147]createSpec.markdown start
-16:44:19.739 [0148]PropList.makeTable start
-16:44:19.739 [0148]PropList.makeTable normal end
-16:44:19.739 [0149]PropList.makeTable start
-16:44:19.739 [0149]PropList.makeTable normal end
-16:44:19.739 [0147]createSpec.markdown normal end
-16:44:19.739 [0150]createSpec.markdown start
-16:44:19.739 [0151]PropList.makeTable start
-16:44:19.739 [0151]PropList.makeTable normal end
-16:44:19.739 [0150]createSpec.markdown normal end
-16:44:19.739 [0152]createSpec.markdown start
-16:44:19.739 [0152]createSpec.markdown normal end
-16:44:19.739 [0153]createSpec.markdown start
-16:44:19.739 [0153]createSpec.markdown normal end
-16:44:19.739 [0154]createSpec.markdown start
-16:44:19.739 [0155]PropList.makeTable start
-16:44:19.739 [0155]PropList.makeTable normal end
-16:44:19.739 [0154]createSpec.markdown normal end
-16:44:19.739 [0156]createSpec.markdown start
-16:44:19.739 [0156]createSpec.markdown normal end
-16:44:19.739 [0157]createSpec.markdown start
-16:44:19.739 [0157]createSpec.markdown normal end
-16:44:19.739 [0158]createSpec.markdown start
-16:44:19.739 [0158]createSpec.markdown normal end
-16:44:19.739 [0159]createSpec.markdown start
-16:44:19.739 [0160]PropList.makeTable start
-16:44:19.739 [0160]PropList.makeTable normal end
-16:44:19.739 [0161]PropList.makeTable start
-16:44:19.739 [0161]PropList.makeTable normal end
-16:44:19.739 [0159]createSpec.markdown normal end
-16:44:19.739 [0162]createSpec.markdown start
-16:44:19.739 [0163]PropList.makeTable start
-16:44:19.739 [0163]PropList.makeTable normal end
-16:44:19.739 [0162]createSpec.markdown normal end
-16:44:19.739 [0164]createSpec.markdown start
-16:44:19.740 [0165]PropList.makeTable start
-16:44:19.740 [0165]PropList.makeTable normal end
-16:44:19.740 [0166]PropList.makeTable start
-16:44:19.740 [0166]PropList.makeTable normal end
-16:44:19.740 [0164]createSpec.markdown normal end
-16:44:19.740 [0167]createSpec.markdown start
-16:44:19.740 [0168]PropList.makeTable start
-16:44:19.740 [0168]PropList.makeTable normal end
-16:44:19.740 [0169]PropList.makeTable start
-16:44:19.740 [0169]PropList.makeTable normal end
-16:44:19.740 [0167]createSpec.markdown normal end
-16:44:19.740 [0170]createSpec.markdown start
-16:44:19.740 [0170]createSpec.markdown normal end
-16:44:19.740 [0171]createSpec.markdown start
-16:44:19.740 [0172]PropList.makeTable start
-16:44:19.740 [0172]PropList.makeTable normal end
-16:44:19.740 [0173]PropList.makeTable start
-16:44:19.740 [0173]PropList.makeTable normal end
-16:44:19.740 [0171]createSpec.markdown normal end
-16:44:19.740 [0174]createSpec.markdown start
-16:44:19.740 [0174]createSpec.markdown normal end
-16:44:19.740 [0130]createSpec.output normal end
-16:44:19.740 [0001]createSpec normal end
+11:31:00.911 [0130]createSpec.output start
+11:31:00.911 [0131]createSpec.markdown start
+== [0131]createSpec.markdown step.99.944 {
+  type:"description", // string
+  parent:null, // object
+  comment:"/** ダミータイトル
+ * @name JSDoc.v001.jsonテスト
+ * @desc グローバル領域での概要説明
+ * - desc 2行目
+ * 
+ * @example
+ *   `node ./test.js`
+ *   exampleの2行目
+ * 
+ * @history
+ * - rev.1.1 2026/01/31
+ * - rev.1.0 2026/01/27
+ */", // string
+  name:"jsonテスト", // string
+  longname:"JSDoc.v001.jsonテスト", // string
+}
+11:31:00.911 [0131]createSpec.markdown normal end
+11:31:00.911 [0132]createSpec.markdown start
+11:31:00.911 [0133]PropList.makeTable start
+11:31:00.911 [0133]PropList.makeTable normal end
+== [0132]createSpec.markdown step.99.944 {
+  type:"typedef", // string
+  parent:null, // object
+  comment:"/** globalDef: テスト用定義①
+ * - typedef前の補足説明
+ *   - サブ項目
+ * @typedef {Object} globalDef
+ * - typedef後の補足説明
+ * @property {typeDef[]|columnDef[]} [main=[]] - グローバル領域にあるJSDoc
+ * @property {Object} class - クラス定義にかかるJSDoc
+ * @property {columnDef[]} [class.method] - 任意項目確認用
+ * 
+ * @desc
+ * - 末尾にある補足説明
+ */", // string
+  name:"globalDef", // string
+  longname:"globalDef", // string
+}
+11:31:00.911 [0132]createSpec.markdown normal end
+11:31:00.911 [0134]createSpec.markdown start
+11:31:00.911 [0135]PropList.makeTable start
+11:31:00.911 [0135]PropList.makeTable normal end
+== [0134]createSpec.markdown step.99.944 {
+  type:"interface", // string
+  parent:null, // object
+  comment:"/**
+ * @interface User
+ * @property {string} name
+ * @property {number} age
+ * @property {boolean} isAdmin
+ */", // string
+  name:"User", // string
+  longname:"User", // string
+}
+11:31:00.911 [0134]createSpec.markdown normal end
+11:31:00.911 [0136]createSpec.markdown start
+11:31:00.911 [0137]PropList.makeTable start
+11:31:00.911 [0137]PropList.makeTable normal end
+11:31:00.911 [0138]PropList.makeTable start
+11:31:00.911 [0138]PropList.makeTable normal end
+== [0136]createSpec.markdown step.99.944 {
+  type:"objectFunc", // string
+  parent:"/User", // string
+  comment:"/**
+ * @function
+ * @name User#test
+ * @desc オブジェクト内関数の説明
+ * @param {string} arg
+ * @returns {boolean|Error}
+ * @example オブジェクト内関数の使用例
+ */", // string
+  name:"test", // string
+  longname:"User#test", // string
+}
+11:31:00.911 [0136]createSpec.markdown normal end
+11:31:00.911 [0139]createSpec.markdown start
+11:31:00.911 [0139]createSpec.markdown normal end
+11:31:00.912 [0140]createSpec.markdown start
+11:31:00.912 [0140]createSpec.markdown normal end
+11:31:00.912 [0141]createSpec.markdown start
+11:31:00.912 [0141]createSpec.markdown normal end
+11:31:00.912 [0142]createSpec.markdown start
+11:31:00.912 [0142]createSpec.markdown normal end
+11:31:00.912 [0143]createSpec.markdown start
+11:31:00.912 [0143]createSpec.markdown normal end
+11:31:00.912 [0144]createSpec.markdown start
+11:31:00.912 [0145]PropList.makeTable start
+11:31:00.912 [0145]PropList.makeTable normal end
+11:31:00.912 [0146]PropList.makeTable start
+11:31:00.912 [0146]PropList.makeTable normal end
+== [0144]createSpec.markdown step.99.944 {
+  type:"function", // string
+  parent:null, // object
+  comment:"/** func01: 関数テスト
+ * 関数テスト説明文
+ * @param {number} arg - 引数
+ * @returns {object} 戻り値
+ */", // string
+  name:"func01", // string
+  longname:"func01", // string
+}
+11:31:00.912 [0144]createSpec.markdown normal end
+11:31:00.912 [0147]createSpec.markdown start
+11:31:00.912 [0148]PropList.makeTable start
+11:31:00.912 [0148]PropList.makeTable normal end
+11:31:00.912 [0149]PropList.makeTable start
+11:31:00.912 [0149]PropList.makeTable normal end
+== [0147]createSpec.markdown step.99.944 {
+  type:"innerFunc", // string
+  parent:"/func01", // string
+  comment:"/** arrow01: アローテスト
+   * @param {string} arg - 引数
+   * @returns {string} 戻り値
+   */", // string
+  name:"arrow01", // string
+  longname:"func01~arrow01", // string
+}
+11:31:00.912 [0147]createSpec.markdown normal end
+11:31:00.912 [0150]createSpec.markdown start
+11:31:00.912 [0151]PropList.makeTable start
+11:31:00.912 [0151]PropList.makeTable normal end
+== [0150]createSpec.markdown step.99.944 {
+  type:"typedef", // string
+  parent:"/func01", // string
+  comment:"/**
+     * @memberof func01
+     * @typedef {Object} arrowDef - JSDocの関数・メソッド単位のオブジェクト
+     * @property {string} name - 関数・メソッド名
+     * @property {arrowDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc
+     */", // string
+  name:"arrowDef", // string
+  longname:"func01.arrowDef", // string
+}
+11:31:00.912 [0150]createSpec.markdown normal end
+11:31:00.912 [0152]createSpec.markdown start
+11:31:00.912 [0152]createSpec.markdown normal end
+11:31:00.912 [0153]createSpec.markdown start
+== [0153]createSpec.markdown step.99.944 {
+  type:"description", // string
+  parent:"/func01", // string
+  comment:"/**
+   * @name 関数内説明文
+   * @memberof func01
+   * @description 関数内部での説明文
+   * DocletEx.id="/func01"の子要素になっているか確認
+   */", // string
+  name:"関数内説明文", // string
+  longname:"func01.関数内説明文", // string
+}
+11:31:00.912 [0153]createSpec.markdown normal end
+11:31:00.912 [0154]createSpec.markdown start
+11:31:00.912 [0155]PropList.makeTable start
+11:31:00.912 [0155]PropList.makeTable normal end
+== [0154]createSpec.markdown step.99.944 {
+  type:"typedef", // string
+  parent:null, // object
+  comment:"/**
+   * @typedef {Object} funcDef - JSDocの関数・メソッド単位のオブジェクト
+   * @property {string} name - 関数・メソッド名
+   * @property {funcDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc
+   */", // string
+  name:"funcDef", // string
+  longname:"funcDef", // string
+}
+11:31:00.912 [0154]createSpec.markdown normal end
+11:31:00.912 [0156]createSpec.markdown start
+11:31:00.912 [0156]createSpec.markdown normal end
+11:31:00.912 [0157]createSpec.markdown start
+11:31:00.912 [0157]createSpec.markdown normal end
+11:31:00.912 [0158]createSpec.markdown start
+11:31:00.912 [0158]createSpec.markdown normal end
+11:31:00.912 [0159]createSpec.markdown start
+11:31:00.912 [0160]PropList.makeTable start
+11:31:00.912 [0160]PropList.makeTable normal end
+11:31:00.912 [0161]PropList.makeTable start
+11:31:00.912 [0161]PropList.makeTable normal end
+== [0159]createSpec.markdown step.99.944 {
+  type:"class", // string
+  parent:"/class01", // string
+  comment:"/**
+ * @class
+ * @desc テスト用クラス(desc)
+ * @classdesc テスト用クラス(classdesc)
+ * @extends BaseClass
+ * @prop {Object} opt - 起動時オプション
+ */", // string
+  name:"class01", // string
+  longname:"class01", // string
+}
+11:31:00.912 [0159]createSpec.markdown normal end
+11:31:00.913 [0162]createSpec.markdown start
+11:31:00.913 [0163]PropList.makeTable start
+11:31:00.913 [0163]PropList.makeTable normal end
+== [0162]createSpec.markdown step.99.944 {
+  type:"typedef", // string
+  parent:null, // object
+  comment:"/**
+   * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト
+   * @property {string} name - データ型の定義名
+   * @property {columnDef[]} list - 項目(メンバ)のリスト
+   */", // string
+  name:"typeDef", // string
+  longname:"typeDef", // string
+}
+11:31:00.913 [0162]createSpec.markdown normal end
+11:31:00.913 [0164]createSpec.markdown start
+11:31:00.913 [0165]PropList.makeTable start
+11:31:00.913 [0165]PropList.makeTable normal end
+11:31:00.913 [0166]PropList.makeTable start
+11:31:00.913 [0166]PropList.makeTable normal end
+== [0164]createSpec.markdown step.99.944 {
+  type:"class", // string
+  parent:"/class01", // string
+  comment:"/**
+ * @class
+ * @desc テスト用クラス(desc)
+ * @classdesc テスト用クラス(classdesc)
+ * @extends BaseClass
+ * @prop {Object} opt - 起動時オプション
+ */", // string
+  name:"class01", // string
+  longname:"class01", // string
+}
+11:31:00.913 [0164]createSpec.markdown normal end
+11:31:00.913 [0167]createSpec.markdown start
+11:31:00.913 [0168]PropList.makeTable start
+11:31:00.913 [0168]PropList.makeTable normal end
+11:31:00.913 [0169]PropList.makeTable start
+11:31:00.913 [0169]PropList.makeTable normal end
+== [0167]createSpec.markdown step.99.944 {
+  type:"class", // string
+  parent:"/class01", // string
+  comment:"/**
+ * @class
+ * @desc テスト用クラス(desc)
+ * @classdesc テスト用クラス(classdesc)
+ * @extends BaseClass
+ * @prop {Object} opt - 起動時オプション
+ */", // string
+  name:"class01", // string
+  longname:"class01", // string
+}
+11:31:00.913 [0167]createSpec.markdown normal end
+11:31:00.913 [0170]createSpec.markdown start
+11:31:00.913 [0170]createSpec.markdown normal end
+11:31:00.913 [0171]createSpec.markdown start
+11:31:00.913 [0172]PropList.makeTable start
+11:31:00.913 [0172]PropList.makeTable normal end
+11:31:00.913 [0173]PropList.makeTable start
+11:31:00.913 [0173]PropList.makeTable normal end
+== [0171]createSpec.markdown step.99.944 {
+  type:"method", // string
+  parent:"/class01", // string
+  comment:"/** method01: メソッドテスト
+   * @memberof class01
+   * @param {number} arg - method01の引数
+   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる
+   */", // string
+  name:"method01", // string
+  longname:"class01#method01", // string
+}
+11:31:00.913 [0171]createSpec.markdown normal end
+11:31:00.913 [0174]createSpec.markdown start
+11:31:00.913 [0174]createSpec.markdown normal end
+11:31:00.913 [0130]createSpec.output normal end
+11:31:00.913 [0001]createSpec normal end
