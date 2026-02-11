@@ -1,4 +1,4 @@
-13:37:59.791 [0001]createSpec start
+13:44:22.890 [0001]createSpec start
 == [0001]createSpec step.1 {
   jsdocJson:"jsdoc.json", // string
   dummyDir:"./dummy", // string
@@ -16,274 +16,274 @@
     unknown:"_", // string
   }
 }
-13:37:59.793 [0002]createSpec.listSource start
-13:37:59.793 [0002]createSpec.listSource normal end
-13:37:59.793 [0003]createSpec.getFile start
+13:44:22.892 [0002]createSpec.listSource start
+13:44:22.892 [0002]createSpec.listSource normal end
+13:44:22.892 [0003]createSpec.getFile start
 {}
-13:37:59.922 [0004]DocletEx.constructor start
-13:37:59.922 [0005]DocletEx.determineType start
-13:37:59.922 [0005]DocletEx.determineType normal end
-13:37:59.922 [0006]PropList.constructor start
-13:37:59.923 [0006]PropList.constructor normal end
-13:37:59.923 [0007]PropList.constructor start
-13:37:59.923 [0007]PropList.constructor normal end
-13:37:59.923 [0008]PropList.constructor start
-13:37:59.923 [0008]PropList.constructor normal end
-13:37:59.923 [0004]DocletEx.constructor normal end
-13:37:59.923 [0009]DocletEx.constructor start
-13:37:59.923 [0010]DocletEx.determineType start
-13:37:59.923 [0010]DocletEx.determineType normal end
-13:37:59.923 [0011]PropList.constructor start
-13:37:59.932 [0011]PropList.constructor normal end
-13:37:59.932 [0012]PropList.constructor start
-13:37:59.932 [0012]PropList.constructor normal end
-13:37:59.932 [0013]PropList.constructor start
-13:37:59.932 [0013]PropList.constructor normal end
-13:37:59.932 [0009]DocletEx.constructor normal end
-13:37:59.932 [0014]DocletEx.constructor start
-13:37:59.932 [0015]DocletEx.determineType start
-13:37:59.932 [0015]DocletEx.determineType normal end
-13:37:59.932 [0016]PropList.constructor start
-13:37:59.932 [0016]PropList.constructor normal end
-13:37:59.932 [0017]PropList.constructor start
-13:37:59.932 [0017]PropList.constructor normal end
-13:37:59.932 [0018]PropList.constructor start
-13:37:59.932 [0018]PropList.constructor normal end
-13:37:59.932 [0014]DocletEx.constructor normal end
-13:37:59.932 [0019]DocletEx.constructor start
-13:37:59.932 [0020]DocletEx.determineType start
-13:37:59.932 [0020]DocletEx.determineType normal end
-13:37:59.932 [0021]PropList.constructor start
-13:37:59.932 [0021]PropList.constructor normal end
-13:37:59.932 [0022]PropList.constructor start
-13:37:59.932 [0022]PropList.constructor normal end
-13:37:59.932 [0023]PropList.constructor start
-13:37:59.932 [0023]PropList.constructor normal end
-13:37:59.933 [0019]DocletEx.constructor normal end
-13:37:59.933 [0024]DocletEx.constructor start
-13:37:59.933 [0025]DocletEx.determineType start
-13:37:59.933 [0025]DocletEx.determineType normal end
-13:37:59.933 [0026]PropList.constructor start
-13:37:59.933 [0026]PropList.constructor normal end
-13:37:59.933 [0027]PropList.constructor start
-13:37:59.933 [0027]PropList.constructor normal end
-13:37:59.933 [0028]PropList.constructor start
-13:37:59.933 [0028]PropList.constructor normal end
-13:37:59.933 [0024]DocletEx.constructor normal end
-13:37:59.933 [0029]DocletEx.constructor start
-13:37:59.933 [0030]DocletEx.determineType start
-13:37:59.933 [0031]PropList.constructor start
-13:37:59.933 [0031]PropList.constructor normal end
-13:37:59.933 [0032]PropList.constructor start
-13:37:59.933 [0032]PropList.constructor normal end
-13:37:59.933 [0033]PropList.constructor start
-13:37:59.933 [0033]PropList.constructor normal end
-13:37:59.933 [0029]DocletEx.constructor normal end
-13:37:59.933 [0034]DocletEx.constructor start
-13:37:59.933 [0035]DocletEx.determineType start
-13:37:59.933 [0036]PropList.constructor start
-13:37:59.933 [0036]PropList.constructor normal end
-13:37:59.933 [0037]PropList.constructor start
-13:37:59.933 [0037]PropList.constructor normal end
-13:37:59.933 [0038]PropList.constructor start
-13:37:59.933 [0038]PropList.constructor normal end
-13:37:59.933 [0034]DocletEx.constructor normal end
-13:37:59.933 [0039]DocletEx.constructor start
-13:37:59.933 [0040]DocletEx.determineType start
-13:37:59.933 [0041]PropList.constructor start
-13:37:59.933 [0041]PropList.constructor normal end
-13:37:59.933 [0042]PropList.constructor start
-13:37:59.933 [0042]PropList.constructor normal end
-13:37:59.933 [0043]PropList.constructor start
-13:37:59.933 [0043]PropList.constructor normal end
-13:37:59.933 [0039]DocletEx.constructor normal end
-13:37:59.933 [0044]DocletEx.constructor start
-13:37:59.933 [0045]DocletEx.determineType start
-13:37:59.933 [0046]PropList.constructor start
-13:37:59.933 [0046]PropList.constructor normal end
-13:37:59.934 [0047]PropList.constructor start
-13:37:59.934 [0047]PropList.constructor normal end
-13:37:59.934 [0048]PropList.constructor start
-13:37:59.934 [0048]PropList.constructor normal end
-13:37:59.934 [0044]DocletEx.constructor normal end
-13:37:59.934 [0049]DocletEx.constructor start
-13:37:59.934 [0050]DocletEx.determineType start
-13:37:59.934 [0050]DocletEx.determineType normal end
-13:37:59.934 [0051]PropList.constructor start
-13:37:59.934 [0051]PropList.constructor normal end
-13:37:59.934 [0052]PropList.constructor start
-13:37:59.934 [0052]PropList.constructor normal end
-13:37:59.934 [0053]PropList.constructor start
-13:37:59.934 [0053]PropList.constructor normal end
-13:37:59.934 [0049]DocletEx.constructor normal end
-13:37:59.934 [0054]DocletEx.constructor start
-13:37:59.934 [0055]DocletEx.determineType start
-13:37:59.934 [0055]DocletEx.determineType normal end
-13:37:59.934 [0056]PropList.constructor start
-13:37:59.934 [0056]PropList.constructor normal end
-13:37:59.934 [0057]PropList.constructor start
-13:37:59.934 [0057]PropList.constructor normal end
-13:37:59.934 [0058]PropList.constructor start
-13:37:59.934 [0058]PropList.constructor normal end
-13:37:59.934 [0054]DocletEx.constructor normal end
-13:37:59.934 [0059]DocletEx.constructor start
-13:37:59.934 [0060]DocletEx.determineType start
-13:37:59.934 [0060]DocletEx.determineType normal end
-13:37:59.934 [0061]PropList.constructor start
-13:37:59.934 [0061]PropList.constructor normal end
-13:37:59.934 [0062]PropList.constructor start
-13:37:59.934 [0062]PropList.constructor normal end
-13:37:59.934 [0063]PropList.constructor start
-13:37:59.934 [0063]PropList.constructor normal end
-13:37:59.934 [0059]DocletEx.constructor normal end
-13:37:59.934 [0064]DocletEx.constructor start
-13:37:59.934 [0065]DocletEx.determineType start
-13:37:59.934 [0065]DocletEx.determineType normal end
-13:37:59.934 [0066]PropList.constructor start
-13:37:59.934 [0066]PropList.constructor normal end
-13:37:59.934 [0067]PropList.constructor start
-13:37:59.934 [0067]PropList.constructor normal end
-13:37:59.935 [0068]PropList.constructor start
-13:37:59.935 [0068]PropList.constructor normal end
-13:37:59.935 [0064]DocletEx.constructor normal end
-13:37:59.935 [0069]DocletEx.constructor start
-13:37:59.935 [0070]DocletEx.determineType start
-13:37:59.935 [0070]DocletEx.determineType normal end
-13:37:59.935 [0071]PropList.constructor start
-13:37:59.935 [0071]PropList.constructor normal end
-13:37:59.935 [0072]PropList.constructor start
-13:37:59.935 [0072]PropList.constructor normal end
-13:37:59.935 [0073]PropList.constructor start
-13:37:59.935 [0073]PropList.constructor normal end
-13:37:59.935 [0069]DocletEx.constructor normal end
-13:37:59.935 [0074]DocletEx.constructor start
-13:37:59.935 [0075]DocletEx.determineType start
-13:37:59.935 [0075]DocletEx.determineType normal end
-13:37:59.935 [0076]PropList.constructor start
-13:37:59.935 [0076]PropList.constructor normal end
-13:37:59.935 [0077]PropList.constructor start
-13:37:59.935 [0077]PropList.constructor normal end
-13:37:59.935 [0078]PropList.constructor start
-13:37:59.935 [0078]PropList.constructor normal end
-13:37:59.935 [0074]DocletEx.constructor normal end
-13:37:59.935 [0079]DocletEx.constructor start
-13:37:59.935 [0080]DocletEx.determineType start
-13:37:59.935 [0080]DocletEx.determineType normal end
-13:37:59.935 [0081]PropList.constructor start
-13:37:59.935 [0081]PropList.constructor normal end
-13:37:59.935 [0082]PropList.constructor start
-13:37:59.935 [0082]PropList.constructor normal end
-13:37:59.935 [0083]PropList.constructor start
-13:37:59.935 [0083]PropList.constructor normal end
-13:37:59.935 [0079]DocletEx.constructor normal end
-13:37:59.935 [0084]DocletEx.constructor start
-13:37:59.935 [0085]DocletEx.determineType start
-13:37:59.935 [0086]PropList.constructor start
-13:37:59.935 [0086]PropList.constructor normal end
-13:37:59.935 [0087]PropList.constructor start
-13:37:59.935 [0087]PropList.constructor normal end
-13:37:59.935 [0088]PropList.constructor start
-13:37:59.935 [0088]PropList.constructor normal end
-13:37:59.935 [0084]DocletEx.constructor normal end
-13:37:59.935 [0089]DocletEx.constructor start
-13:37:59.935 [0090]DocletEx.determineType start
-13:37:59.935 [0091]PropList.constructor start
-13:37:59.935 [0091]PropList.constructor normal end
-13:37:59.935 [0092]PropList.constructor start
-13:37:59.935 [0092]PropList.constructor normal end
-13:37:59.935 [0093]PropList.constructor start
-13:37:59.935 [0093]PropList.constructor normal end
-13:37:59.935 [0089]DocletEx.constructor normal end
-13:37:59.935 [0094]DocletEx.constructor start
-13:37:59.935 [0095]DocletEx.determineType start
-13:37:59.935 [0095]DocletEx.determineType normal end
-13:37:59.935 [0096]PropList.constructor start
-13:37:59.935 [0096]PropList.constructor normal end
-13:37:59.935 [0097]PropList.constructor start
-13:37:59.935 [0097]PropList.constructor normal end
-13:37:59.935 [0098]PropList.constructor start
-13:37:59.935 [0098]PropList.constructor normal end
-13:37:59.935 [0094]DocletEx.constructor normal end
-13:37:59.935 [0099]DocletEx.constructor start
-13:37:59.935 [0100]DocletEx.determineType start
-13:37:59.935 [0100]DocletEx.determineType normal end
-13:37:59.935 [0101]PropList.constructor start
-13:37:59.935 [0101]PropList.constructor normal end
-13:37:59.935 [0102]PropList.constructor start
-13:37:59.935 [0102]PropList.constructor normal end
-13:37:59.935 [0103]PropList.constructor start
-13:37:59.935 [0103]PropList.constructor normal end
-13:37:59.935 [0099]DocletEx.constructor normal end
-13:37:59.936 [0104]DocletEx.constructor start
-13:37:59.936 [0105]DocletEx.determineType start
-13:37:59.936 [0105]DocletEx.determineType normal end
-13:37:59.936 [0106]PropList.constructor start
-13:37:59.936 [0106]PropList.constructor normal end
-13:37:59.936 [0107]PropList.constructor start
-13:37:59.936 [0107]PropList.constructor normal end
-13:37:59.936 [0108]PropList.constructor start
-13:37:59.936 [0108]PropList.constructor normal end
-13:37:59.936 [0104]DocletEx.constructor normal end
-13:37:59.936 [0109]DocletEx.constructor start
-13:37:59.936 [0110]DocletEx.determineType start
-13:37:59.936 [0110]DocletEx.determineType normal end
-13:37:59.936 [0111]PropList.constructor start
-13:37:59.936 [0111]PropList.constructor normal end
-13:37:59.936 [0112]PropList.constructor start
-13:37:59.936 [0112]PropList.constructor normal end
-13:37:59.936 [0113]PropList.constructor start
-13:37:59.936 [0113]PropList.constructor normal end
-13:37:59.936 [0109]DocletEx.constructor normal end
-13:37:59.936 [0114]DocletEx.constructor start
-13:37:59.936 [0115]DocletEx.determineType start
-13:37:59.936 [0116]PropList.constructor start
-13:37:59.936 [0116]PropList.constructor normal end
-13:37:59.936 [0117]PropList.constructor start
-13:37:59.936 [0117]PropList.constructor normal end
-13:37:59.936 [0118]PropList.constructor start
-13:37:59.936 [0118]PropList.constructor normal end
-13:37:59.936 [0114]DocletEx.constructor normal end
-13:37:59.936 [0119]DocletEx.constructor start
-13:37:59.936 [0120]DocletEx.determineType start
-13:37:59.936 [0120]DocletEx.determineType normal end
-13:37:59.936 [0121]PropList.constructor start
-13:37:59.936 [0121]PropList.constructor normal end
-13:37:59.936 [0122]PropList.constructor start
-13:37:59.936 [0122]PropList.constructor normal end
-13:37:59.936 [0123]PropList.constructor start
-13:37:59.936 [0123]PropList.constructor normal end
-13:37:59.936 [0119]DocletEx.constructor normal end
-13:37:59.936 [0124]DocletEx.constructor start
-13:37:59.936 [0125]DocletEx.determineType start
-13:37:59.936 [0126]PropList.constructor start
-13:37:59.936 [0126]PropList.constructor normal end
-13:37:59.936 [0127]PropList.constructor start
-13:37:59.936 [0127]PropList.constructor normal end
-13:37:59.936 [0128]PropList.constructor start
-13:37:59.936 [0128]PropList.constructor normal end
-13:37:59.936 [0124]DocletEx.constructor normal end
-13:37:59.936 [0003]createSpec.getFile normal end
-13:37:59.937 [0129]createSpec.determineParent start
-13:37:59.937 [0129]createSpec.determineParent normal end
-13:37:59.937 [0130]createSpec.output start
-13:37:59.937 [0131]createSpec.markdown start
-13:37:59.937 [0132]PropList.makeTable start
-13:37:59.937 [0132]PropList.makeTable normal end
-13:37:59.937 [0133]PropList.makeTable start
-13:37:59.937 [0133]PropList.makeTable normal end
-13:37:59.937 [0131]createSpec.markdown normal end
-13:37:59.938 [0134]createSpec.markdown start
-13:37:59.938 [0135]PropList.makeTable start
-13:37:59.938 [0135]PropList.makeTable normal end
-13:37:59.938 [0136]PropList.makeTable start
-13:37:59.938 [0136]PropList.makeTable normal end
-13:37:59.938 [0134]createSpec.markdown normal end
-13:37:59.938 [0137]createSpec.markdown start
-13:37:59.938 [0138]PropList.makeTable start
-13:37:59.938 [0138]PropList.makeTable normal end
-13:37:59.938 [0139]PropList.makeTable start
-13:37:59.938 [0139]PropList.makeTable normal end
-13:37:59.938 [0137]createSpec.markdown normal end
+13:44:23.021 [0004]DocletEx.constructor start
+13:44:23.022 [0005]DocletEx.determineType start
+13:44:23.022 [0005]DocletEx.determineType normal end
+13:44:23.022 [0006]PropList.constructor start
+13:44:23.022 [0006]PropList.constructor normal end
+13:44:23.022 [0007]PropList.constructor start
+13:44:23.022 [0007]PropList.constructor normal end
+13:44:23.022 [0008]PropList.constructor start
+13:44:23.022 [0008]PropList.constructor normal end
+13:44:23.022 [0004]DocletEx.constructor normal end
+13:44:23.022 [0009]DocletEx.constructor start
+13:44:23.022 [0010]DocletEx.determineType start
+13:44:23.022 [0010]DocletEx.determineType normal end
+13:44:23.022 [0011]PropList.constructor start
+13:44:23.031 [0011]PropList.constructor normal end
+13:44:23.031 [0012]PropList.constructor start
+13:44:23.031 [0012]PropList.constructor normal end
+13:44:23.031 [0013]PropList.constructor start
+13:44:23.031 [0013]PropList.constructor normal end
+13:44:23.031 [0009]DocletEx.constructor normal end
+13:44:23.031 [0014]DocletEx.constructor start
+13:44:23.031 [0015]DocletEx.determineType start
+13:44:23.031 [0015]DocletEx.determineType normal end
+13:44:23.032 [0016]PropList.constructor start
+13:44:23.032 [0016]PropList.constructor normal end
+13:44:23.032 [0017]PropList.constructor start
+13:44:23.032 [0017]PropList.constructor normal end
+13:44:23.032 [0018]PropList.constructor start
+13:44:23.032 [0018]PropList.constructor normal end
+13:44:23.032 [0014]DocletEx.constructor normal end
+13:44:23.032 [0019]DocletEx.constructor start
+13:44:23.032 [0020]DocletEx.determineType start
+13:44:23.032 [0020]DocletEx.determineType normal end
+13:44:23.032 [0021]PropList.constructor start
+13:44:23.032 [0021]PropList.constructor normal end
+13:44:23.032 [0022]PropList.constructor start
+13:44:23.032 [0022]PropList.constructor normal end
+13:44:23.032 [0023]PropList.constructor start
+13:44:23.032 [0023]PropList.constructor normal end
+13:44:23.032 [0019]DocletEx.constructor normal end
+13:44:23.032 [0024]DocletEx.constructor start
+13:44:23.032 [0025]DocletEx.determineType start
+13:44:23.032 [0025]DocletEx.determineType normal end
+13:44:23.032 [0026]PropList.constructor start
+13:44:23.032 [0026]PropList.constructor normal end
+13:44:23.032 [0027]PropList.constructor start
+13:44:23.032 [0027]PropList.constructor normal end
+13:44:23.032 [0028]PropList.constructor start
+13:44:23.032 [0028]PropList.constructor normal end
+13:44:23.032 [0024]DocletEx.constructor normal end
+13:44:23.032 [0029]DocletEx.constructor start
+13:44:23.032 [0030]DocletEx.determineType start
+13:44:23.032 [0031]PropList.constructor start
+13:44:23.032 [0031]PropList.constructor normal end
+13:44:23.032 [0032]PropList.constructor start
+13:44:23.032 [0032]PropList.constructor normal end
+13:44:23.032 [0033]PropList.constructor start
+13:44:23.032 [0033]PropList.constructor normal end
+13:44:23.032 [0029]DocletEx.constructor normal end
+13:44:23.032 [0034]DocletEx.constructor start
+13:44:23.032 [0035]DocletEx.determineType start
+13:44:23.032 [0036]PropList.constructor start
+13:44:23.032 [0036]PropList.constructor normal end
+13:44:23.032 [0037]PropList.constructor start
+13:44:23.032 [0037]PropList.constructor normal end
+13:44:23.032 [0038]PropList.constructor start
+13:44:23.032 [0038]PropList.constructor normal end
+13:44:23.032 [0034]DocletEx.constructor normal end
+13:44:23.032 [0039]DocletEx.constructor start
+13:44:23.032 [0040]DocletEx.determineType start
+13:44:23.033 [0041]PropList.constructor start
+13:44:23.033 [0041]PropList.constructor normal end
+13:44:23.033 [0042]PropList.constructor start
+13:44:23.033 [0042]PropList.constructor normal end
+13:44:23.033 [0043]PropList.constructor start
+13:44:23.033 [0043]PropList.constructor normal end
+13:44:23.033 [0039]DocletEx.constructor normal end
+13:44:23.033 [0044]DocletEx.constructor start
+13:44:23.033 [0045]DocletEx.determineType start
+13:44:23.033 [0046]PropList.constructor start
+13:44:23.033 [0046]PropList.constructor normal end
+13:44:23.033 [0047]PropList.constructor start
+13:44:23.033 [0047]PropList.constructor normal end
+13:44:23.033 [0048]PropList.constructor start
+13:44:23.033 [0048]PropList.constructor normal end
+13:44:23.033 [0044]DocletEx.constructor normal end
+13:44:23.033 [0049]DocletEx.constructor start
+13:44:23.033 [0050]DocletEx.determineType start
+13:44:23.033 [0050]DocletEx.determineType normal end
+13:44:23.033 [0051]PropList.constructor start
+13:44:23.033 [0051]PropList.constructor normal end
+13:44:23.033 [0052]PropList.constructor start
+13:44:23.033 [0052]PropList.constructor normal end
+13:44:23.033 [0053]PropList.constructor start
+13:44:23.033 [0053]PropList.constructor normal end
+13:44:23.033 [0049]DocletEx.constructor normal end
+13:44:23.033 [0054]DocletEx.constructor start
+13:44:23.033 [0055]DocletEx.determineType start
+13:44:23.033 [0055]DocletEx.determineType normal end
+13:44:23.033 [0056]PropList.constructor start
+13:44:23.033 [0056]PropList.constructor normal end
+13:44:23.033 [0057]PropList.constructor start
+13:44:23.034 [0057]PropList.constructor normal end
+13:44:23.034 [0058]PropList.constructor start
+13:44:23.034 [0058]PropList.constructor normal end
+13:44:23.034 [0054]DocletEx.constructor normal end
+13:44:23.034 [0059]DocletEx.constructor start
+13:44:23.034 [0060]DocletEx.determineType start
+13:44:23.034 [0060]DocletEx.determineType normal end
+13:44:23.034 [0061]PropList.constructor start
+13:44:23.034 [0061]PropList.constructor normal end
+13:44:23.034 [0062]PropList.constructor start
+13:44:23.034 [0062]PropList.constructor normal end
+13:44:23.034 [0063]PropList.constructor start
+13:44:23.034 [0063]PropList.constructor normal end
+13:44:23.034 [0059]DocletEx.constructor normal end
+13:44:23.034 [0064]DocletEx.constructor start
+13:44:23.034 [0065]DocletEx.determineType start
+13:44:23.034 [0065]DocletEx.determineType normal end
+13:44:23.034 [0066]PropList.constructor start
+13:44:23.034 [0066]PropList.constructor normal end
+13:44:23.034 [0067]PropList.constructor start
+13:44:23.034 [0067]PropList.constructor normal end
+13:44:23.034 [0068]PropList.constructor start
+13:44:23.034 [0068]PropList.constructor normal end
+13:44:23.034 [0064]DocletEx.constructor normal end
+13:44:23.034 [0069]DocletEx.constructor start
+13:44:23.034 [0070]DocletEx.determineType start
+13:44:23.034 [0070]DocletEx.determineType normal end
+13:44:23.034 [0071]PropList.constructor start
+13:44:23.034 [0071]PropList.constructor normal end
+13:44:23.034 [0072]PropList.constructor start
+13:44:23.034 [0072]PropList.constructor normal end
+13:44:23.034 [0073]PropList.constructor start
+13:44:23.034 [0073]PropList.constructor normal end
+13:44:23.034 [0069]DocletEx.constructor normal end
+13:44:23.034 [0074]DocletEx.constructor start
+13:44:23.034 [0075]DocletEx.determineType start
+13:44:23.034 [0075]DocletEx.determineType normal end
+13:44:23.034 [0076]PropList.constructor start
+13:44:23.034 [0076]PropList.constructor normal end
+13:44:23.034 [0077]PropList.constructor start
+13:44:23.034 [0077]PropList.constructor normal end
+13:44:23.034 [0078]PropList.constructor start
+13:44:23.034 [0078]PropList.constructor normal end
+13:44:23.034 [0074]DocletEx.constructor normal end
+13:44:23.034 [0079]DocletEx.constructor start
+13:44:23.034 [0080]DocletEx.determineType start
+13:44:23.034 [0080]DocletEx.determineType normal end
+13:44:23.034 [0081]PropList.constructor start
+13:44:23.034 [0081]PropList.constructor normal end
+13:44:23.034 [0082]PropList.constructor start
+13:44:23.034 [0082]PropList.constructor normal end
+13:44:23.034 [0083]PropList.constructor start
+13:44:23.034 [0083]PropList.constructor normal end
+13:44:23.034 [0079]DocletEx.constructor normal end
+13:44:23.034 [0084]DocletEx.constructor start
+13:44:23.034 [0085]DocletEx.determineType start
+13:44:23.035 [0086]PropList.constructor start
+13:44:23.035 [0086]PropList.constructor normal end
+13:44:23.035 [0087]PropList.constructor start
+13:44:23.035 [0087]PropList.constructor normal end
+13:44:23.035 [0088]PropList.constructor start
+13:44:23.035 [0088]PropList.constructor normal end
+13:44:23.035 [0084]DocletEx.constructor normal end
+13:44:23.035 [0089]DocletEx.constructor start
+13:44:23.035 [0090]DocletEx.determineType start
+13:44:23.035 [0091]PropList.constructor start
+13:44:23.035 [0091]PropList.constructor normal end
+13:44:23.035 [0092]PropList.constructor start
+13:44:23.035 [0092]PropList.constructor normal end
+13:44:23.035 [0093]PropList.constructor start
+13:44:23.035 [0093]PropList.constructor normal end
+13:44:23.035 [0089]DocletEx.constructor normal end
+13:44:23.035 [0094]DocletEx.constructor start
+13:44:23.035 [0095]DocletEx.determineType start
+13:44:23.035 [0095]DocletEx.determineType normal end
+13:44:23.035 [0096]PropList.constructor start
+13:44:23.035 [0096]PropList.constructor normal end
+13:44:23.035 [0097]PropList.constructor start
+13:44:23.035 [0097]PropList.constructor normal end
+13:44:23.035 [0098]PropList.constructor start
+13:44:23.035 [0098]PropList.constructor normal end
+13:44:23.035 [0094]DocletEx.constructor normal end
+13:44:23.035 [0099]DocletEx.constructor start
+13:44:23.035 [0100]DocletEx.determineType start
+13:44:23.035 [0100]DocletEx.determineType normal end
+13:44:23.035 [0101]PropList.constructor start
+13:44:23.035 [0101]PropList.constructor normal end
+13:44:23.035 [0102]PropList.constructor start
+13:44:23.035 [0102]PropList.constructor normal end
+13:44:23.035 [0103]PropList.constructor start
+13:44:23.035 [0103]PropList.constructor normal end
+13:44:23.035 [0099]DocletEx.constructor normal end
+13:44:23.035 [0104]DocletEx.constructor start
+13:44:23.035 [0105]DocletEx.determineType start
+13:44:23.035 [0105]DocletEx.determineType normal end
+13:44:23.035 [0106]PropList.constructor start
+13:44:23.035 [0106]PropList.constructor normal end
+13:44:23.035 [0107]PropList.constructor start
+13:44:23.035 [0107]PropList.constructor normal end
+13:44:23.035 [0108]PropList.constructor start
+13:44:23.035 [0108]PropList.constructor normal end
+13:44:23.035 [0104]DocletEx.constructor normal end
+13:44:23.035 [0109]DocletEx.constructor start
+13:44:23.035 [0110]DocletEx.determineType start
+13:44:23.035 [0110]DocletEx.determineType normal end
+13:44:23.035 [0111]PropList.constructor start
+13:44:23.035 [0111]PropList.constructor normal end
+13:44:23.035 [0112]PropList.constructor start
+13:44:23.035 [0112]PropList.constructor normal end
+13:44:23.035 [0113]PropList.constructor start
+13:44:23.035 [0113]PropList.constructor normal end
+13:44:23.035 [0109]DocletEx.constructor normal end
+13:44:23.035 [0114]DocletEx.constructor start
+13:44:23.035 [0115]DocletEx.determineType start
+13:44:23.035 [0116]PropList.constructor start
+13:44:23.035 [0116]PropList.constructor normal end
+13:44:23.035 [0117]PropList.constructor start
+13:44:23.035 [0117]PropList.constructor normal end
+13:44:23.035 [0118]PropList.constructor start
+13:44:23.035 [0118]PropList.constructor normal end
+13:44:23.035 [0114]DocletEx.constructor normal end
+13:44:23.036 [0119]DocletEx.constructor start
+13:44:23.036 [0120]DocletEx.determineType start
+13:44:23.036 [0120]DocletEx.determineType normal end
+13:44:23.036 [0121]PropList.constructor start
+13:44:23.036 [0121]PropList.constructor normal end
+13:44:23.036 [0122]PropList.constructor start
+13:44:23.036 [0122]PropList.constructor normal end
+13:44:23.036 [0123]PropList.constructor start
+13:44:23.036 [0123]PropList.constructor normal end
+13:44:23.036 [0119]DocletEx.constructor normal end
+13:44:23.036 [0124]DocletEx.constructor start
+13:44:23.036 [0125]DocletEx.determineType start
+13:44:23.036 [0126]PropList.constructor start
+13:44:23.036 [0126]PropList.constructor normal end
+13:44:23.036 [0127]PropList.constructor start
+13:44:23.036 [0127]PropList.constructor normal end
+13:44:23.036 [0128]PropList.constructor start
+13:44:23.036 [0128]PropList.constructor normal end
+13:44:23.036 [0124]DocletEx.constructor normal end
+13:44:23.036 [0003]createSpec.getFile normal end
+13:44:23.036 [0129]createSpec.determineParent start
+13:44:23.036 [0129]createSpec.determineParent normal end
+13:44:23.036 [0130]createSpec.output start
+13:44:23.037 [0131]createSpec.markdown start
+13:44:23.037 [0132]PropList.makeTable start
+13:44:23.037 [0132]PropList.makeTable normal end
+13:44:23.037 [0133]PropList.makeTable start
+13:44:23.037 [0133]PropList.makeTable normal end
+13:44:23.037 [0131]createSpec.markdown normal end
+13:44:23.037 [0134]createSpec.markdown start
+13:44:23.037 [0135]PropList.makeTable start
+13:44:23.037 [0135]PropList.makeTable normal end
+13:44:23.037 [0136]PropList.makeTable start
+13:44:23.037 [0136]PropList.makeTable normal end
+13:44:23.037 [0134]createSpec.markdown normal end
+13:44:23.037 [0137]createSpec.markdown start
+13:44:23.037 [0138]PropList.makeTable start
+13:44:23.037 [0138]PropList.makeTable normal end
+13:44:23.037 [0139]PropList.makeTable start
+13:44:23.037 [0139]PropList.makeTable normal end
+13:44:23.037 [0137]createSpec.markdown normal end
 == [0130]createSpec.output step.3 {
   /:  {
     funclass:    [
@@ -298,5 +298,13 @@
     ], // Array
   }
 }
-13:37:59.938 [0130]createSpec.output normal end
-13:37:59.938 [0001]createSpec normal end
+13:44:23.038 [0140]PropList.makeTable start
+13:44:23.038 [0140]PropList.makeTable normal end
+13:44:23.038 [0141]PropList.makeTable start
+13:44:23.038 [0141]PropList.makeTable normal end
+13:44:23.038 [0142]PropList.makeTable start
+13:44:23.038 [0142]PropList.makeTable normal end
+13:44:23.038 [0143]PropList.makeTable start
+13:44:23.038 [0143]PropList.makeTable normal end
+13:44:23.038 [0130]createSpec.output normal end
+13:44:23.038 [0001]createSpec normal end

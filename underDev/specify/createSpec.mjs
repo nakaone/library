@@ -1008,6 +1008,12 @@ async function createSpec(opt={}) {
           v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
         });
         // データ型定義
+        v.md.push('','# データ型');
+        v.list[unique].typedef.forEach(id => {
+          v.r = doc.map[id].properties.makeTable();
+          if( v.r instanceof Error ) throw v.r;
+          v.md.push('',`## ${doc.map[id].name}`,'',v.r);
+        });
 
         // index.mdとして出力
         writeFileSync(`${doc.source.outDir}/${unique}/index.md`,v.md.join('\n'))
