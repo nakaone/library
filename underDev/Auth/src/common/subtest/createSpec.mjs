@@ -964,22 +964,7 @@ async function createSpec(opt={}) {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
-      dev.step(99.967,{source:doc.source,unique:doc.unique.sort()});
-      /*
-      doc.source.outDir:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tmp", // string
-
-      doc.unique = [
-        "client/", // string
-        "common/", // string
-        "common/subtest/", // string
-        "server/", // string
-      ]*/
-      doc.unique.sort().forEach(x => {
-        v.path = doc.source.outDir + '/' + x;
-        if( !existsSync(v.path) ) mkdirSync(v.path);
-      })
-
+      dev.step(99.967,doc.unique);
 
       /*
       v.proto = {

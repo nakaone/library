@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 node createSpec.mjs sample/test.js -o ./ > test.result.txt 2> test.error.txt
-#node createSpec.mjs ../Auth/src/**/*.(js|mjs) -o ../Auth/tmp > auth.result.txt 2> auth.error.txt
+node createSpec.mjs ../Auth/src/**/*.(js|mjs) -o ../Auth/tmp/ > auth.result.txt 2> auth.error.txt
 
 # sample
 jsdoc -X sample/test.js > sample/test.json
