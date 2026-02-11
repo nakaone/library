@@ -970,16 +970,48 @@ async function createSpec(opt={}) {
         if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
       })
 
-      dev.step(2);  // グローバル関数・クラスならファイル出力
+      v.list = {};
       for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
         v.d = doc.doclet[v.i];
-        v.r = markdown(v.d.id);
-        if( v.r instanceof Error ) throw v.r;
+        if( typeof v.list[v.d.unique] === 'undefined' )
+          v.list[v.d.unique] = {funclass:[],typedef:[]};
+
         if( ['function','class'].includes(v.d.docletType) ){
+          dev.step(2.1);  // グローバル関数・クラス
+          // リストに登録
+          if( !v.list[v.d.unique].funclass.includes(v.d.id) )
+            v.list[v.d.unique].funclass.push(v.d.id);
+          // MDファイル出力
+          v.r = markdown(v.d.id);
+          if( v.r instanceof Error ) throw v.r;
           writeFileSync(`${doc.source.outDir}/${v.d.unique}/${v.d.name}.md`,v.r);
+        } else if( ['typedef','interface'].includes(v.d.docletType) && v.d.parent === null ){
+          dev.step(2.2);  // データ型定義なら登録のみ
+          // 関数・クラス内部のデータ型定義も一覧に入れておく(複数箇所表示)
+          if( !v.list[v.d.unique].typedef.includes(v.d.id) )
+            v.list[v.d.unique].typedef.push(v.d.id);
         }
       }
 
+      dev.step(3,v.list);  // 固有パス毎にindex.md作成
+      doc.unique.forEach(unique => {
+        v.md = ['# グローバル関数・クラス一覧','',
+          '| path | name | label |','| :-- | :-- | :-- |'];
+        // グローバル関数・クラス一覧
+        v.list[unique].funclass.forEach(id => {
+          v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
+        });
+        // データ型定義一覧
+        v.md.push('','# データ型定義一覧','',
+          '| path | name | label |','| :-- | :-- | :-- |');
+        v.list[unique].typedef.forEach(id => {
+          v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
+        });
+        // データ型定義
+
+        // index.mdとして出力
+        writeFileSync(`${doc.source.outDir}/${unique}/index.md`,v.md.join('\n'))
+      });
 
       /*
       v.proto = {

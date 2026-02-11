@@ -1,3 +1,18 @@
+
+      const setNested = (obj, keys, value) => {
+        dev.step(99.974,{obj,keys,value});
+        let cur = obj;
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (typeof cur[keys[i]] !== 'object' || cur[keys[i]] === null) {
+            cur[keys[i]] = {};
+          }
+          cur = cur[keys[i]];
+        }
+        cur[keys[keys.length - 1]] = value;
+      }
+
+
+
 /** Article: Markdownの単一記事(タイトル＋本文)用データオブジェクト
  * - `<!--::記事のID::-->`で他記事も埋め込み可とする
  * - アンカーのidは識別子を小文字変換したものとする
