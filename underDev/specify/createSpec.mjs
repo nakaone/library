@@ -5,6 +5,124 @@ import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
+/** createSpec概要
+ * @name createSpec概要
+ * @desc
+ * 
+ * JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成する。
+ * 
+ * - クラス・グローバル関数毎に別ファイル化
+ * - typedef,interfaceはまとめて"index.md"としてフォルダ毎に作成
+ * - 出力フォルダは入力ファイルのフォルダと同じ構成(パスの共通部分を出力フォルダで置換)
+ *   ```
+ *   /Users/xxx/〜/library/yyy/src/common/z01.js <- class a01,function a02
+ *   /Users/xxx/〜/library/yyy/src/client/z02.js <- class a03
+ *   /Users/xxx/〜/library/yyy/src/server/z03.js <- class a04
+ * 
+ *   出力先フォルダが"../doc"の場合
+ *   ../doc/common/a01.md
+ *   ../doc/common/a02.md ※a01,a02は別ファイル
+ *   ../doc/common/index.md ※typedef,interface集
+ *   ../doc/client/a03.md
+ *   ../doc/client/index.md
+ *   ../doc/server/a04.md
+ *   ../doc/server/index.md
+ *   ```
+ * 
+ * # 使用方法
+ * 
+ * ```
+ * node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]
+ * ```
+ * 
+ * - 処理対象は'.js','.mjs','.gs','.txt'
+ * - ワイルドカード関係の注意
+ *   - クォートすると展開されない(src/*.jsはOKだが"src/*.js"は不展開)
+ *   - *.js # 任意文字列
+ *   - ?.js # 1文字
+ *   - [a-z].js # 文字クラス
+ *   - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
+ *   - 【不採用】src/**\/*.js~src/**\/*.test.js # 除外glob(左例はtestを除外したjs)
+ * 
+ * # JSDoc記述上の注意
+ * 
+ * - グローバル関数・クラス・データ型定義の名称は重複不可
+ *   ∵ リンクを張る場合、リンク先を特定できない
+ * - 以下はエラーとなる
+ *   - ＠class未定義で＠constructorやメソッドにJSDoc記述
+ *   - グローバル関数未定義で内部関数にJSDoc記述
+ * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
+ * - コンストラクタには「＠constructor」必須
+ * - 「＠history」を独自タグとして定義
+ * - 説明文(=Markdownとして出力する説明)
+ *   - 「＠name (説明文のタイトル)」＋「＠desc」で開始
+ *   - 「＠name」がない説明文は出力されない(廃棄)
+ *   - クラス・関数内部に記述する場合、「＠memberof」を指定
+ *   - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
+ *   - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
+ * - ＠typedefでfunctionの定義は不可
+ * - ＠interfaceではfunction型メンバの定義は可能だが、分離する
+ *   ```
+ *   ／**
+ *     * ＠interface User
+ *     * ＠property {string} name
+ *     * ＠property {number} age
+ *     * ＠property {boolean} isAdmin
+ *     *／
+ *   ／**
+ *     * ＠function ※ここには記述不可
+ *     * ＠name User#test ※ここには記述不可
+ *     * ＠desc オブジェクト内関数の説明
+ *     * ＠param {string} arg
+ *     * ＠returns {boolean|Error}
+ *     * ＠example オブジェクト内関数の使用例
+ *     *／
+ *   ```
+ *   なお変数がinterfaceで定義されたデータ型であることは以下のように示す
+ *   ```
+ *   ／** ＠type {User}*／
+ *   const user = {...}
+ *   ```
+ * 
+ * # 用語集
+ * 
+ * - Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
+ *   `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
+ * - シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
+ * 
+ * # 参考資料
+ * 
+ * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
+ * 
+ * @example
+ * node createSpec.mjs
+ *   ../Auth/src/**／*.(js|mjs) ../Auth/src/**／*.md \
+ *   -o ../Auth/tmp \
+ *   -x ../Auth/src/server/*
+ * 
+ * @history
+ * - rev.1.0.0 : 2026/01/31
+ *   specify.mjsを継承し、初版作成
+ */
+/** 開発工程・残課題
+ * @name 開発工程・残課題
+ * @desc
+ * 
+ * - useageの出力
+ * - DocletEx.idの重複確認
+ *   - 重複シンボルがあればエラーメッセージ？統合？
+ * - anchor, linkの設定
+ * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
+ * - [bug] 説明文が複数回出力される
+ * - ログの出力抑止
+ * - jsdoc動作定義ファイル/ダミーディレクトリの削除
+ * - undocumentedチェックを追加
+ * - シンボル・メソッドと一致する文字列にはリンクを自動生成
+ * - 和文の他、英文のテンプレートも追加
+ * - 文法チェック
+ *   - ＠class の後に余計な文字列があればエラー
+ */
+
 /** PropList: 属性一覧に表示する項目
  * @class
  * @prop {object[]} list - 項目一覧
@@ -424,122 +542,6 @@ class DocletEx extends Doclet {
   }
 }
 
-/** createSpec概要
- * @name createSpec概要
- * @desc
- * 
- * JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成する。
- * 
- * - クラス・グローバル関数毎に別ファイル化
- * - typedef,interfaceはまとめて"index.md"としてフォルダ毎に作成
- * - 出力フォルダは入力ファイルのフォルダと同じ構成(パスの共通部分を出力フォルダで置換)
- *   ```
- *   /Users/xxx/〜/library/yyy/src/common/z01.js <- class a01,function a02
- *   /Users/xxx/〜/library/yyy/src/client/z02.js <- class a03
- *   /Users/xxx/〜/library/yyy/src/server/z03.js <- class a04
- * 
- *   出力先フォルダが"../doc"の場合
- *   ../doc/common/a01.md
- *   ../doc/common/a02.md ※a01,a02は別ファイル
- *   ../doc/common/index.md ※typedef,interface集
- *   ../doc/client/a03.md
- *   ../doc/client/index.md
- *   ../doc/server/a04.md
- *   ../doc/server/index.md
- *   ```
- * 
- * # 使用方法
- * 
- * ```
- * node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]
- * ```
- * 
- * - 処理対象は'.js','.mjs','.gs','.txt'
- * - ワイルドカード関係の注意
- *   - クォートすると展開されない(src/*.jsはOKだが"src/*.js"は不展開)
- *   - *.js # 任意文字列
- *   - ?.js # 1文字
- *   - [a-z].js # 文字クラス
- *   - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
- *   - 【不採用】src/**\/*.js~src/**\/*.test.js # 除外glob(左例はtestを除外したjs)
- * 
- * # JSDoc記述上の注意
- * 
- * - グローバル関数・クラス・データ型定義の名称は重複不可
- *   ∵ リンクを張る場合、リンク先を特定できない
- * - 以下はエラーとなる
- *   - ＠class未定義で＠constructorやメソッドにJSDoc記述
- *   - グローバル関数未定義で内部関数にJSDoc記述
- * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
- * - コンストラクタには「＠constructor」必須
- * - 「＠history」を独自タグとして定義
- * - 説明文(=Markdownとして出力する説明)
- *   - 「＠name (説明文のタイトル)」＋「＠desc」で開始
- *   - 「＠name」がない説明文は出力されない(廃棄)
- *   - クラス・関数内部に記述する場合、「＠memberof」を指定
- *   - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
- *   - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
- * - ＠typedefでfunctionの定義は不可
- * - ＠interfaceではfunction型メンバの定義は可能だが、分離する
- *   ```
- *   ／**
- *     * ＠interface User
- *     * ＠property {string} name
- *     * ＠property {number} age
- *     * ＠property {boolean} isAdmin
- *     *／
- *   ／**
- *     * ＠function ※ここには記述不可
- *     * ＠name User#test ※ここには記述不可
- *     * ＠desc オブジェクト内関数の説明
- *     * ＠param {string} arg
- *     * ＠returns {boolean|Error}
- *     * ＠example オブジェクト内関数の使用例
- *     *／
- *   ```
- *   なお変数がinterfaceで定義されたデータ型であることは以下のように示す
- *   ```
- *   ／** ＠type {User}*／
- *   const user = {...}
- *   ```
- * 
- * # 用語集
- * 
- * - Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
- *   `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
- * - シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
- * 
- * # 参考資料
- * 
- * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
- * 
- * @example
- * node createSpec.mjs
- *   ../Auth/src/**／*.(js|mjs) ../Auth/src/**／*.md \
- *   -o ../Auth/tmp \
- *   -x ../Auth/src/server/*
- * 
- * @history
- * - rev.1.0.0 : 2026/01/31
- *   specify.mjsを継承し、初版作成
- */
-/** 開発課題
- * @name 開発課題
- * @desc
- * - undocumentedチェックを追加
- * - Objectからの一覧表作成機能(ex. properties -> Markdownの表)
- * - シンボル・メソッドと一致する文字列にはリンクを自動生成
- * - 和文の他、英文のテンプレートも追加
- * - シンボル内の説明文を当該シンボル内に記載
- *   現状、記載すべき箇所を特定する事が困難なため、全てグローバル領域になっている。
- *   案：＠descの後に記載箇所特定文字列を入れる(ex."authLog.constructor")
- *   案：rangeで内包関係を調べる
- *       (parant.meta.range[0]<=child.meta.range[0]
- *        && child.meta.range[1] <= parent.meta.range[1])
- * - 重複シンボルがあればエラーメッセージ
- * - 文法チェック
- *   - ＠class の後に余計な文字列があればエラー
- */
 console.log(JSON.stringify(createSpec(),null,2));
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成

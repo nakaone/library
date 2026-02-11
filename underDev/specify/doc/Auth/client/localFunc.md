@@ -1,0 +1,3 @@
+# 🧩 localFunc
+
+localFunc
