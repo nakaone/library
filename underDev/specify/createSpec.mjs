@@ -965,9 +965,9 @@ async function createSpec(opt={}) {
     try {
 
       dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
-      doc.unique.sort().forEach(x => {
+      doc.unique.forEach(x => {
         v.path = doc.source.outDir + '/' + x;
-        if( !existsSync(v.path) ) mkdirSync(v.path);
+        if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
       })
 
       dev.step(2);  // グローバル関数・クラスならファイル出力
