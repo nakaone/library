@@ -25,7 +25,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | parent | string |  | 親要素のDocletEx.id |  |
 | children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.id | # docletTypeの判定ロジック
 
-以下第一レベルがdocletTypeとする文字列
+以下���一レベルがdocletTypeとする文字列
 
 - typedef
   kind === 'typedef'

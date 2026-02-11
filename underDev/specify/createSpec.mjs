@@ -18,7 +18,6 @@ createSpec();
  * - anchor, linkの設定
  * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
  * - [bug] 説明文が複数回出力される
- * - jsdoc動作定義ファイル/ダミーディレクトリの削除
  * - undocumentedチェックを追加
  * - シンボル・メソッドと一致する文字列にはリンクを自動生成
  * - 和文の他、英文のテンプレートも追加
@@ -224,11 +223,11 @@ async function createSpec(opt={}) {
 
   } catch (e) { dev.error(e); return e; } finally {
     // jsdoc動作定義ファイルを削除
-    //if( existsSync(cf.jsdocJson) )
-      //unlinkSync(cf.jsdocJson);
+    if( existsSync(cf.jsdocJson) )
+      unlinkSync(cf.jsdocJson);
     // ダミーディレクトリを削除
-    //if( existsSync(cf.dummyDir) )
-      //rmSync(cf.dummyDir, { recursive: true, force: true });
+    if( existsSync(cf.dummyDir) )
+      rmSync(cf.dummyDir, { recursive: true, force: true });
   }
 
   /** determineParent: 対象要素が子要素であるとき親要素を特定
@@ -606,7 +605,7 @@ async function createSpec(opt={}) {
         }
       }
 
-      dev.step(3,v.list);  // 固有パス毎にindex.md作成
+      dev.step(3);  // 固有パス毎にindex.md作成
       doc.unique.forEach(unique => {
         v.md = ['# グローバル関数・クラス一覧','',
           '| path | name | label |','| :-- | :-- | :-- |'];
