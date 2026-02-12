@@ -10,11 +10,14 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - 引数無し起動時、エラーメッセージ出力(ToBe:メッセージ出力無し)
- * - [bug] createSpec.output step.3
- *   TypeError: Cannot read properties of undefined (reading 'makeTable')
  * - DocletEx.idの重複確認
  *   - 重複シンボルがあればエラーメッセージ？統合？
+ * - [bug] createSpec.output step.3
+ *   TypeError: Cannot read properties of undefined (reading 'makeTable')
+ *   - 「kind:"package"」がtypedef対象のループで呼ばれている
+ *   - docletType='typedef'||'interface'??? ⇒ OK:'unknown'
+ *   - typedefに間違って登録されている？ ⇒ false
+ *   - doc.map[id]が間違ったdocletを指している？ ⇒ DocletEx.idの重複確認を先行させる
  * - anchor, linkの設定
  * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
  * - [bug] 説明文が複数回出力される
@@ -24,6 +27,9 @@ createSpec();
  * - 文法チェック
  *   - ＠class の後に余計な文字列があればエラー
  * - history対応
+ * - createSpecはシェルの起動時パラメータを引数とする関数に変更
+ * - class定義をcreateSpec内部に移動
+ *   但しインスタンス作成前の宣言が必要
  */
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
@@ -212,6 +218,8 @@ async function createSpec(opt={}) {
       pv.r = determineParent();
       if( pv.r instanceof Error) throw pv.r;
 
+      dev.step(99.221,JSON.stringify(extractDuplicates(doc.doclet,'id'))); 
+
       dev.step(6);  // Markdownファイルを作成、出力
       pv.r = output();
       if( pv.r instanceof Error) throw pv.r;
@@ -229,6 +237,29 @@ async function createSpec(opt={}) {
     if( existsSync(cf.dummyDir) )
       rmSync(cf.dummyDir, { recursive: true, force: true });
   }
+
+  /**
+   * 指定キーで重複している要素のみを抽出する
+   * @param {Object[]} arr
+   * @param {string} prop  重複判定するプロパティ名
+   * @returns {Object}  { 値: [要素配列] }
+   */
+  function extractDuplicates(arr, prop) {
+    const map = {};
+
+    for (const obj of arr) {
+      const val = obj[prop];
+      if (!map[val]) map[val] = [];
+      map[val].push(obj);
+    }
+
+    // 重複しているものだけ残す
+    return Object.fromEntries(
+      Object.entries(map).filter(([_, list]) => list.length > 1)
+    );
+  }
+
+
 
   /** determineParent: 対象要素が子要素であるとき親要素を特定
    * メソッド⇒クラス、内部関数⇒グローバル関数、等
