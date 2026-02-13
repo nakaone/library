@@ -207,10 +207,12 @@ async function createSpec(opt={}){
      * @param {string} unique 
      */
     constructor(doclet,unique='/'){
-      //super(doclet);
       const v = {whois:`DocletEx.constructor`, arg:{doclet,unique}, rv:null};
       const dev = new devTools(v,{mode:'pipe'});
       try {
+
+        dev.step(1);  // オリジナルのメンバをコピー
+        Object.keys(doclet).forEach(x => this[x] = doclet[x]);
 
         dev.step(1);  // id
         this.id =unique + doclet.longname;
@@ -330,11 +332,17 @@ async function createSpec(opt={}){
   */
   /** DocletTree: 処理対象ソース・Docletの全体構造を管理
   * @class DocletTree
-  * @prop {DocletTreeSource} source - 処理対象となるソース
-  * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
+  * @prop {DocletTreeSource} source - 処理対象となるソースファイル
+  * @prop {DocletEx[]} doclet - `jsdoc -X`で返されるJSDocの配列
   * @prop {Object} [opt={}] - オプション設定値
   */
   class DocletTree {
+    /**
+     * @constructor
+     * @param {DocletTreeSource} arg - 入力ファイル(JSソース)情報
+     * @param {*} opt 
+     * @returns {DocletTree}
+     */
     constructor(arg,opt={}){
       const v = {whois:`DocletTree.constructor`, arg:{arg,opt}, rv:null};
       const dev = new devTools(v);
@@ -354,11 +362,11 @@ async function createSpec(opt={}){
     }
 
     /** execJSDoc: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
+     * @memberof DocletTree
      * @param {string} fn - 対象ファイル名
      * @returns {Array.<DocletEx|string>} JSON化できない(=エラー)の場合はテキスト
      */
     async execJSDoc(fn) {
-      console.log(`l.59 ${fn}`);
 
       /** step.1 : jsdoc動作環境整備
        * @name jsdoc動作環境整備
@@ -376,7 +384,7 @@ async function createSpec(opt={}){
        *   - 空のダミーディレクトリを作成、終了時に廃棄
        */
 
-      dev.step(1.1,fn);  // jsdoc設定ファイルの作成
+      dev.step(1.1);  // jsdoc設定ファイルの作成
       if( !existsSync(cf.jsdocJson) ){
         writeFileSync(cf.jsdocJson,JSON.stringify({source:{
           include:[cf.dummyDir],
@@ -435,6 +443,11 @@ async function createSpec(opt={}){
       });
     }
 
+    /** initialize: DocletTreeインスタンス作成
+     * @memberof DocletTree
+     * @param {DocletTreeSource} arg - 入力ファイル(JSソース)情報
+     * @returns {DocletTree|Error}
+     */
     static async initialize(arg,opt={}){
       const v = {whois:`execJSDoc.initialize`, arg:{arg,opt}, rv:null};
       const dev = new devTools(v);
@@ -443,7 +456,7 @@ async function createSpec(opt={}){
         dev.step(1);  // DocletTreeの原型作成
         v.rv = new DocletTree(arg,opt);
 
-        dev.step(2,v.rv); // ファイル単位にjsdoc実行
+        dev.step(2); // ファイル単位にjsdoc実行
         for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
           dev.step(2.1);
           v.r = await v.rv.execJSDoc(v.rv.source.files[v.i].full);
@@ -485,7 +498,6 @@ async function createSpec(opt={}){
     pv.rv = listSource(pv.argv)
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
-    dev.step(99.32,doc);
 
     dev.end(pv.rv);
     return pv.rv;
