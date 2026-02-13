@@ -16,6 +16,115 @@ async function createSpec(opt={}){
   };
   const dev = new devTools(pv,{mode:'dev'});
 
+  /** PropList: 属性一覧に表示する項目
+   * @class
+   * @prop {object[]} list - 項目一覧
+   * @prop {string}   list.name - 項目名
+   * @prop {string}   list.type - データ型。複数なら' | 'で区切って並記
+   * @prop {string}   list.value - 要否/既定値。「必須」「任意」または既定値
+   * @prop {string}   list.desc - 1行の簡潔な項目説明
+   * @prop {string}   list.note - 備考
+   * @prop {Object}   opt - オプション。内容はconstructorのparam参照
+   */
+  class PropList {
+    /** 属性一覧表示用のオブジェクトを作成
+     * @constructor
+     * @param {DocletColDef} doclet - Docletの項目定義オブジェクト
+     * @param {Object} [opt={}] - オプション
+     * @param {string} [opt.lang=ロケール] - ラベルに使用する言語(ex.'ja-JP')
+     * @param {Object} [opt.label] - 項目のメンバ名->Markdown作成時のラベル文字列への変換マップ
+     *   既定値に統合するので、変更・追加項目のみ指定すれば可。
+     *   例：valueを「要否/既定値」から「値」に変更 ⇒ {value:'値'}
+     *   　　独自項目'foo'を追加 ⇒ {foo:'ダミー'}
+     * @param {string} [opt.order=['name','type','value','desc','note']] - 項目の並び順
+     *   記載されていない項目はMarkdownで表を作成する際、非表示になる。
+     *   既定値を置換するので、変更する場合は全項目を指定する。
+     *   例：value,noteは表示不要、独自項目fooを追加 ⇒ ['name','type','desc','foo']
+     * @param {Object} [opt.value] - 項目の値->Markdown作成時の表示への変換マップ
+     * @returns {PropList|{}|Error} 処理対象属性が無い場合は{}
+     */
+    constructor(doclet,opt={}){
+      const v = {whois:`PropList.constructor`, arg:{doclet,opt}, rv:{}};
+      const dev = new devTools(v,{mode:'pipe'});
+      try {
+
+        dev.step(1.1);  // 項目チェック
+        if( typeof doclet === 'undefined'       // docletに無い
+          || doclet.length === 0                // 要素が無い
+        ){
+          dev.end();
+          return v.rv;  // 空要素(!v.rv instance of PropList)
+        } else if( !Array.isArray(doclet) )     // 対象項目が配列では無い
+          throw new Error(`not an array.`);
+        
+        dev.step(1.2);  // 初期値設定
+        this.list = [];
+        this.opt = {
+          lang: opt.lang ?? Intl.DateTimeFormat().resolvedOptions().locale,
+          label: opt.label ?? {},
+          order: opt.order ?? ['name','type','value','desc','note'],
+          value: opt.value ?? {},
+        };
+        this.opt.label = Object.assign((this.opt.lang === 'ja-JP'
+          ? {name:'項目名',type:'データ型',value:'要否/既定値',desc:'説明',note:'備考'}
+          : {name:'name',type:'type',value:'value',desc:'desc',note:'note'}
+        ),this.opt.label);
+        this.opt.value = Object.assign((this.opt.lang === 'ja-JP'
+          ? {undef:'未定義',optional:'任意',required:'必須'}
+          : {undef:'undefined',optional:'optional',required:'required'}
+        ),this.opt.value);
+
+        dev.step(2);  // this.listの作成
+        doclet.forEach(col => {
+          v.desc = (col.description ?? '').split('\n');
+          v.o = {
+            name: col.name,
+            type: col.type.names
+              .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
+              .join(' \\| '),
+            value: typeof col.defaultvalue !== 'undefined' ? col.defaultvalue
+              : (col.optional === true ? this.opt.value.optional : this.opt.value.required),
+            desc: v.desc[0],
+            note: v.desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
+          };
+          this.list.push(v.o);
+        });
+
+        dev.end(); // 終了処理
+
+      } catch (e) { return dev.error(e); }
+
+    }
+
+    /** makeTable: Markdownのテーブル作成
+     * @param {number} [indent=0] - テーブルの左余白桁数
+     * @returns {string|Error}
+     */
+    makeTable(indent=0){
+      const v = {whois:`${this.constructor.name}.makeTable`, arg:{}, rv:null};
+      const dev = new devTools(v,{mode:'pipe'});
+      try {
+
+        dev.step(1);  // ヘッダ部
+        v.lines = [[],[]];
+        this.opt.order.forEach(x => {
+          v.lines[0].push(this.opt.label[x]);
+          v.lines[1].push(':--');
+        });
+
+        dev.step(2);  // データ部
+        this.list.forEach(l => v.lines.push(this.opt.order.map(x => l[x])));
+
+        dev.step(3);  // テキストに変換
+        v.rv = v.lines.map(l => `${' '.repeat(indent)}| ${l.join(' | ')} |`).join('\n');
+
+        dev.end();
+        return v.rv;
+      
+      } catch (e) { return dev.error(e); }
+    }
+  }
+
   /** DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
    * @typedef {Object} DocletColDef
    * @prop {Object}   type - データ型情報オブジェクト
@@ -464,57 +573,93 @@ async function createSpec(opt={}){
           dev.step(2.2);
           v.rv.source.files[v.i].jsdoc = v.r;
         }
-        
+
+        dev.step(3);  // DocletExを生成
+        for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
+          v.jsdoc = v.rv.source.files[v.i].jsdoc;
+          for( v.j=0 ; v.j<v.jsdoc.length ; v.j++ ){
+            v.r = new DocletEx(v.jsdoc[v.j]);
+            if( v.r instanceof Error ) throw v.r;
+            v.rv.doclet.push(v.r);
+          }
+        }
+
         dev.end(); // 終了処理
         return v.rv;
       } catch (e) { return dev.error(e); }
     }
 
-    /** dump: 指定パス群から存在するメンバのみ抽出したオブジェクトを生成
+    /** dump: 【開発用】指定条件のDocletを抽出、指定メンバのみ抽出したオブジェクトを生成
      * @param {string[]} paths - '.'区切りで階層化された、抽出対象となるメンバ
+     *   
+     *   ex. 'longname','meta.range' ⇒ {longname:'xxx',meta:{range:[1,2]}}
      * @param {Function} filter - 抽出対象となるDocletならtrue
      * @returns {Object[]|Error}
+     * 
+     * @example
+     * doc.dump(['meta.range','longname'],x=>x.kind==='class')
+		 * ⇒ [
+		 *   {
+		 *     meta:    {
+		 *       range:      [
+		 *         1879, // number
+		 *         2606, // number
+		 *       ], // Array
+		 *     }
+		 *     longname:"class01", // string
+		 *   }
+		 *   {
+		 *     meta:    {
+		 *       range:      [
+		 *         2180, // number
+		 *         2398, // number
+		 *       ], // Array
+		 *     }
+		 *     longname:"class01", // string
+		 *   }
+		 * ], // Array
      */
     dump(paths=[],filter=()=>true){
-      const v = {whois:`${this.constructor.name}.constructor`, arg:{paths,filter}, rv:[]};
+      const v = {whois:`${this.constructor.name}.dump`, arg:{paths,filter}, rv:[]};
       const dev = new devTools(v);
       try {
 
-        for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
+        const pickPaths = (obj, paths) => {
+          const result = {};
 
-          dev.step(1,{paths,filter});  // 対象外のDocletは飛ばす
-          if( !filter(this.doclet[v.i]) ) continue;
+          for (const path of paths) {
+            const keys = path.split('.');
+            let src = obj;
+            let dst = result;
+            let valid = true;
 
-          v.dst = {};
-          for( v.j=0 ; v.j<paths.length ; v.j++ ){
-            v.keys = paths[v.j].split('.');
-            v.source = this.doclet[v.i];
-            v.exists = true;
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
 
-            // 存在確認
-            for( v.k=0 ; v.k<v.keys.length ; v.k++ ){
-              if( v.source !== null && typeof v.source === 'object' && v.keys[v.k] in v.source ){
-                v.source = v.source[v.keys[v.k]];
-              } else {
-                v.exists = false;
+              if (!(key in src)) {
+                valid = false;
                 break;
               }
-            }
-            if( v.exists === false ) continue;
 
-            // v.rvへdeepセット
-            for( v.k=0 ; v.k<v.keys.length ; v.k++ ){
-              v.key = v.keys[v.k];
-              if( v.k === v.keys.length - 1 ){
-                v.dst[v.key] = v.source;
+              if (i === keys.length - 1) {
+                // 最後のキーなら値をコピー
+                dst[key] = src[key];
               } else {
-                if( !(v.key in v.dst) ) v.dst[v.key] = {};
-                v.dst = v.dst[v.key];
+                // 中間ノードを作成または再利用
+                if (!(key in dst)) {
+                  dst[key] = {};
+                }
+                src = src[key];
+                dst = dst[key];
               }
             }
           }
-          v.rv.push(v.dst);
+
+          return result;
         }
+
+        dev.step(1);  // 指定条件に合致するDocletを抽出
+        this.doclet.filter(filter).forEach(x => v.rv.push(pickPaths(x,paths)));
 
         dev.end(); // 終了処理
         return v.rv;
@@ -530,7 +675,6 @@ async function createSpec(opt={}){
         return v.rv;
       } catch (e) { return dev.error(e); }
     }
-
   }
 
   /** listSource: 事前準備、対象ファイルリスト作成
@@ -632,7 +776,7 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
 
-    dev.end(doc.dump(['longname']));
+    dev.end(doc.dump(['meta.range','longname'],x=>x.kind==='class'));
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; }
