@@ -470,6 +470,57 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
+    /** dump: 指定パス群から存在するメンバのみ抽出したオブジェクトを生成
+     * @param {string[]} paths - '.'区切りで階層化された、抽出対象となるメンバ
+     * @param {Function} filter - 抽出対象となるDocletならtrue
+     * @returns {Object[]|Error}
+     */
+    dump(paths=[],filter=()=>true){
+      const v = {whois:`${this.constructor.name}.constructor`, arg:{paths,filter}, rv:[]};
+      const dev = new devTools(v);
+      try {
+
+        for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
+
+          dev.step(1,{paths,filter});  // 対象外のDocletは飛ばす
+          if( !filter(this.doclet[v.i]) ) continue;
+
+          v.dst = {};
+          for( v.j=0 ; v.j<paths.length ; v.j++ ){
+            v.keys = paths[v.j].split('.');
+            v.source = this.doclet[v.i];
+            v.exists = true;
+
+            // 存在確認
+            for( v.k=0 ; v.k<v.keys.length ; v.k++ ){
+              if( v.source !== null && typeof v.source === 'object' && v.keys[v.k] in v.source ){
+                v.source = v.source[v.keys[v.k]];
+              } else {
+                v.exists = false;
+                break;
+              }
+            }
+            if( v.exists === false ) continue;
+
+            // v.rvへdeepセット
+            for( v.k=0 ; v.k<v.keys.length ; v.k++ ){
+              v.key = v.keys[v.k];
+              if( v.k === v.keys.length - 1 ){
+                v.dst[v.key] = v.source;
+              } else {
+                if( !(v.key in v.dst) ) v.dst[v.key] = {};
+                v.dst = v.dst[v.key];
+              }
+            }
+          }
+          v.rv.push(v.dst);
+        }
+
+        dev.end(); // 終了処理
+        return v.rv;
+      } catch (e) { return dev.error(e); }
+    }
+
     proto(){
       const v = {whois:`${this.constructor.name}.constructor`, arg:{arg,opt}, rv:null};
       const dev = new devTools(v);
@@ -581,7 +632,7 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
 
-    dev.end(pv.rv);
+    dev.end(doc.dump(['longname']));
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; }
