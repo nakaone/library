@@ -183,7 +183,7 @@ async function createSpec(opt={}) {
     unique: [],   // {string[]} 固有パス一覧
   };
   const dev = new devTools(pv,{mode:'pipe'});
-  try {
+  try { // createSpec主処理
 
     dev.step(1);  // 最初の2つは全体とコマンド名、不要なので削除
     pv.argv = process.argv.slice(2);
@@ -208,6 +208,7 @@ async function createSpec(opt={}) {
 
         dev.step(4.2);  // Doclet型の配列を共通メンバdocに格納
         pv.r.forEach(x => {
+          // いまここ：同一Docletがあれば統合した上で登録に修正
           doc.doclet.push(x);
           doc.map[x.id] = x;
           if( !doc.unique.includes(x.unique) ) doc.unique.push(x.unique);
@@ -218,11 +219,13 @@ async function createSpec(opt={}) {
       pv.r = determineParent();
       if( pv.r instanceof Error) throw pv.r;
 
-      dev.step(99.221,JSON.stringify(extractDuplicates(doc.doclet,'id'))); 
+      dev.step(99.221); // docのダンプをJSON形式で出力
+      if( doc.source.research )
+        writeFileSync(doc.source.research,JSON.stringify(doc));
 
       dev.step(6);  // Markdownファイルを作成、出力
-      pv.r = output();
-      if( pv.r instanceof Error) throw pv.r;
+      //pv.r = output();
+      //if( pv.r instanceof Error) throw pv.r;
 
     }
 
@@ -237,29 +240,6 @@ async function createSpec(opt={}) {
     if( existsSync(cf.dummyDir) )
       rmSync(cf.dummyDir, { recursive: true, force: true });
   }
-
-  /**
-   * 指定キーで重複している要素のみを抽出する
-   * @param {Object[]} arr
-   * @param {string} prop  重複判定するプロパティ名
-   * @returns {Object}  { 値: [要素配列] }
-   */
-  function extractDuplicates(arr, prop) {
-    const map = {};
-
-    for (const obj of arr) {
-      const val = obj[prop];
-      if (!map[val]) map[val] = [];
-      map[val].push(obj);
-    }
-
-    // 重複しているものだけ残す
-    return Object.fromEntries(
-      Object.entries(map).filter(([_, list]) => list.length > 1)
-    );
-  }
-
-
 
   /** determineParent: 対象要素が子要素であるとき親要素を特定
    * メソッド⇒クラス、内部関数⇒グローバル関数、等
@@ -309,7 +289,7 @@ async function createSpec(opt={}) {
 
   /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
    * @param {string} fn - 対象ファイル名
-   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
+   * @returns {Array.<DocletEx|string>} JSON化できない(=エラー)の場合はテキスト
    */
   async function getFile(fn) {
 
@@ -428,6 +408,7 @@ async function createSpec(opt={}) {
        * ②3番目以降'-o'までは入力ファイル
        * ③'-o'の次は出力フォルダ名
        * ④'-x'の次からは除外ファイル
+       * ⑤'-r'の次は調査ファイル
        */
 
       dev.step(1);  // 結果を格納する領域を準備
@@ -442,11 +423,14 @@ async function createSpec(opt={}) {
             v.mode = 'o'; break;
           case '-x':
             v.mode = 'x'; break;
+          case '-r':
+            v.mode = 'r'; break;
           default:
             switch( v.mode ){
               case 'i': v.iList.push(v.x); break;
               case 'o': v.rv.outDir = v.x; break;
               case 'x': v.xList.push(v.x); break;
+              case 'r': v.rv.research = v.x; break;
             }
         }
       }
