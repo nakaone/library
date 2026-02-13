@@ -11,13 +11,14 @@ mkdir $tmp
 # 1. sample/test.js
 # 開発用に中間ファイル出力
 jsdoc -X sample/test.js > $tmp/test.json
-node createSpec.mjs sample/test.js -o $doc/test > $tmp/test.result.txt 2> $tmp/test.error.txt
+node createSpec.mjs sample/test.js -o $doc/test \
+  > $tmp/test.result.txt 2> $tmp/test.error.txt
 
 # 2. createSpec本体
-cp createSpec.mjs $tmp/createSpec.js
-jsdoc -X $tmp/createSpec.js > $tmp/createSpec.json
-rm $tmp/createSpec.js
-node createSpec.mjs createSpec.mjs -o $doc/createSpec > $tmp/createSpec.result.txt 2> $tmp/createSpec.error.txt
+#cp createSpec.mjs $tmp/createSpec.js
+#jsdoc -X $tmp/createSpec.js > $tmp/createSpec.json
+#rm $tmp/createSpec.js
+#node createSpec.mjs createSpec.mjs -o $doc/createSpec > $tmp/createSpec.result.txt 2> $tmp/createSpec.error.txt
 
 # 3. 引数無しでの起動時
 #msg="\n=== no argument"; echo $msg > $tmp/noarg.result.txt; echo $msg > $tmp/noarg.error.txt
