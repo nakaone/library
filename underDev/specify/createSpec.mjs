@@ -207,7 +207,7 @@ async function createSpec(opt={}){
      * @param {string} unique 
      */
     constructor(doclet,unique='/'){
-      super(doclet);
+      //super(doclet);
       const v = {whois:`DocletEx.constructor`, arg:{doclet,unique}, rv:null};
       const dev = new devTools(v,{mode:'pipe'});
       try {
