@@ -482,28 +482,6 @@ async function createSpec(opt={}){
 
   }
 
-  try { // createSpec主処理
-
-    dev.step(1.1);  // 最初の2つは全体とコマンド名、不要なので削除
-    pv.argv = process.argv.slice(2);
-
-    dev.step(1.2);  // 起動時パラメータが無指定の場合、useageを表示して終了
-    if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
-      //console.log(cf.useage);
-      dev.end(); // 終了処理
-      return v.rv;
-    }
-
-    dev.step(2);  // 対象ファイルの情報を取得
-    pv.rv = listSource(pv.argv)
-    if( pv.rv instanceof Error ) throw pv.rv;
-    const doc = await DocletTree.initialize(pv.rv);
-
-    dev.end(pv.rv);
-    return pv.rv;
-
-  } catch (e) { dev.error(e); return e; }
-
   /** listSource: 事前準備、対象ファイルリスト作成
    * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
    * @param {void}
@@ -585,5 +563,27 @@ async function createSpec(opt={}){
 
     } catch (e) { return dev.error(e); }
   }
+
+  try { // createSpec主処理
+
+    dev.step(1.1);  // 最初の2つは全体とコマンド名、不要なので削除
+    pv.argv = process.argv.slice(2);
+
+    dev.step(1.2);  // 起動時パラメータが無指定の場合、useageを表示して終了
+    if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
+      //console.log(cf.useage);
+      dev.end(); // 終了処理
+      return v.rv;
+    }
+
+    dev.step(2);  // 対象ファイルの情報を取得
+    pv.rv = listSource(pv.argv)
+    if( pv.rv instanceof Error ) throw pv.rv;
+    const doc = await DocletTree.initialize(pv.rv);
+
+    dev.end(pv.rv);
+    return pv.rv;
+
+  } catch (e) { dev.error(e); return e; }
 }
 
