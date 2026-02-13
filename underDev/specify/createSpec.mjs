@@ -776,7 +776,12 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
 
-    dev.end(doc.dump(['meta.range','longname'],x=>x.kind==='class'));
+    dev.end(doc.dump());
+    // meta.range未定義
+    // ['comment'],x=>typeof x.meta?.range === 'undefined'
+    // ⇒ @name, @typedef, @interface, @function(@name付き)
+    // id作成関係メンバ
+    // ['unique','meta.path','meta.filename','meta.range','meta.lineno','meta.columnno','kind','longname'],x=>x.kind==='class'
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; }
