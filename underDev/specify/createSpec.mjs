@@ -12,15 +12,13 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
+ * - createSpec.20260212.mjsからの移行
+ *   - determineParent
+ *   - markdown
+ *   - output
+ * 
  * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
- * - DocletEx.idの重複確認
- *   - 重複シンボルがあればエラーメッセージ？統合？
- * - [bug] createSpec.output step.3
- *   TypeError: Cannot read properties of undefined (reading 'makeTable')
- *   - 「kind:"package"」がtypedef対象のループで呼ばれている
- *   - docletType='typedef'||'interface'??? ⇒ OK:'unknown'
- *   - typedefに間違って登録されている？ ⇒ false
- *   - doc.map[id]が間違ったdocletを指している？ ⇒ DocletEx.idの重複確認を先行させる
+ * - description内の'#'について自動的にレベル設定
  * - anchor, linkの設定
  * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
  * - [bug] 説明文が複数回出力される
@@ -43,6 +41,101 @@ async function createSpec(opt={}){
     jsdocJson: opt.jsdocJson ?? `jsdoc.json`,  // jsdocコマンド設定ファイル名
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
+    useage: `
+      createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
+      
+      useage: \`node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]\`
+      
+      - 入力側のフォルダに合わせて出力フォルダを作成
+      - 一覧＋データ型定義のindex.md＋クラス・グローバル関数毎のMarkdownを作成
+      - 詳細は後掲「入出力イメージ」の項を参照
+      
+      # 使用上の注意
+      
+      - 処理対象は'.js','.mjs','.gs','.txt'
+      - ワイルドカード関係の注意
+        - クォートすると展開されない(src/*.jsはOKだが"src/*.js"は不展開)
+        - *.js # 任意文字列
+        - ?.js # 1文字
+        - [a-z].js # 文字クラス
+        - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
+      - 動作時devTools(3.0.0~)が必要
+      
+      # JSDoc記述上の注意
+      
+      - グローバル関数・クラス・データ型定義の名称は重複不可
+        ∵ リンクを張る場合、リンク先を特定できない
+      - 以下はエラーとなる
+        - ＠class未定義で＠constructorやメソッドにJSDoc記述
+        - グローバル関数未定義で内部関数にJSDoc記述
+      - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
+      - コンストラクタには「＠constructor」必須
+      - 「＠history」を独自タグとして定義
+      - 説明文(=Markdownとして出力する説明)
+        - 「＠name (説明文のタイトル)」＋「＠desc」で開始
+        - 「＠name」がない説明文は出力されない(廃棄)
+        - クラス・関数内部に記述する場合、「＠memberof」を指定
+        - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
+        - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
+      - ＠typedefでfunctionの定義は不可
+      - ＠interfaceではfunction型メンバの定義は可能だが、分離する
+        \`\`\`
+        ／**
+          * ＠interface User
+          * ＠property {string} name
+          * ＠property {number} age
+          * ＠property {boolean} isAdmin
+          *／
+        ／**
+          * ＠function ※ここには記述不可
+          * ＠name User#test ※ここには記述不可
+          * ＠desc オブジェクト内関数の説明
+          * ＠param {string} arg
+          * ＠returns {boolean|Error}
+          * ＠example オブジェクト内関数の使用例
+          *／
+        \`\`\`
+        なお変数がinterfaceで定義されたデータ型であることは以下のように示す
+        \`\`\`
+        ／** ＠type {User}*／
+        const user = {...}
+        \`\`\`
+      
+      # 入出力イメージ
+      
+      \`\`\`入力側サンプル
+      ├── client
+      │   ├── authClient.mjs
+      │   └── cryptoClient.mjs
+      ├── common
+      │   ├── authConfig.mjs
+      │   └── subtest
+      │       └── createSpec.mjs
+      └── server
+          ├── authServer.mjs
+          ├── cryptoServer.mjs
+          └── Member.mjs
+      \`\`\`
+      
+      \`\`\` 出力側サンプル
+      ├── client
+      │   ├── index.md  <- グローバル関数・クラス一覧＋データ型定義
+      │   ├── authClient.md
+      │   ├── clearAuthEnvironment.md <- authClient.mjs内で宣言されたグローバル関数
+      │   └── cryptoClient.md
+      ├── common
+      │   ├── index.md
+      │   ├── authConfig.md
+      │   └── subtest
+      │       ├── createSpec.md <- クラス毎に別ファイル化
+      │       ├── DocletEx.md
+      │       └── PropList.md
+      └── server
+          ├── authServer.md
+          ├── cryptoServer.md
+          └── Member.md
+      \`\`\`
+    `.replaceAll(/\n      /g,'\n'),
   };
   const dev = new devTools(pv,{mode:'dev',footer:true});
 
@@ -532,6 +625,54 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
+    /** determineParent: 対象要素が子要素であるとき親要素を特定
+     * メソッド⇒クラス、内部関数⇒グローバル関数、等
+     * 1. child.memberof === parent.longname
+     * 2. child.rangeが包含されている直近の要素
+     */
+    determineParent(){
+      const v = {whois:`${this.constructor.name}.determineParent`, arg:{}, rv:null};
+      const dev = new devTools(v,{mode:'dev'});
+      try {
+
+        /*
+        for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
+          v.d = this.doclet[v.i];
+          dev.step(1);  // child.memberof === parent.longname
+          v.pId = typeof v.d.memberof === 'string' ? v.d.unique + v.d.memberof : null;
+          if( v.pId && typeof doc.map[v.pId] !== 'undefined' ){
+            dev.step(2);  // memberofがidと一致する場合
+            v.d.parent = doc.map[v.pId].id;
+            doc.map[v.pId].children.push(v.d.id);
+          } else if( v.d.meta?.range ) {
+            dev.step(3);  // 包摂する直近の要素を親とする
+            v.minSize = Infinity;
+            for( v.t of this.doclet ){
+              dev.step(4);  // 比較元=比較先またはrangeが無ければスキップ
+              if( v.d === v.t || !v.t.meta?.range ) continue;
+              dev.step(5);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
+              if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
+                dev.step(6);  // 比較先の終了位置−開始位置が最小のものが直近
+                v.size = v.t.meta.range[1] - v.t.meta.range[0];
+                if( v.size < v.minSize ){
+                  v.minSize = v.size;
+                  v.d.parent = v.t.id; // 比較先を比較元の親要素として設定
+                }
+              }
+            }
+            dev.step(7);  // 親要素のchildrenに比較元を登録
+            if( v.d.parent !== null )
+              doc.map[v.d.parent].children.push(v.d.id);
+          }
+        }
+        */
+
+        dev.end(); // 終了処理
+        return v.rv;
+
+      } catch (e) { return dev.error(e); }
+    }
+
     /** dump: 【開発用】指定条件のDocletを抽出、指定メンバのみ抽出したオブジェクトを生成
      * @param {Object} arg
      * @param {string[]} arg.paths - '.'区切りで階層化された、抽出対象となるメンバ
@@ -600,6 +741,38 @@ async function createSpec(opt={}){
           }
 
           return result;
+        }
+
+        /* 【未使用】正規表現にマッチするキーだけを再帰的に抽出(copilot)
+        const input = {
+          a01: { b01: { a02: 10, b02: 20 } },
+          a03: 30,
+          b03: 31,
+          b04: { a04: 40, c01: 1 }
+        };
+        const regex = /^a0.＊/;
+        const filtered = filterKeysByRegex(input, regex);
+        console.log(filtered);
+        */
+        const filterKeysByRegex = (obj, regex) => {
+          if (typeof obj !== 'object' || obj === null) return undefined;
+
+          const result = Array.isArray(obj) ? [] : {};
+
+          for (const key in obj) {
+            if (Object.hasOwnProperty.call(obj, key)) {
+              const value = obj[key];
+              const filteredValue = filterKeysByRegex(value, regex);
+
+              if (regex.test(key)) {
+                result[key] = filteredValue !== undefined ? filteredValue : value;
+              } else if (filteredValue !== undefined) {
+                result[key] = filteredValue;
+              }
+            }
+          }
+
+          return Object.keys(result).length > 0 ? result : undefined;
         }
 
         dev.step(1);  // 既定値設定
@@ -925,7 +1098,7 @@ async function createSpec(opt={}){
 
     dev.step(1.2);  // 起動時パラメータが無指定の場合、useageを表示して終了
     if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
-      //console.log(cf.useage);
+      console.log(cf.useage);
       dev.end(); // 終了処理
       return v.rv;
     }
