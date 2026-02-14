@@ -1,1 +1,1 @@
-{"source":{"include":["./dummy"]}}
+{"source":{"include":["./dummy"],"includePattern":".+\\.(js|mjs|gs|txt)$"}}
