@@ -580,6 +580,12 @@ async function createSpec(opt={}){
           for( v.j=0 ; v.j<v.jsdoc.length ; v.j++ ){
             v.r = new DocletEx(v.jsdoc[v.j]);
             if( v.r instanceof Error ) throw v.r;
+
+            v.r.com0 = typeof v.r.comment === 'undefined' ? 'コメント無し' : v.r.comment.split('\n')[0];
+            v.r.calc = typeof v.r.comment === 'undefined' ? -1
+            : v.rv.source.files[v.i].content.split(v.r.comment)[0].split('\n').length;
+            //v.r.calc = '' //v.rv.source.files[v.i].full
+            //+ (v.r.meta?.range ? v.r.meta.range[0] : v.content[0].length);
             v.rv.doclet.push(v.r);
           }
         }
@@ -776,7 +782,7 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
 
-    dev.end(doc.dump());
+    dev.end(doc.dump(['calc','meta.lineno','meta.range','com0']));
     // meta.range未定義
     // ['comment'],x=>typeof x.meta?.range === 'undefined'
     // ⇒ @name, @typedef, @interface, @function(@name付き)
