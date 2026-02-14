@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import path from 'path';
 import process from 'process';
+import { createHash } from 'crypto';
 import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
+import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
 createSpec();
 
 async function createSpec(opt={}){
@@ -255,23 +257,26 @@ async function createSpec(opt={}){
    */
   /** DocletEx: jsdocから出力されるDocletに情報を付加したもの
    * @class
-   * @prop {string} id - 固有パス＋longname
-   * @prop {string} unique - ソースファイルの固有パス
-   *   固有パス：複数フォルダ対象時、フルパスから共通のパスを除いた部分
-   *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
-   *   unique = 'test.js' -> '/' ※直下の場合'/'
    * @prop {string} docletType - Docletの種類。下記「docletTypeの判定ロジック」参照
    * @prop {string} label - 1行で簡潔に記述された概要説明
    *   ① `／** `に続く文字列
    *   ② description, classdesc があれば先頭行
    *   ③ longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
-   * @prop {PropList} [properties] - メンバ一覧
-   * @prop {PropList} [params] - 引数。クラスの場合はconstructorの引数
-   * @prop {PropList} [returns=[]] - 戻り値
+   * @prop {PropList} [properties] - メンバ一覧(※DocletのそれをPropListで置換)
+   * @prop {PropList} [params] - 引数。クラスの場合はconstructorの引数(※同上)
+   * @prop {PropList} [returns=[]] - 戻り値(※同上)
    * 
    * @prop {string} [parent=null] - 親要素のDocletEx.id
    * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.id
+   * 
+   * @prop {string} [unique] - 固有パス
+   * @prop {string} [basename] - ファイル名
+   * @prop {string} [rangeId] - 固有パス＋ファイル名＋meta.range[0]
+   *   ※ Doclet以外のファイル情報が必要なため、DocletTree側で追加される項目
+   * @prop {string} [linenoId] - 固有パス＋ファイル名＋meta.lineno ※同上
+   * @prop {string} [commentId] - 「固有パス＋ファイル名＋comment」のSHA256
+   *   同一commentが同一ファイル内に複数有った場合は設定しない
    * 
    * # docletTypeの判定ロジック
    * 
@@ -313,27 +318,20 @@ async function createSpec(opt={}){
     /**
      * @constructor
      * @param {Doclet} doclet 
-     * @param {string} unique 
      */
-    constructor(doclet,unique='/'){
-      const v = {whois:`DocletEx.constructor`, arg:{doclet,unique}, rv:null};
+    constructor(doclet){
+      const v = {whois:`DocletEx.constructor`, arg:{doclet}, rv:null};
       const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // オリジナルのメンバをコピー
         Object.keys(doclet).forEach(x => this[x] = doclet[x]);
 
-        dev.step(1);  // id
-        this.id =unique + doclet.longname;
-
-        dev.step(2);  // unique
-        this.unique = unique;
-
-        dev.step(3);  // docletType
+        dev.step(2);  // docletType
         this.docletType = this.determineType(doclet);
         if( this.determineType instanceof Error) throw this.determineType;
 
-        dev.step(4);  // label
+        dev.step(3);  // label
         // ①JSDoc先頭の「/**」に続く文字列
         v.m = doclet.comment?.split('\n')[0].match(/^\/\*\*\s*(.+)\n/) ?? null;
         // ②説明文の先頭行
@@ -350,17 +348,17 @@ async function createSpec(opt={}){
         if( doclet.classdesc && doclet.classdesc.startsWith(this.label) )
           doclet.classdesc.slice(this.label.length).trim();
 
-        dev.step(5);  // properties
+        dev.step(4);  // properties
         v.r = new PropList(doclet.properties);
         if( v.r instanceof Error ) throw v.r;
         if( v.r instanceof PropList ) this.properties = v.r;
 
-        dev.step(6);  // params
+        dev.step(5);  // params
         v.r = new PropList(doclet.params);
         if( v.r instanceof Error ) throw v.r;
         if( v.r instanceof PropList ) this.params = v.r;
 
-        dev.step(7);  // returns
+        dev.step(6);  // returns
         v.r = new PropList(doclet.returns
           // name, value は不要なのでorderから削除
           ,{order:['type','desc','note']});
@@ -369,13 +367,9 @@ async function createSpec(opt={}){
           this.returns = v.r;
         }
 
-        dev.step(8);  // parent, childrenの初期値設定。実値は全Doclet作成後に設定
+        dev.step(7);  // parent, childrenの初期値設定。実値は全Doclet作成後に設定
         this.parent = null;
         this.children = [];
-
-        // returns他、typedef/interfaceで定義した型を展開
-
-        dev.step(9);  // md - メソッドで対応？
 
         dev.end();
 
@@ -428,21 +422,26 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
   }
-  /** DocletTreeSource: 入力ファイル(JSソース)情報
+ /** DocletTreeFile: 個別入力ファイル情報
+  * @typedef {Object} DocletTreeFile
+  * @prop {string} full - フルパス＋ファイル名
+  * @prop {string} unique - 固有パス(フルパス−共通部分)
+  * @prop {string} basename - ファイル名
+  * @prop {string} content - ファイルの内容
+  * @prop {Doclet[]} jsdoc - `jsdoc -X`の実行結果オブジェクト
+  */
+ /** DocletTreeSource: 統合版入力ファイル(JSソース)情報
   * @typedef {Object} DocletTreeSource
   * @prop {string} [common=''] - フルパスの共通部分
   * @prop {string} [outDir=''] - 出力先フォルダ名(フルパス)
   * @prop {number} [num=0] - 対象ファイルの個数
-  * @prop {Object[]} [files=[]] - 対象ファイルの情報
-  * @prop {string} files.full - フルパス＋ファイル名
-  * @prop {string} files.unique - 固有パス(フルパス−共通部分)
-  * @prop {string} files.content - ファイルの内容
-  * @prop {Doclet[]} files.jsdoc - `jsdoc -X`の実行結果オブジェクト
+  * @prop {DocletTreeFile[]} [files=[]] - 対象ファイルの情報
   */
-  /** DocletTree: 処理対象ソース・Docletの全体構造を管理
+ /** DocletTree: 処理対象ソース・Docletの全体構造を管理
   * @class DocletTree
   * @prop {DocletTreeSource} source - 処理対象となるソースファイル
-  * @prop {DocletEx[]} doclet - `jsdoc -X`で返されるJSDocの配列
+  * @prop {DocletEx[]} doclet - 独自情報を付加したDocletExの配列
+  * @prop {Object.<string, DocletEx>} map - rangeId/linenoId/commentIdをキーにしたDocletExのマップ
   * @prop {Object} [opt={}] - オプション設定値
   */
   class DocletTree {
@@ -464,9 +463,87 @@ async function createSpec(opt={}){
           files:  arg.files ?? [],
         };
         this.doclet = [];
+        this.map = {};
         this.opt = opt;
 
         dev.end(); // 終了処理
+      } catch (e) { return dev.error(e); }
+    }
+
+    /** dump: 【開発用】指定条件のDocletを抽出、指定メンバのみ抽出したオブジェクトを生成
+     * @param {string[]} paths - '.'区切りで階層化された、抽出対象となるメンバ
+     *   
+     *   ex. 'longname','meta.range' ⇒ {longname:'xxx',meta:{range:[1,2]}}
+     * @param {Function} filter - 抽出対象となるDocletならtrue
+     * @returns {Object[]|Error}
+     * 
+     * @example
+     * doc.dump(['meta.range','longname'],x=>x.kind==='class')
+		 * ⇒ [
+		 *   {
+		 *     meta:    {
+		 *       range:      [
+		 *         1879, // number
+		 *         2606, // number
+		 *       ], // Array
+		 *     }
+		 *     longname:"class01", // string
+		 *   }
+		 *   {
+		 *     meta:    {
+		 *       range:      [
+		 *         2180, // number
+		 *         2398, // number
+		 *       ], // Array
+		 *     }
+		 *     longname:"class01", // string
+		 *   }
+		 * ], // Array
+     */
+    dump(paths=[],filter=()=>true){
+      const v = {whois:`${this.constructor.name}.dump`, arg:{paths,filter}, rv:[]};
+      const dev = new devTools(v);
+      try {
+
+        const pickPaths = (obj, paths) => {
+          const result = {};
+
+          for (const path of paths) {
+            const keys = path.split('.');
+            let src = obj;
+            let dst = result;
+            let valid = true;
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+
+              if (!(key in src)) {
+                valid = false;
+                break;
+              }
+
+              if (i === keys.length - 1) {
+                // 最後のキーなら値をコピー
+                dst[key] = src[key];
+              } else {
+                // 中間ノードを作成または再利用
+                if (!(key in dst)) {
+                  dst[key] = {};
+                }
+                src = src[key];
+                dst = dst[key];
+              }
+            }
+          }
+
+          return result;
+        }
+
+        dev.step(1);  // 指定条件に合致するDocletを抽出
+        this.doclet.filter(filter).forEach(x => v.rv.push(pickPaths(x,paths)));
+
+        dev.end(); // 終了処理
+        return v.rv;
       } catch (e) { return dev.error(e); }
     }
 
@@ -558,7 +635,7 @@ async function createSpec(opt={}){
      * @returns {DocletTree|Error}
      */
     static async initialize(arg,opt={}){
-      const v = {whois:`execJSDoc.initialize`, arg:{arg,opt}, rv:null};
+      const v = {whois:`DocletTree.initialize`, arg:{arg,opt}, rv:null};
       const dev = new devTools(v);
       try {
 
@@ -576,17 +653,14 @@ async function createSpec(opt={}){
 
         dev.step(3);  // DocletExを生成
         for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
-          v.jsdoc = v.rv.source.files[v.i].jsdoc;
-          for( v.j=0 ; v.j<v.jsdoc.length ; v.j++ ){
-            v.r = new DocletEx(v.jsdoc[v.j]);
+          v.file = v.rv.source.files[v.i];
+          for( v.j=0 ; v.j<v.file.jsdoc.length ; v.j++ ){
+            dev.step(3.1);  // DocletExインスタンス作成
+            v.r = new DocletEx(v.file.jsdoc[v.j]);
             if( v.r instanceof Error ) throw v.r;
-
-            v.r.com0 = typeof v.r.comment === 'undefined' ? 'コメント無し' : v.r.comment.split('\n')[0];
-            v.r.calc = typeof v.r.comment === 'undefined' ? -1
-            : v.rv.source.files[v.i].content.split(v.r.comment)[0].split('\n').length;
-            //v.r.calc = '' //v.rv.source.files[v.i].full
-            //+ (v.r.meta?.range ? v.r.meta.range[0] : v.content[0].length);
-            v.rv.doclet.push(v.r);
+            dev.step(3.2);  // 重複登録チェック＋マップ登録
+            v.r = v.rv.registration(v.r,v.file);
+            if( v.r instanceof Error ) throw v.r;
           }
         }
 
@@ -595,77 +669,56 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** dump: 【開発用】指定条件のDocletを抽出、指定メンバのみ抽出したオブジェクトを生成
-     * @param {string[]} paths - '.'区切りで階層化された、抽出対象となるメンバ
-     *   
-     *   ex. 'longname','meta.range' ⇒ {longname:'xxx',meta:{range:[1,2]}}
-     * @param {Function} filter - 抽出対象となるDocletならtrue
-     * @returns {Object[]|Error}
-     * 
-     * @example
-     * doc.dump(['meta.range','longname'],x=>x.kind==='class')
-		 * ⇒ [
-		 *   {
-		 *     meta:    {
-		 *       range:      [
-		 *         1879, // number
-		 *         2606, // number
-		 *       ], // Array
-		 *     }
-		 *     longname:"class01", // string
-		 *   }
-		 *   {
-		 *     meta:    {
-		 *       range:      [
-		 *         2180, // number
-		 *         2398, // number
-		 *       ], // Array
-		 *     }
-		 *     longname:"class01", // string
-		 *   }
-		 * ], // Array
+    /** registration: DocletEx生成時の重複登録チェック＋マップへの登録
+     * @param {DocletEx} doclet - 生成直後のDocletExインスタンス
+     * @param {DocletTreeFile} file - doclet抽出元の個別入力ファイル情報
+     * @returns {null|Error}
      */
-    dump(paths=[],filter=()=>true){
-      const v = {whois:`${this.constructor.name}.dump`, arg:{paths,filter}, rv:[]};
+    registration(doclet,file){
+      const v = {whois:`DocletTree.registration`, arg:{doclet,file}, rv:null};
       const dev = new devTools(v);
       try {
 
-        const pickPaths = (obj, paths) => {
-          const result = {};
+        dev.step(1);  // 固有パスとファイル名(meta.filenameが無い場合への備え)
+        doclet.unique = file.unique;
+        doclet.basename = file.basename;
 
-          for (const path of paths) {
-            const keys = path.split('.');
-            let src = obj;
-            let dst = result;
-            let valid = true;
+        dev.step(2);  // 重複チェック用のキー作成
+        v.dupkey = '';  // 登録済のdocletがあればtrue
+        v.fn = `${file.unique}/${file.basename}:`; // 固有パス＋ファイル名
 
-            for (let i = 0; i < keys.length; i++) {
-              const key = keys[i];
-
-              if (!(key in src)) {
-                valid = false;
-                break;
-              }
-
-              if (i === keys.length - 1) {
-                // 最後のキーなら値をコピー
-                dst[key] = src[key];
-              } else {
-                // 中間ノードを作成または再利用
-                if (!(key in dst)) {
-                  dst[key] = {};
-                }
-                src = src[key];
-                dst = dst[key];
-              }
-            }
-          }
-
-          return result;
+        // 信頼性の低い順にチェックし、より信頼度の高いものが一致すれば置換する
+        dev.step(2.1);  // 「固有パス＋ファイル名＋comment」のハッシュ
+        // 「/** 〜 */」が同一ファイル内で一箇所のみ
+        if( typeof doclet.comment !== 'undefined'
+            && file.content.split(doclet.comment).length === 2 ){
+          doclet.commentId = createHash('sha256')
+            .update(v.fn + doclet.comment).digest('hex');
+          if( typeof this.map[doclet.commentId] !== 'undefined' )
+            v.dupkey = doclet.commentId;
+        }
+        dev.step(2.2);  // 固有パス＋ファイル名＋lineno
+        if( typeof doclet.meta?.lineno !== 'undefined' ){
+          doclet.linenoId = v.fn + `L${doclet.meta.lineno}`;
+          if( typeof this.map[doclet.linenoId] !== 'undefined' )
+            v.dupkey = doclet.linenoId;
+        }
+        dev.step(2.3);  // 固有パス＋ファイル名＋range[0]
+        if( typeof doclet.meta?.range !== 'undefined' ){
+          doclet.rangeId = v.fn + `R${doclet.meta.range[0]}`;
+          if( typeof this.map[doclet.rangeId] !== 'undefined' )
+            v.dupkey = doclet.rangeId;
         }
 
-        dev.step(1);  // 指定条件に合致するDocletを抽出
-        this.doclet.filter(filter).forEach(x => v.rv.push(pickPaths(x,paths)));
+        if( v.dupkey.length > 0 ){
+          dev.step(3);  // 登録済なら既存DocletExに情報追加
+          this.map[v.dupkey] = mergeDeeply(this.map[v.dupkey],doclet);
+        } else {
+          dev.step(4);  // 未登録なので新規追加
+          this.doclet.push(doclet);
+          ['rangeId','linenoId','commentId']
+            .map(x => this.map[doclet[x]] = doclet);
+        }
 
         dev.end(); // 終了処理
         return v.rv;
@@ -751,10 +804,12 @@ async function createSpec(opt={}){
         }
       }
 
-      dev.step(5);  // 固有部分を作成
-      v.rv.files.map(x => x.unique = 
-        path.posix.dirname(x.full.slice(v.rv.common.length))
-        .replace(/\/?$/, '/').replace(/^\.\//,'/'));
+      dev.step(5);  // 固有部分とファイル名を作成
+      v.rv.files.map(x => {
+        x.unique = path.posix.dirname(x.full.slice(v.rv.common.length))
+          .replace(/\/?$/, '/').replace(/^\.\//,'/');
+        x.basename = path.basename(x.full);
+      });
 
       dev.step(6);  // ソースを読み込み
       v.rv.files.forEach(f => f.content = readFileSync(f.full,cf.encode));
@@ -782,7 +837,9 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
 
-    dev.end(doc.dump(['calc','meta.lineno','meta.range','com0']));
+    dev.end(doc.dump(['rangeId','linenoId','commentId'],x=>x.kind==='class'));
+    // class01重複チェック
+    // ['rangeId','linenoId','commentId'],x=>x.kind==='class'
     // meta.range未定義
     // ['comment'],x=>typeof x.meta?.range === 'undefined'
     // ⇒ @name, @typedef, @interface, @function(@name付き)
