@@ -44,7 +44,7 @@ async function createSpec(opt={}){
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
   };
-  const dev = new devTools(pv,{mode:'dev'});
+  const dev = new devTools(pv,{mode:'dev',footer:true});
 
   /** PropList: 属性一覧に表示する項目
    * @class
@@ -167,6 +167,7 @@ async function createSpec(opt={}){
       this.folderName = folderName;
       this.funclass = {};
       this.typedef = {};
+      this.children = {};
     }
 
     markdown(){
@@ -801,12 +802,15 @@ async function createSpec(opt={}){
           dev.step(4.3);  // DocletTree.folder
           // 登録フォルダの特定
           v.folder = this.folder;
-          doclet.unique.split('/').filter(x => x.length>0).forEach(folderName => {
-            if( typeof v.folder.children[folderName] === 'undefined' ){
-              v.folder.children[folderName] = new DocletTreeFolder(folderName);
-            }
-            v.folder = v.folder.children[folderName];
-          });
+          v.path = doclet.unique.split('/').filter(x => x.length>0);
+          if( v.path.length > 0 ){
+            v.path.forEach(folderName => {
+              if( typeof v.folder.children[folderName] === 'undefined' ){
+                v.folder.children[folderName] = new DocletTreeFolder(folderName);
+              }
+              v.folder = v.folder.children[folderName];
+            });
+          }
           // グローバル関数・クラスまたはデータ型定義の場合、登録
           if( ['function','class'].includes(doclet.docletType) )
             v.folder.funclass[doclet.uuid] = doclet;
@@ -931,7 +935,8 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
 
-    dev.end(doc.dump({data:doc.folder}));
+    console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc.folder)));
+    dev.end();
     // doc.dump
     // class01重複チェック
     // {path:['rangeId','linenoId','commentId'],filter:x=>x.kind==='class'}
