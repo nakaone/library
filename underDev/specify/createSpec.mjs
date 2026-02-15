@@ -14,8 +14,7 @@ createSpec();
  * @desc
  * 
  * - createSpec.20260212.mjsからの移行
- *   - determineParent
- *   - markdown
+ *   - DocletEx.markdown
  *   - output
  * 
  * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
@@ -470,24 +469,42 @@ async function createSpec(opt={}){
   class DocletEx {
     /**
      * @constructor
-     * @param {Doclet} doclet 
+     * @param {Doclet} doclet
+     * @param {Object} [opt={}] - オプション設定値
      */
-    constructor(doclet){
-      const v = {whois:`DocletEx.constructor`, arg:{doclet}, rv:null};
+    constructor(doclet,opt={}){
+      const v = {whois:`DocletEx.constructor`, arg:{doclet,opt}, rv:null};
       const dev = new devTools(v,{mode:'dev'});
       try {
 
         dev.step(1);  // オリジナルのメンバをコピー
         Object.keys(doclet).forEach(x => this[x] = doclet[x]);
 
-        dev.step(2);  // 独自ID
+        dev.step(2);  // オプション設定
+        this.opt = Object.assign({title:{}},opt);
+        // Markdown文書のタイトル行の既定値(deepcopyなので個別)
+        this.opt.title = Object.assign({
+          // '_'をDocletEx.nameで置換
+          typedef: '_データ型定義',
+          interface: '_データ型定義',
+          class: '_クラス仕様書',
+          constructor: 'constructor()',
+          method: '_()',
+          function: '_()',
+          innerFunc: '_()',
+          objectFunc: '_()',
+          description: '_',
+          unknown: '_',
+        },(opt.title ?? {}));
+
+        dev.step(3);  // 独自ID
         this.uuid = randomUUID();
 
-        dev.step(3);  // docletType
+        dev.step(4);  // docletType
         this.docletType = this.determineType(doclet);
         if( this.determineType instanceof Error) throw this.determineType;
 
-        dev.step(4);  // label
+        dev.step(5);  // label
         // ①JSDoc先頭の「/**」に続く文字列
         v.m = doclet.comment?.split('\n')[0].match(/^\/\*\*\s*(.+)\n/) ?? null;
         // ②説明文の先頭行
@@ -504,17 +521,17 @@ async function createSpec(opt={}){
         if( doclet.classdesc && doclet.classdesc.startsWith(this.label) )
           doclet.classdesc.slice(this.label.length).trim();
 
-        dev.step(5);  // properties
+        dev.step(6);  // properties
         v.r = new PropList(doclet.properties);
         if( v.r instanceof Error ) throw v.r;
         if( v.r instanceof PropList ) this.properties = v.r;
 
-        dev.step(6);  // params
+        dev.step(7);  // params
         v.r = new PropList(doclet.params);
         if( v.r instanceof Error ) throw v.r;
         if( v.r instanceof PropList ) this.params = v.r;
 
-        dev.step(7);  // returns
+        dev.step(8);  // returns
         v.r = new PropList(doclet.returns
           // name, value は不要なのでorderから削除
           ,{order:['type','desc','note']});
@@ -523,7 +540,8 @@ async function createSpec(opt={}){
           this.returns = v.r;
         }
 
-        dev.step(8);  // parent, childrenの初期値設定。実値は全Doclet作成後に設定
+        dev.step(9);  // parent, childrenの初期値設定
+        // 実値は全Doclet作成後にDocletTree.determineParentで設定
         this.parent = null;
         this.children = [];
 
@@ -572,6 +590,111 @@ async function createSpec(opt={}){
             && doclet.name ? 'description' : 'unknown';
         }
 
+        dev.end();
+        return v.rv;
+
+      } catch (e) { return dev.error(e); }
+    }
+
+    /** markdown: 単一DocletExのインスタンスからMarkdown文字列を作成
+     * @param {string} [uuid=this.uuid] - 対象DocletEx.uuid
+     * @param {number} [level=1] - 階層の深さ
+     * @returns {string|Error}
+     */
+    markdown(uuid,level=1) {
+      const v = {whois:`${this.constructor.name}.markdown`, arg:{uuid,level}, rv:null};
+      const dev = new devTools(v,{mode:'dev'});
+      /**
+       * @name 文書の構成
+       * @memberof markdown
+       * @description
+       * 
+       * | 項目名      | ①クラス<br>・関数 | ②データ型 | ③説明文 | 識別子 | 備考 |
+       * | :--        | :--: | :--: | :--: | :-- | :-- |
+       * | ヘッダ部    |    |    |   | _top |  |
+       * | — タイトル  | ⭕ | ⭕ | ⭕ |         | ○○クラス(データ型)仕様書、等 |
+       * | — ラベル    | ⭕ | ⭕ | ❌ |         | 一行にまとめた説明 |
+       * | — 概要説明  | ⭕ | ⭕ | ⭕ |         | 数行程度 |
+       * | メンバ一覧  | ⭕ | ⭕ | ❌ | _prop    |  |
+       * | メソッド一覧 | ⭕ | ❌ | ❌ | _func   |  |
+       * | 詳細説明    | ⭕ | ❌ | ❌ | _desc   |  |
+       * | 引数       | ⭕ | ❌ | ❌ | _param   |  |
+       * | 戻り値      | ⭕ | ❌ | ❌ | _return |  |
+       * | 個別メソッド | ⭕ | ⭕ | ❌ | -XXXX   | 注意：'_'ではなく'-' |
+       * 
+       * ①クラス・(グローバル)関数
+       *   docletType = 'class', 'constructor', 'method', 'function', 'innerFunc', 'objectFunc'
+       * ②データ型
+       *   docletType = 'typedef', 'interface'
+       * ③説明文
+       *   docletType = 'description'
+       */
+      try {
+
+        dev.step(1);  // ヘッダ部
+        v.d = this.map[uuid];
+        v.rv = ['#'.repeat(level) + ' 🧩 '
+          + this.opt.title[v.d.docletType].replace('_',v.d.name)];  // タイトル
+        
+        // ラベル
+        if( v.d.label ) v.rv.push(...['',v.d.label]);
+
+        // 説明文
+        v.desc = [];
+        ['description','classdesc'].forEach(x => {
+          if( v.d[x] ) v.desc.push(v.d[x]);
+        if( v.desc.length > 0 )
+          v.rv.push(...['',`${'#'.repeat(level+1)} 🧾 概説`,'',],...v.desc)});
+
+        // メンバ一覧
+        if( v.d.properties instanceof PropList ){
+          v.r = v.d.properties.makeTable();
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(...['',`${'#'.repeat(level+1)} 🔢 メンバ一覧`,''],v.r)
+        }
+
+        // 引数
+        if( v.d.params instanceof PropList ){
+          v.r = v.d.params.makeTable();
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(...['',`${'#'.repeat(level+1)} 📥 引数`,''],v.r)
+        }
+
+        // 戻り値
+        if( v.d.returns instanceof PropList ){
+          v.r = v.d.returns.makeTable();
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(...['',`${'#'.repeat(level+1)} 📤 戻り値`,''],v.r)
+        }
+
+        // メソッド一覧
+        if( v.d.children && v.d.children.length > 0 ){
+          [v.children,v.num] = [[],1];
+          v.d.children.map(uuid => {
+            v.o = {
+              uuid: uuid,
+              no: v.num++,
+              name: this.map[uuid].name,
+              anchor: ``,
+              /* いまここ：アンカーの設定方法
+                クラス・グローバル関数は「拡張子」のみ
+                  ※クラス・グローバル関数名はファイル名なので割愛
+                  ⇒ #prop, #returns, etc
+                メソッド・内部関数はメソッド名＋拡張子
+                  ⇒ #constructor_prop
+                  孫要素なら子要素名-孫要素名_拡張子
+                  子孫要素名が'prop'等、拡張子と一致する場合は先頭に'-'を付ける
+                  ⇒ #-prop_prop
+              */
+              label: this.map[uuid].label,
+            }
+          });
+        }
+
+        // 🧩 想定する実装
+        // 🧱 authClient.exec()
+
+        v.rv = v.rv.join('\n');
         dev.end();
         return v.rv;
 
