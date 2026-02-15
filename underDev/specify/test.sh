@@ -52,7 +52,7 @@ function Schema {
 
 test
 #createSpec
-noarg
+#noarg
 #auth
 #Schema
 

@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
+import { basename } from 'node:path';
 createSpec();
 
 /** 開発工程・残課題
@@ -421,11 +422,14 @@ async function createSpec(opt={}){
    * @prop {string} [unique] - 固有パス
    *   ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/")
    * @prop {string} [basename] - ファイル名
+   * @prop {string} [prefix] - 固有パス＋ファイル名＋'::'
+   *   以下の各種IDの共通部分(固有パスの先頭・末尾の'/'有無処理済)
    * @prop {string} [rangeId] - 固有パス＋ファイル名＋meta.range[0]
    *   ※ Doclet以外のファイル情報が必要なため、DocletTree側で追加される項目
    * @prop {string} [linenoId] - 固有パス＋ファイル名＋meta.lineno ※同上
    * @prop {string} [commentId] - 「固有パス＋ファイル名＋comment」のSHA256
    *   同一commentが同一ファイル内に複数有った場合は設定しない
+   * @prop {string} [longnameId] - 固有パス＋ファイル名＋longname
    * 
    * # docletTypeの判定ロジック
    * 
@@ -635,37 +639,40 @@ async function createSpec(opt={}){
       const dev = new devTools(v,{mode:'dev'});
       try {
 
-        /*
         for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
           v.d = this.doclet[v.i];
-          dev.step(1);  // child.memberof === parent.longname
-          v.pId = typeof v.d.memberof === 'string' ? v.d.unique + v.d.memberof : null;
-          if( v.pId && typeof doc.map[v.pId] !== 'undefined' ){
-            dev.step(2);  // memberofがidと一致する場合
-            v.d.parent = doc.map[v.pId].id;
-            doc.map[v.pId].children.push(v.d.id);
-          } else if( v.d.meta?.range ) {
-            dev.step(3);  // 包摂する直近の要素を親とする
+
+          dev.step(1);  // ①：child.memberof === parent.longnameで判定
+          if( Object.hasOwn(v.d,'memberof' )){
+            v.key = v.d.prefix + v.d.memberof;
+            if( Object.hasOwn(this.map,v.key) && this.map[v.key] !== null ){
+              // memberof:longnameが一意に親が決定されたらOK
+              v.d.parent = this.map[v.key].uuid;
+            }
+          }
+
+          dev.step(2);  // ②：①で決まらない場合、子要素を包摂する直近の要素
+          if( v.d.parent === null && typeof v.d.meta?.range !== 'undefined' ){
             v.minSize = Infinity;
             for( v.t of this.doclet ){
-              dev.step(4);  // 比較元=比較先またはrangeが無ければスキップ
+              dev.step(2.1);  // 比較元=比較先またはrangeが無ければスキップ
               if( v.d === v.t || !v.t.meta?.range ) continue;
-              dev.step(5);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
+              dev.step(2.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
               if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
-                dev.step(6);  // 比較先の終了位置−開始位置が最小のものが直近
+                dev.step(2.3);  // 比較先の終了位置−開始位置が最小のものが直近
                 v.size = v.t.meta.range[1] - v.t.meta.range[0];
                 if( v.size < v.minSize ){
                   v.minSize = v.size;
-                  v.d.parent = v.t.id; // 比較先を比較元の親要素として設定
+                  v.d.parent = v.t.uuid; // 比較先を比較元の親要素として設定
                 }
               }
             }
-            dev.step(7);  // 親要素のchildrenに比較元を登録
-            if( v.d.parent !== null )
-              doc.map[v.d.parent].children.push(v.d.id);
           }
+
+          dev.step(3);  // 親要素のchildrenに比較元を登録
+          if( v.d.parent !== null )
+            this.map[v.d.parent].children.push(v.d.uuid);
         }
-        */
 
         dev.end(); // 終了処理
         return v.rv;
@@ -706,7 +713,7 @@ async function createSpec(opt={}){
      */
     dump(arg){
       const v = {whois:`${this.constructor.name}.dump`, arg:{arg}, rv:[]};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'dev'});
       try {        
 
         const pickPaths = (obj, paths) => {
@@ -783,7 +790,7 @@ async function createSpec(opt={}){
         },arg);
 
         dev.step(2);  // 指定条件に合致するDocletを抽出
-        v.target = arg.filter !== null ? arg.data.filter(filter) : arg.data;
+        v.target = typeof arg.filter === 'function' ? arg.data.filter(arg.filter) : arg.data;
 
         dev.step(3);  // 配列なら個別に、オブジェクトならそのまま指定メンバ抽出
         if( Array.isArray(v.target) ){
@@ -914,6 +921,10 @@ async function createSpec(opt={}){
           }
         }
 
+        dev.step(4);  // Docletの親子関係関連付け
+        v.r = v.rv.determineParent();
+        if( v.r instanceof Error ) throw v.r;
+
         dev.end(); // 終了処理
         return v.rv;
       } catch (e) { return dev.error(e); }
@@ -935,7 +946,11 @@ async function createSpec(opt={}){
 
         dev.step(2);  // 重複チェック用のキー作成
         v.dupkey = '';  // 登録済のdocletがあればtrue
-        v.fn = `${file.unique}/${file.basename}:`; // 固有パス＋ファイル名
+        // 固有パス＋ファイル名
+        doclet.prefix = `${
+          (/^\//.test(file.unique) ? '' : '/')
+          + file.unique
+          + (/\/$/.test(file.unique) ? '' : '/')}${file.basename}:`;
 
         // 信頼性の低い順にチェックし、より信頼度の高いものが一致すれば置換する
         dev.step(2.1);  // 「固有パス＋ファイル名＋comment」のハッシュ
@@ -943,21 +958,30 @@ async function createSpec(opt={}){
         if( typeof doclet.comment !== 'undefined'
             && file.content.split(doclet.comment).length === 2 ){
           doclet.commentId = createHash('sha256')
-            .update(v.fn + doclet.comment).digest('hex');
+            .update(doclet.prefix + doclet.comment).digest('hex');
           if( typeof this.map[doclet.commentId] !== 'undefined' )
             v.dupkey = doclet.commentId;
         }
         dev.step(2.2);  // 固有パス＋ファイル名＋lineno
         if( typeof doclet.meta?.lineno !== 'undefined' ){
-          doclet.linenoId = v.fn + `L${doclet.meta.lineno}`;
+          doclet.linenoId = doclet.prefix + `N${doclet.meta.lineno}`;
           if( typeof this.map[doclet.linenoId] !== 'undefined' )
             v.dupkey = doclet.linenoId;
         }
         dev.step(2.3);  // 固有パス＋ファイル名＋range[0]
         if( typeof doclet.meta?.range !== 'undefined' ){
-          doclet.rangeId = v.fn + `R${doclet.meta.range[0]}`;
+          doclet.rangeId = doclet.prefix + `R${doclet.meta.range[0]}`;
           if( typeof this.map[doclet.rangeId] !== 'undefined' )
             v.dupkey = doclet.rangeId;
+        }
+        dev.step(2.4);  // 固有パス＋ファイル名＋longname
+        if( typeof doclet.longname !== 'undefined' ){
+          doclet.longnameId = doclet.prefix + `L${doclet.longname}`;
+          // longnameは重複判定に使用しないので作成のみ
+          // this.mapへの登録は他のIDと異なり
+          // 「未登録なら追加、登録済(longname重複)ならnull」
+          // とするため、後続ステップではなくここで行う
+          this.map[doclet.longnameId] = Object.hasOwn(this.map,doclet.longnameId) ? null : doclet;
         }
 
         if( v.dupkey.length > 0 ){
@@ -1109,15 +1133,20 @@ async function createSpec(opt={}){
     const doc = await DocletTree.initialize(pv.rv);
 
     console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc.folder)));
-    dev.end();
+    dev.end(doc.dump({
+      paths:['uuid','memberof','longnameId','parent','children'],
+      //filter:x=>x.docletType==='description'
+    }));
     // doc.dump
+    // longnameの確認
+    // 
     // class01重複チェック
-    // {path:['rangeId','linenoId','commentId'],filter:x=>x.kind==='class'}
+    // {paths:['rangeId','linenoId','commentId'],filter:x=>x.kind==='class'}
     // meta.range未定義
-    // {path:['comment'],filter:x=>typeof x.meta?.range === 'undefined'}
+    // {paths:['comment'],filter:x=>typeof x.meta?.range === 'undefined'}
     // ⇒ @name, @typedef, @interface, @function(@name付き)
     // id作成関係メンバ
-    // {path:['unique','meta.path','meta.filename','meta.range','meta.lineno','meta.columnno','kind','longname'],filter:x=>x.kind==='class'}
+    // {paths:['unique','meta.path','meta.filename','meta.range','meta.lineno','meta.columnno','kind','longname'],filter:x=>x.kind==='class'}
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; }
