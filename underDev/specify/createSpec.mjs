@@ -13,9 +13,10 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - createSpec.20260212.mjsからの移行
- *   - output
- * 
+ * - [bug] 出力先に不正フォルダを作成(ToBe:doc/class01.md, AsIs:doc/test/class01.md)
+ * - DocletTree.markdown, DocletTreeFolder.markdownの定義位置再検討
+ *   感覚的に上位のindex.htmlが下位クラスのDocletTreeFolderにあるのは違和感あり
+ *   但し個別MDは子要素の再帰呼出ができるようmapが必要。両方DocletTree?
  * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
  * - description内の'#'について自動的にレベル設定
  * - anchor, linkの設定
@@ -480,21 +481,7 @@ async function createSpec(opt={}){
         Object.keys(doclet).forEach(x => this[x] = doclet[x]);
 
         dev.step(2);  // オプション設定
-        this.opt = Object.assign({title:{}},opt);
-        // Markdown文書のタイトル行の既定値(deepcopyなので個別)
-        this.opt.title = Object.assign({
-          // '_'をDocletEx.nameで置換
-          typedef: '_データ型定義',
-          interface: '_データ型定義',
-          class: '_クラス仕様書',
-          constructor: 'constructor()',
-          method: '_()',
-          function: '_()',
-          innerFunc: '_()',
-          objectFunc: '_()',
-          description: '_',
-          unknown: '_',
-        },(opt.title ?? {}));
+        this.opt = opt;
 
         dev.step(3);  // 独自ID
         this.uuid = randomUUID();
@@ -640,7 +627,22 @@ async function createSpec(opt={}){
         this.doclet = [];
         this.map = {};
         this.folder = new DocletTreeFolder('/');
-        this.opt = opt;
+        this.opt = Object.assign({title:{}},opt);
+        // Markdown文書のタイトル行の既定値(deepcopyなので個別)
+        this.opt.title = Object.assign({
+          // '_'をDocletEx.nameで置換
+          typedef: '_データ型定義',
+          interface: '_データ型定義',
+          class: '_クラス仕様書',
+          constructor: 'constructor()',
+          method: '_()',
+          function: '_()',
+          innerFunc: '_()',
+          objectFunc: '_()',
+          description: '_',
+          unknown: '_',
+        },(opt.title ?? {}));
+
 
         dev.end(); // 終了処理
       } catch (e) { return dev.error(e); }
