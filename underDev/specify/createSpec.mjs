@@ -911,6 +911,50 @@ async function createSpec(opt={}){
       });
     }
 
+    /** initialize: DocletTreeインスタンス作成
+     * @memberof DocletTree
+     * @param {DocletTreeSource} arg - 入力ファイル(JSソース)情報
+     * @returns {DocletTree|Error}
+     */
+    static async initialize(arg,opt={}){
+      const v = {whois:`DocletTree.initialize`, arg:{arg,opt}, rv:null};
+      const dev = new devTools(v);
+      try {
+
+        dev.step(1);  // DocletTreeの原型作成
+        v.rv = new DocletTree(arg,opt);
+
+        dev.step(2); // ファイル単位にjsdoc実行
+        for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
+          dev.step(2.1);
+          v.r = await v.rv.execJSDoc(v.rv.source.files[v.i].full);
+          if( v.r instanceof Error ) throw v.r;
+          dev.step(2.2);
+          v.rv.source.files[v.i].jsdoc = v.r;
+        }
+
+        dev.step(3);  // DocletExを生成
+        for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
+          v.file = v.rv.source.files[v.i];
+          for( v.j=0 ; v.j<v.file.jsdoc.length ; v.j++ ){
+            dev.step(3.1);  // DocletExインスタンス作成
+            v.r = new DocletEx(v.file.jsdoc[v.j]);
+            if( v.r instanceof Error ) throw v.r;
+            dev.step(3.2);  // 重複登録チェック＋マップ登録
+            v.r = v.rv.registration(v.r,v.file);
+            if( v.r instanceof Error ) throw v.r;
+          }
+        }
+
+        dev.step(4);  // Docletの親子関係関連付け
+        v.r = v.rv.determineParent();
+        if( v.r instanceof Error ) throw v.r;
+
+        dev.end(); // 終了処理
+        return v.rv;
+      } catch (e) { return dev.error(e); }
+    }
+
     /** makeMD: Markdownファイル作成のコントローラ */
     makeMD(){
       const v = {whois:`${this.constructor.name}.makeMD`, arg:{arg,opt}, rv:null};
@@ -1097,44 +1141,45 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** initialize: DocletTreeインスタンス作成
-     * @memberof DocletTree
-     * @param {DocletTreeSource} arg - 入力ファイル(JSソース)情報
-     * @returns {DocletTree|Error}
+    /** makeTable: Markdownのテーブル作成
+     * @param {Object.<string, any>[]} data - テーブル作成用データ
+     * @param {Object} [opt={}]
+     * @param {Object[]} [opt.header=[]] - {key,label,align}形式のオブジェクト
+     *   keyは必須。labelの既定値はkey(=dataのメンバ名)
+     *   alingはMarkdownテーブルの配置指定文字列(':--'(既定値) or ':--:' or '--:')
+     * @param {number} [opt.indent=0] - テーブルの左余白桁数
+     * @returns {string|Error}
      */
-    static async initialize(arg,opt={}){
-      const v = {whois:`DocletTree.initialize`, arg:{arg,opt}, rv:null};
+    static makeTable(data,opt={}){
+      const v = {whois:`${this.constructor.name}.makeTable`, arg:{}, rv:[[],[]]};
       const dev = new devTools(v);
       try {
 
-        dev.step(1);  // DocletTreeの原型作成
-        v.rv = new DocletTree(arg,opt);
-
-        dev.step(2); // ファイル単位にjsdoc実行
-        for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
-          dev.step(2.1);
-          v.r = await v.rv.execJSDoc(v.rv.source.files[v.i].full);
-          if( v.r instanceof Error ) throw v.r;
-          dev.step(2.2);
-          v.rv.source.files[v.i].jsdoc = v.r;
+        dev.step(1);  // オプションの既定値設定
+        opt.header = opt.header ?? [];
+        opt.indent = opt.indent ?? 0;
+        if( opt.header.length === 0 ){
+          opt.header = [...new Set(data.flatMap(obj => Object.keys(obj)))]
+          .map(o => {return {key:o,label:o,align:':--'}});
+        } else {
+          opt.header = opt.header.map(o => Object.assign({
+            key: o.key,
+            lable: o.label ?? o.key,
+            align: o.align ?? ':--'
+          },o));
         }
 
-        dev.step(3);  // DocletExを生成
-        for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
-          v.file = v.rv.source.files[v.i];
-          for( v.j=0 ; v.j<v.file.jsdoc.length ; v.j++ ){
-            dev.step(3.1);  // DocletExインスタンス作成
-            v.r = new DocletEx(v.file.jsdoc[v.j]);
-            if( v.r instanceof Error ) throw v.r;
-            dev.step(3.2);  // 重複登録チェック＋マップ登録
-            v.r = v.rv.registration(v.r,v.file);
-            if( v.r instanceof Error ) throw v.r;
-          }
-        }
+        dev.step(1);  // ヘッダ部
+        opt.header.forEach(x => {
+          v.rv[0].push(x.label);
+          v.rv[1].push(x.align);
+        });
 
-        dev.step(4);  // Docletの親子関係関連付け
-        v.r = v.rv.determineParent();
-        if( v.r instanceof Error ) throw v.r;
+        dev.step(2);  // データ部
+        data.forEach(l => v.rv.push(opt.header.map(x => l[x.key])));
+
+        dev.step(3);  // テキストに変換
+        v.rv = v.rv.map(l => `${' '.repeat(opt.indent)}| ${l.join(' | ')} |`).join('\n');
 
         dev.end(); // 終了処理
         return v.rv;
