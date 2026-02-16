@@ -13,10 +13,6 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - [bug] 出力先に不正フォルダを作成(ToBe:doc/class01.md, AsIs:doc/test/class01.md)
- * - DocletTree.markdown, DocletTreeFolder.markdownの定義位置再検討
- *   感覚的に上位のindex.htmlが下位クラスのDocletTreeFolderにあるのは違和感あり
- *   但し個別MDは子要素の再帰呼出ができるようmapが必要。両方DocletTree?
  * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
  * - description内の'#'について自動的にレベル設定
  * - anchor, linkの設定
@@ -32,6 +28,7 @@ createSpec();
  * - createSpecはシェルの起動時パラメータを引数とする関数に変更
  * - class定義をcreateSpec内部に移動
  *   但しインスタンス作成前の宣言が必要
+ * - propList.makeTableをDocletTree.makeTableへ統合
  */
 
 async function createSpec(opt={}){
@@ -1111,7 +1108,7 @@ async function createSpec(opt={}){
         v.rv.push(`# グローバル関数・クラス一覧`);
         v.data = [];
         Object.keys(folder.funclass).map(x => this.map[x])  // 配列化して名前順に並べ替え
-        .sort((a,b) => a.name < b.name ? -1 : (a.name === b.name ? 0 : 1))
+        .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })})
         .forEach(doclet => {
           v.data.push({
             name: `[${doclet.name}](${doclet.name}.md)`,
@@ -1128,7 +1125,7 @@ async function createSpec(opt={}){
 
         dev.step(2);  // データ型定義(folder.typedef)を配列化
         v.list = Object.keys(folder.typedef).map(x => this.map[x])
-        .sort((a,b) => a.name < b.name ? -1 : (a.name === b.name ? 0 : 1));
+        .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })});
 
         dev.step(3);  // データ型定義一覧
         v.rv.push('',`# データ型定義一覧`);
@@ -1227,7 +1224,7 @@ async function createSpec(opt={}){
 
         dev.step(2);  // グローバル関数・クラス毎に個別ファイル作成
         Object.keys(folder.funclass).map(x => this.map[x])  // 配列化して名前順に並べ替え
-        .sort((a,b) => a.name < b.name ? -1 : (a.name === b.name ? 0 : 1))
+        .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })})
         .forEach(doclet => {
           v.r = this.makeDocletMD(doclet.uuid);
           if( v.r instanceof Error ) throw v.r;
