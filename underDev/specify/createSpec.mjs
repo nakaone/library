@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-import path from 'path';
+import { path, basename } from 'path';
 import process from 'process';
 import { createHash, randomUUID } from 'crypto';
 import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
-import { basename } from 'node:path';
 createSpec();
 
 /** 開発工程・残課題
@@ -27,7 +26,8 @@ createSpec();
  * - 和文の他、英文のテンプレートも追加
  * - 文法チェック
  *   - ＠class の後に余計な文字列があればエラー
- * - history対応
+ * - 独自タグ「history」対応
+ * - 独自タグ「setvalue」で戻り値に設定する値を指定可能に
  * - createSpecはシェルの起動時パラメータを引数とする関数に変更
  * - class定義をcreateSpec内部に移動
  *   但しインスタンス作成前の宣言が必要
@@ -77,6 +77,11 @@ async function createSpec(opt={}){
         - クラス・関数内部に記述する場合、「＠memberof」を指定
         - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
         - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
+      - クラス・関数への自動リンクは設定されない(手動で\`[]()\`を記述)
+      - リンク先のアンカーは以下の命名規則
+        - "top" : ページ内先頭
+        - "desc" : 説明文
+        - 後略
       - ＠typedefでfunctionの定義は不可
       - ＠interfaceではfunction型メンバの定義は可能だが、分離する
         \`\`\`
@@ -905,19 +910,32 @@ async function createSpec(opt={}){
       });
     }
 
-    /** markdown: 単一DocletExのインスタンスからMarkdown文字列を作成
+    /** makeMD: Markdownファイル作成のコントローラ */
+    makeMD(){
+      const v = {whois:`${this.constructor.name}.makeMD`, arg:{arg,opt}, rv:null};
+      const dev = new devTools(v);
+      try {
+
+
+
+        dev.end(); // 終了処理
+        return v.rv;
+      } catch (e) { return dev.error(e); }
+    }
+
+    /** makeDocletMD: 単一DocletExのインスタンスからMarkdownを作成
      * - フォルダ内クラス・グローバル関数一覧＋データ型定義一覧(index.html)は
      *   DocletTreeFolder.markdownで作成
      * @param {string} [uuid=this.uuid] - 対象DocletEx.uuid
      * @param {number} [level=1] - 階層の深さ
      * @returns {string|Error}
      */
-    markdown(uuid,level=1) {
-      const v = {whois:`${this.constructor.name}.markdown`, arg:{uuid,level}, rv:null};
+    makeDocletMD(uuid,level=1) {
+      const v = {whois:`${this.constructor.name}.makeDocletMD`, arg:{uuid,level}, rv:null};
       const dev = new devTools(v,{mode:'dev'});
       /**
        * @name 文書の構成
-       * @memberof markdown
+       * @memberof makeDocletMD
        * @description
        * 
        * | 項目名      | ①クラス<br>・関数 | ②データ型 | ③説明文 | 識別子 | 備考 |
@@ -997,10 +1015,80 @@ async function createSpec(opt={}){
         // 📤 戻り値
         // 🧱 authClient.exec()
 
+        /*
+        dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
+        doc.unique.forEach(x => {
+          v.path = doc.source.outDir + '/' + x;
+          if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
+        })
+
+        v.list = {};
+        for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
+          v.d = doc.doclet[v.i];
+          if( typeof v.list[v.d.unique] === 'undefined' )
+            v.list[v.d.unique] = {funclass:[],typedef:[]};
+
+          if( ['function','class'].includes(v.d.docletType) ){
+            dev.step(2.1);  // グローバル関数・クラス
+            // リストに登録
+            if( !v.list[v.d.unique].funclass.includes(v.d.id) )
+              v.list[v.d.unique].funclass.push(v.d.id);
+            // MDファイル出力
+            v.r = markdown(v.d.id);
+            if( v.r instanceof Error ) throw v.r;
+            writeFileSync(`${doc.source.outDir}/${v.d.unique}/${v.d.name}.md`,v.r);
+          } else if( ['typedef','interface'].includes(v.d.docletType) && v.d.parent === null ){
+            dev.step(2.2);  // データ型定義なら登録のみ
+            // 関数・クラス内部のデータ型定義も一覧に入れておく(複数箇所表示)
+            if( !v.list[v.d.unique].typedef.includes(v.d.id) )
+              v.list[v.d.unique].typedef.push(v.d.id);
+          }
+        }
+        */
+
         v.rv = v.rv.join('\n');
         dev.end();
         return v.rv;
 
+      } catch (e) { return dev.error(e); }
+    }
+
+    /** makeIndexMD: フォルダ単位のクラス・グローバル関数一覧＋データ型定義のMarkdownを作成 */
+    makeIndexMD(){
+      const v = {whois:`${this.constructor.name}.makeIndexMD`, arg:{arg,opt}, rv:null};
+      const dev = new devTools(v);
+      try {
+
+        /*
+        dev.step(3);  // 固有パス毎にindex.md作成
+        doc.unique.forEach(unique => {
+          v.md = ['# グローバル関数・クラス一覧','',
+            '| path | name | label |','| :-- | :-- | :-- |'];
+          // グローバル関数・クラス一覧
+          v.list[unique].funclass.forEach(id => {
+            v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
+          });
+          // データ型定義一覧
+          v.md.push('','# データ型定義一覧','',
+            '| path | name | label |','| :-- | :-- | :-- |');
+          v.list[unique].typedef.forEach(id => {
+            v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
+          });
+          // データ型定義
+          v.md.push('','# データ型');
+          v.list[unique].typedef.forEach(id => {
+            v.r = doc.map[id].properties.makeTable();
+            if( v.r instanceof Error ) throw v.r;
+            v.md.push('',`## ${doc.map[id].name}`,'',v.r);
+          });
+
+          // index.mdとして出力
+          writeFileSync(`${doc.source.outDir}/${unique}/index.md`,v.md.join('\n'))
+        });
+        */
+
+        dev.end(); // 終了処理
+        return v.rv;
       } catch (e) { return dev.error(e); }
     }
 
@@ -1048,7 +1136,7 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** output: Markdownファイル作成・出力のコントローラ
+    /** output: Markdownをファイルとして出力
      * - 出力先配下にフォルダ作成＋index.mdの作成
      * - markdown()を呼び出しDocletEx単位のMarkdownを作成
      * - 出力先フォルダにMarkdownファイルを作成
@@ -1082,62 +1170,7 @@ async function createSpec(opt={}){
 
         dev.step(4);  // 子フォルダを再帰呼出
 
-        /*
-        dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
-        doc.unique.forEach(x => {
-          v.path = doc.source.outDir + '/' + x;
-          if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
-        })
 
-        v.list = {};
-        for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
-          v.d = doc.doclet[v.i];
-          if( typeof v.list[v.d.unique] === 'undefined' )
-            v.list[v.d.unique] = {funclass:[],typedef:[]};
-
-          if( ['function','class'].includes(v.d.docletType) ){
-            dev.step(2.1);  // グローバル関数・クラス
-            // リストに登録
-            if( !v.list[v.d.unique].funclass.includes(v.d.id) )
-              v.list[v.d.unique].funclass.push(v.d.id);
-            // MDファイル出力
-            v.r = markdown(v.d.id);
-            if( v.r instanceof Error ) throw v.r;
-            writeFileSync(`${doc.source.outDir}/${v.d.unique}/${v.d.name}.md`,v.r);
-          } else if( ['typedef','interface'].includes(v.d.docletType) && v.d.parent === null ){
-            dev.step(2.2);  // データ型定義なら登録のみ
-            // 関数・クラス内部のデータ型定義も一覧に入れておく(複数箇所表示)
-            if( !v.list[v.d.unique].typedef.includes(v.d.id) )
-              v.list[v.d.unique].typedef.push(v.d.id);
-          }
-        }
-
-        dev.step(3);  // 固有パス毎にindex.md作成
-        doc.unique.forEach(unique => {
-          v.md = ['# グローバル関数・クラス一覧','',
-            '| path | name | label |','| :-- | :-- | :-- |'];
-          // グローバル関数・クラス一覧
-          v.list[unique].funclass.forEach(id => {
-            v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
-          });
-          // データ型定義一覧
-          v.md.push('','# データ型定義一覧','',
-            '| path | name | label |','| :-- | :-- | :-- |');
-          v.list[unique].typedef.forEach(id => {
-            v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
-          });
-          // データ型定義
-          v.md.push('','# データ型');
-          v.list[unique].typedef.forEach(id => {
-            v.r = doc.map[id].properties.makeTable();
-            if( v.r instanceof Error ) throw v.r;
-            v.md.push('',`## ${doc.map[id].name}`,'',v.r);
-          });
-
-          // index.mdとして出力
-          writeFileSync(`${doc.source.outDir}/${unique}/index.md`,v.md.join('\n'))
-        });
-        */
 
         dev.end(); // 終了処理
         return v.rv;
