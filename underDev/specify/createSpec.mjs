@@ -1103,39 +1103,61 @@ async function createSpec(opt={}){
      * @returns {string|Error}
      */
     makeIndexMD(folder){
-      const v = {whois:`${this.constructor.name}.makeIndexMD`, arg:{folder}, rv:null};
+      const v = {whois:`${this.constructor.name}.makeIndexMD`, arg:{folder}, rv:[]};
       const dev = new devTools(v);
       try {
 
-        v.rv = folder.folderName;
-        /*
-        dev.step(3);  // 固有パス毎にindex.md作成
-        doc.unique.forEach(unique => {
-          v.md = ['# グローバル関数・クラス一覧','',
-            '| path | name | label |','| :-- | :-- | :-- |'];
-          // グローバル関数・クラス一覧
-          v.list[unique].funclass.forEach(id => {
-            v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
+        dev.step(1); // グローバル関数・クラス一覧
+        v.rv.push(`# グローバル関数・クラス一覧`);
+        v.data = [];
+        Object.keys(folder.funclass).map(x => this.map[x])  // 配列化して名前順に並べ替え
+        .sort((a,b) => a.name < b.name ? -1 : (a.name === b.name ? 0 : 1))
+        .forEach(doclet => {
+          v.data.push({
+            name: `[${doclet.name}](${doclet.name}.md)`,
+            label: doclet.label,
           });
-          // データ型定義一覧
-          v.md.push('','# データ型定義一覧','',
-            '| path | name | label |','| :-- | :-- | :-- |');
-          v.list[unique].typedef.forEach(id => {
-            v.md.push(`| ${doc.map[id].unique} | ${doc.map[id].name} | ${doc.map[id].label} |`);
-          });
-          // データ型定義
-          v.md.push('','# データ型');
-          v.list[unique].typedef.forEach(id => {
-            v.r = doc.map[id].properties.makeTable();
-            if( v.r instanceof Error ) throw v.r;
-            v.md.push('',`## ${doc.map[id].name}`,'',v.r);
-          });
-
-          // index.mdとして出力
-          writeFileSync(`${doc.source.outDir}/${unique}/index.md`,v.md.join('\n'))
         });
-        */
+        // Markdownテーブル作成
+        v.r = DocletTree.makeTable(v.data,{header:[
+          {key:'name',label:'クラス/関数名',align:':--'},
+          {key:'label',label:'概要',align:':--'},
+        ]});
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.push('',v.r);
 
+        dev.step(2);  // データ型定義(folder.typedef)を配列化
+        v.list = Object.keys(folder.typedef).map(x => this.map[x])
+        .sort((a,b) => a.name < b.name ? -1 : (a.name === b.name ? 0 : 1));
+
+        dev.step(3);  // データ型定義一覧
+        v.rv.push('',`# データ型定義一覧`);
+        v.data = [];
+        dev.step(3.1);  // テーブル用データ作成
+        v.list.forEach(doclet => {
+          v.data.push({
+            name: `[${doclet.name}](#${doclet.name})`,
+            label: doclet.label,
+          });
+        });
+        dev.step(3.2);  // Markdownテーブル作成
+        v.r = DocletTree.makeTable(v.data,{header:[
+          {key:'name',label:'データ型名',align:':--'},
+          {key:'label',label:'概要',align:':--'},
+        ]});
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.push('',v.r);
+
+        dev.step(4);  // 個別データ型定義
+        v.rv.push('',`# 個別データ型定義`)
+        v.list.forEach(doclet => {
+          v.rv.push('',`## <span id="${doclet.name}">"${doclet.name}" データ型定義</span>`);
+          v.r = doclet.properties.makeTable();
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push('',v.r);
+        });
+
+        v.rv = v.rv.join('\n');
         dev.end(); // 終了処理
         return v.rv;
       } catch (e) { return dev.error(e); }
@@ -1169,16 +1191,16 @@ async function createSpec(opt={}){
           },o));
         }
 
-        dev.step(1);  // ヘッダ部
+        dev.step(2);  // ヘッダ部
         opt.header.forEach(x => {
           v.rv[0].push(x.label);
           v.rv[1].push(x.align);
         });
 
-        dev.step(2);  // データ部
+        dev.step(3);  // データ部
         data.forEach(l => v.rv.push(opt.header.map(x => l[x.key])));
 
-        dev.step(3);  // テキストに変換
+        dev.step(4);  // テキストに変換
         v.rv = v.rv.map(l => `${' '.repeat(opt.indent)}| ${l.join(' | ')} |`).join('\n');
 
         dev.end(); // 終了処理
