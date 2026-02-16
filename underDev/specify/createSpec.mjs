@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-import { path, basename } from 'path';
+import path from 'path';
 import process from 'process';
 import { createHash, randomUUID } from 'crypto';
 import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
+import { basename } from 'node:path';
 createSpec();
 
 /** 開発工程・残課題
@@ -1053,12 +1054,16 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** makeIndexMD: フォルダ単位のクラス・グローバル関数一覧＋データ型定義のMarkdownを作成 */
-    makeIndexMD(){
-      const v = {whois:`${this.constructor.name}.makeIndexMD`, arg:{arg,opt}, rv:null};
+    /** makeIndexMD: フォルダ単位のクラス・グローバル関数一覧＋データ型定義のMarkdownを作成
+     * @param {DocletTreeFolder} folder 
+     * @returns {string|Error}
+     */
+    makeIndexMD(folder){
+      const v = {whois:`${this.constructor.name}.makeIndexMD`, arg:{folder}, rv:null};
       const dev = new devTools(v);
       try {
 
+        v.rv = folder.folderName;
         /*
         dev.step(3);  // 固有パス毎にindex.md作成
         doc.unique.forEach(unique => {
@@ -1154,23 +1159,24 @@ async function createSpec(opt={}){
         if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
 
         dev.step(2);  // グローバル関数・クラス毎に個別ファイル作成
-        v.index = {funclass:[],typedef:[]}; // それぞれ対象uuidの配列
-        Object.keys(folder.funclass).map(x => this.map[x])
+        Object.keys(folder.funclass).map(x => this.map[x])  // 配列化して名前順に並べ替え
         .sort((a,b) => a.name < b.name ? -1 : (a.name === b.name ? 0 : 1))
         .forEach(doclet => {
-          // リストに登録
-          v.index.funclass.push(doclet.uuid);
-          // MDファイル出力
-          v.r = this.markdown(doclet.uuid);
+          v.r = this.makeDocletMD(doclet.uuid);
           if( v.r instanceof Error ) throw v.r;
           writeFileSync(`${v.path}/${doclet.name}.md`,v.r);
         });
 
         dev.step(3);  // トップシート(index.md)の作成
+        v.r = this.makeIndexMD(folder);
+        if( v.r instanceof Error ) throw v.r;
+        writeFileSync(`${v.path}/index.md`,v.r);
 
         dev.step(4);  // 子フォルダを再帰呼出
-
-
+        for( v.i=0 ; v.i<folder.children.length ; v.i++ ){
+          v.r = this.output(folder.children[v.i],v.path);
+          if( v.r instanceof Error ) throw v.r;
+        }
 
         dev.end(); // 終了処理
         return v.rv;
