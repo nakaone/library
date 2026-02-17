@@ -2,18 +2,23 @@
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
-| [class01](class01.md) | class01 |
-| [func01](func01.md) | func01: 関数テスト |
+| [class01](class01.md) | *  |
+| [func01](func01.md) | func01: 関数テスト
+ * 関数テスト説明文
+ *  |
 
 # データ型定義一覧
 
 | データ型名 | 概要 |
 | :-- | :-- |
-| [arrowDef](#arrowDef) | JSDocの関数・メソッド単位のオブジェクト |
-| [funcDef](#funcDef) | JSDocの関数・メソッド単位のオブジェクト |
-| [globalDef](#globalDef) | - 末尾にある補足説明 |
-| [typeDef](#typeDef) | JSDocのデータ型定義単位のオブジェクト |
-| [User](#User) | User |
+| [arrowDef](#arrowDef) | *  |
+| [funcDef](#funcDef) | *  |
+| [globalDef](#globalDef) | globalDef: テスト用定義①
+ * - typedef前の補足説明
+ *   - サブ項目
+ *  |
+| [typeDef](#typeDef) | *  |
+| [User](#User) | *  |
 
 # 個別データ型定義
 

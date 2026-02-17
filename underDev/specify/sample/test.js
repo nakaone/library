@@ -17,6 +17,7 @@
  *   - サブ項目
  * @typedef {Object} globalDef
  * - typedef後の補足説明
+ * @desc 補足説明①
  * @property {typeDef[]|columnDef[]} [main=[]] - グローバル領域にあるJSDoc
  * @property {Object} class - クラス定義にかかるJSDoc
  * @property {columnDef[]} [class.method] - 任意項目確認用

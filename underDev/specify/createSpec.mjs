@@ -13,13 +13,22 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
+ * - commentから以下の文字列があればdescriptionに追加
+ *   - 先頭から最初の＠までの文字列
+ *   - descriptionに存在しない、＠desc〜次の＠までの文字列
+ * - test.js ＠name「関数内説明文」になるべき所＠desc「関数内部での説明文」になっている
+ * - ＠desc「テスト用クラス(desc)」になるべき所longnameになっている
+ * - [bug] 説明文が複数回出力される
+ * - anchorの設定
+ * - 各種一覧「データ型」欄内の独自データ型にリンクを自動設定
+ * 
+ * - DocletTree.dump -> devTools.dump
+ *   要素の現在位置を"xxx.aaa.b[0]"という形の文字列として保持、
+ *   正規表現/aaa\.b[[0-9]]/でマッチしたら出力という形にする
  * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
  * - description内の'#'について自動的にレベル設定
- * - anchor, linkの設定
  * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
- * - [bug] 説明文が複数回出力される
  * - undocumentedチェックを追加
- * - シンボル・メソッドと一致する文字列にはリンクを自動生成
  * - 和文の他、英文のテンプレートも追加
  * - 文法チェック
  *   - ＠class の後に余計な文字列があればエラー
@@ -493,22 +502,67 @@ async function createSpec(opt={}){
         this.docletType = this.determineType(doclet);
         if( this.determineType instanceof Error) throw this.determineType;
 
-        dev.step(5);  // label
+        dev.step(5);    // label
+        dev.step(5.1);  // 原文(comment)からタグの内容を整理
+        v.comment = {label:null};
+        if( Object.hasOwn(doclet,'comment') ){
+          // タグ(@xxx)ごとに分解
+          v.m = doclet.comment.matchAll(/(\/\*\*|@[a-zA-Z]+)\s+([^@]+)/g);
+          [...v.m].forEach(tag => {
+
+            // タグ単位に{key,val}形式に変換
+            // ex.`@name User#test\n` ⇒ {key:"@name",val:"User#test"})
+            v.tag = {key:tag[1],val:tag[2]};
+
+            // "/**"で始まる行または"@name"はラベルと判断
+            if( v.tag.key === '/**' || v.tag.key === '@name' && v.comment.label === null )
+              v.comment.label = v.tag.val;
+
+            // @descの表記統一
+            if( ['/**','@desc'].includes(v.tag.key) )
+              v.tag.key = '@description';
+
+            // 不要な余白・コメント指示を削除
+            v.tag.val = v.tag.val.replace(/^\* /,'')  // 先頭の"* "
+            .replaceAll(/\n \* /g,'\n')  // 行頭の" * "
+            .replace(/\*\/?\s*$/,'')  // 末尾の"*/"
+            .trim();
+
+            // タグの種類毎に配列に追加
+            if( Object.hasOwn(v.comment,v.tag.key) ){
+              // 出現済タグの場合は配列に追加
+              v.comment[v.tag.key].push(v.tag.val);
+            } else {
+              // 未出現タグの場合、配列を用意した上で格納
+              v.comment[v.tag.key] = [v.tag.val];
+            }
+          });
+
+          // 各タグの値を結合
+          Object.keys(v.comment).forEach(key => {
+            if( Array.isArray(v.comment[key]) ){
+              v.comment[key] = v.comment[key].join('\n').trim();
+            }
+          })
+        }
+        dev.step(99.534,v.comment);
+
+        dev.step(5.2);  // 以下の優先順位でlabelを設定
         // ①JSDoc先頭の「/**」に続く文字列
-        v.m = doclet.comment?.split('\n')[0].match(/^\/\*\*\s*(.+)\n/) ?? null;
-        // ②説明文の先頭行
-        v.desc = (doclet.description ?? doclet.classdesc ?? doclet.longname)
-          .split('\n')[0] ?? '(ラベル未設定)';
-        // ③「① > (nameまたはclassなら)longname > ②」で決定
-        this.label = v.m !== null ? v.m[1] : (
-          this.docletType === 'name' || this.docletType === 'class'
-          ? (doclet.longname ?? v.desc) : v.desc
-        );
-        // 説明文の先頭行をlabelにした場合、説明文から削除
-        if( doclet.description && doclet.description.startsWith(this.label) )
-          doclet.description.slice(this.label.length).trim();
-        if( doclet.classdesc && doclet.classdesc.startsWith(this.label) )
-          doclet.classdesc.slice(this.label.length).trim();
+        // ②"@name"に続く文字列
+        //   ※①②はv.comment.labelを引用
+        // ③doclet.longname
+        this.label = v.comment.label !== null ? v.comment.label
+        : ( Object.hasOwn(doclet,'longname') ? doclet.longname : '(ラベル未設定)');
+
+        dev.step(5.3);  // 説明文の先頭行をlabelにした場合、説明文から削除
+        ['description','classdesc'].forEach(x => {
+          if( Object.hasOwn(v.comment,`@${x}`) ){
+            doclet[x] = v.comment[`@${x}`]
+            .slice(v.comment[`@${x}`].startsWith(this.label)
+            ? this.label.length : 0).trim();
+          }
+        });
 
         dev.step(6);  // properties
         v.r = new PropList(doclet.properties);
@@ -1456,12 +1510,12 @@ async function createSpec(opt={}){
 
     console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc.folder)));
     dev.end(doc.dump({
-      paths:['uuid','memberof','longnameId','parent','children'],
+      paths:['comment','tmp'],
       //filter:x=>x.docletType==='description'
     }));
     // doc.dump
-    // longnameの確認
-    // 
+    // labelの設定値確認
+    // {paths:['label'],}
     // class01重複チェック
     // {paths:['rangeId','linenoId','commentId'],filter:x=>x.kind==='class'}
     // meta.range未定義
