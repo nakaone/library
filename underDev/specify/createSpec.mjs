@@ -13,7 +13,6 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - [bug] 説明文が複数回出力される
  * - anchorの設定
  * - 各種一覧「データ型」欄内の独自データ型にリンクを自動設定
  * 
@@ -1082,9 +1081,14 @@ async function createSpec(opt={}){
         dev.step(3); // 説明文
         v.desc = [];
         ['description','classdesc'].forEach(x => {
-          if( v.d[x] ) v.desc.push(v.d[x]);
-        if( v.desc.length > 0 )
-          v.rv.push(...['',`${'#'.repeat(level+1)} 🧾 概説`,'',],...v.desc)});
+          // doclet.descriptionは@descが複数有った場合最後のみ有効
+          // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
+          if( v.d[x] && v.d.parsed[`@${x}`].length > 0 )
+            v.desc.push('',v.d.parsed[`@${x}`]);
+        });
+        if( v.desc.length > 0 ){
+          v.rv.push(...['',`${'#'.repeat(level+1)} 🧾 概説`],...v.desc);
+        }
 
         dev.step(4); // メンバ一覧
         if( v.d.properties instanceof PropList ){
