@@ -14,7 +14,6 @@ createSpec();
  * @desc
  * 
  * - commentから以下の文字列があればdescriptionに追加
- *   - 先頭から最初の＠までの文字列
  *   - descriptionに存在しない、＠desc〜次の＠までの文字列
  * - test.js ＠name「関数内説明文」になるべき所＠desc「関数内部での説明文」になっている
  * - ＠desc「テスト用クラス(desc)」になるべき所longnameになっている
@@ -504,23 +503,26 @@ async function createSpec(opt={}){
 
         dev.step(5);    // label
         dev.step(5.1);  // 原文(comment)からタグの内容を整理
-        v.comment = {label:null};
+        this.parsed = {label:null};
         if( Object.hasOwn(doclet,'comment') ){
+
+          // "/**"で始まる行はラベルと判断
+          v.m = doclet.comment.split('\n')[0].match(/\/\*\*\s+([^@].+)/);
+          if( v.m ) this.parsed.label = v.m[1];
+
           // タグ(@xxx)ごとに分解
-          v.m = doclet.comment.matchAll(/(\/\*\*|@[a-zA-Z]+)\s+([^@]+)/g);
+          v.m = doclet.comment.matchAll(/(\/\*\*|@[a-zA-Z]+)\s*([^@]+)/g);
           [...v.m].forEach(tag => {
 
             // タグ単位に{key,val}形式に変換
             // ex.`@name User#test\n` ⇒ {key:"@name",val:"User#test"})
             v.tag = {key:tag[1],val:tag[2]};
 
-            // "/**"で始まる行または"@name"はラベルと判断
-            if( v.tag.key === '/**' || v.tag.key === '@name' && v.comment.label === null )
-              v.comment.label = v.tag.val;
-
-            // @descの表記統一
+            // タグの表記統一
             if( ['/**','@desc'].includes(v.tag.key) )
               v.tag.key = '@description';
+            if( v.tag.key === '@prop' )
+              v.tag.key = '@property';
 
             // 不要な余白・コメント指示を削除
             v.tag.val = v.tag.val.replace(/^\* /,'')  // 先頭の"* "
@@ -529,37 +531,54 @@ async function createSpec(opt={}){
             .trim();
 
             // タグの種類毎に配列に追加
-            if( Object.hasOwn(v.comment,v.tag.key) ){
+            if( Object.hasOwn(this.parsed,v.tag.key) ){
               // 出現済タグの場合は配列に追加
-              v.comment[v.tag.key].push(v.tag.val);
+              this.parsed[v.tag.key].push(v.tag.val);
             } else {
               // 未出現タグの場合、配列を用意した上で格納
-              v.comment[v.tag.key] = [v.tag.val];
+              this.parsed[v.tag.key] = [v.tag.val];
             }
           });
 
           // 各タグの値を結合
-          Object.keys(v.comment).forEach(key => {
-            if( Array.isArray(v.comment[key]) ){
-              v.comment[key] = v.comment[key].join('\n').trim();
+          Object.keys(this.parsed).forEach(key => {
+            if( Array.isArray(this.parsed[key]) ){
+              this.parsed[key] = this.parsed[key].join('\n').trim();
             }
           })
         }
-        dev.step(99.534,v.comment);
 
         dev.step(5.2);  // 以下の優先順位でlabelを設定
         // ①JSDoc先頭の「/**」に続く文字列
         // ②"@name"に続く文字列
-        //   ※①②はv.comment.labelを引用
-        // ③doclet.longname
-        this.label = v.comment.label !== null ? v.comment.label
-        : ( Object.hasOwn(doclet,'longname') ? doclet.longname : '(ラベル未設定)');
+        // ③typdef, interface
+        // ④doclet.longname
+        if( this.parsed.label !== null ){
+          this.label = this.parsed.label;
+        } else if( Object.hasOwn(this.parsed,'@name') ){
+          this.label = this.parsed['@name'];
+        } else if( Object.hasOwn(this.parsed,'@typedef') ){
+          // `@typedef {...} xxx - 説明`形式 ⇒ label=説明
+          v.m1 = this.parsed['@typedef'].match(/\}\s+[^\-]+\s+\-\s+(.+)$/);
+          // `@typedef {...} xxx`形式 ⇒ label=xxx
+          v.m2 = this.parsed['@typedef'].match(/\}\s+(.+)$/);
+          this.label = v.m1 !== null ? v.m1[1]
+            : (v.m2 !== null ? v.m2[1] : '(ラベル未設定)');
+          dev.step(99.567,{str:this.parsed['@typedef'],m1:v.m1,m2:v.m2,label:this.label});
+        } else if( Object.hasOwn(this.parsed,'@interface') ){
+          this.label = this.parsed['@interface'];
+        } else if( Object.hasOwn(doclet,'longname') ){
+          this.label = doclet.longname;
+        } else {
+          this.label = '(ラベル未設定)';
+        }
+        dev.step(99.534,{label:this.label,parsed:this.parsed});
 
         dev.step(5.3);  // 説明文の先頭行をlabelにした場合、説明文から削除
         ['description','classdesc'].forEach(x => {
-          if( Object.hasOwn(v.comment,`@${x}`) ){
-            doclet[x] = v.comment[`@${x}`]
-            .slice(v.comment[`@${x}`].startsWith(this.label)
+          if( Object.hasOwn(this.parsed,`@${x}`) ){
+            doclet[x] = this.parsed[`@${x}`]
+            .slice(this.parsed[`@${x}`].startsWith(this.label)
             ? this.label.length : 0).trim();
           }
         });
@@ -1237,7 +1256,7 @@ async function createSpec(opt={}){
         } else {
           opt.header = opt.header.map(o => Object.assign({
             key: o.key,
-            lable: o.label ?? o.key,
+            label: o.label ?? o.key,
             align: o.align ?? ':--'
           },o));
         }
@@ -1510,7 +1529,7 @@ async function createSpec(opt={}){
 
     console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc.folder)));
     dev.end(doc.dump({
-      paths:['comment','tmp'],
+      paths:['parsed'],
       //filter:x=>x.docletType==='description'
     }));
     // doc.dump
