@@ -13,10 +13,6 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - commentから以下の文字列があればdescriptionに追加
- *   - descriptionに存在しない、＠desc〜次の＠までの文字列
- * - test.js ＠name「関数内説明文」になるべき所＠desc「関数内部での説明文」になっている
- * - ＠desc「テスト用クラス(desc)」になるべき所longnameになっている
  * - [bug] 説明文が複数回出力される
  * - anchorの設定
  * - 各種一覧「データ型」欄内の独自データ型にリンクを自動設定
@@ -552,7 +548,8 @@ async function createSpec(opt={}){
         // ①JSDoc先頭の「/**」に続く文字列
         // ②"@name"に続く文字列
         // ③typdef, interface
-        // ④doclet.longname
+        // ④description, classdescの先頭行
+        // ⑤doclet.longname
         if( this.parsed.label !== null ){
           this.label = this.parsed.label;
         } else if( Object.hasOwn(this.parsed,'@name') ){
@@ -567,21 +564,20 @@ async function createSpec(opt={}){
           dev.step(99.567,{str:this.parsed['@typedef'],m1:v.m1,m2:v.m2,label:this.label});
         } else if( Object.hasOwn(this.parsed,'@interface') ){
           this.label = this.parsed['@interface'];
+        } else if( Object.hasOwn(this.parsed,'@description') ){
+          v.m = this.parsed['@description'].split('\n');
+          this.label = v.m[0];
+          this.parsed['@description'] = doclet.description = v.m.slice(1).join('\n');
+        } else if( Object.hasOwn(this.parsed,'@classdesc') ){
+          v.m = this.parsed['@classdesc'].split('\n');
+          this.label = v.m[0];
+          this.parsed['@classdesc'] = doclet.classdesc = v.m.slice(1).join('\n');
         } else if( Object.hasOwn(doclet,'longname') ){
           this.label = doclet.longname;
         } else {
           this.label = '(ラベル未設定)';
         }
-        dev.step(99.534,{label:this.label,parsed:this.parsed});
-
-        dev.step(5.3);  // 説明文の先頭行をlabelにした場合、説明文から削除
-        ['description','classdesc'].forEach(x => {
-          if( Object.hasOwn(this.parsed,`@${x}`) ){
-            doclet[x] = this.parsed[`@${x}`]
-            .slice(this.parsed[`@${x}`].startsWith(this.label)
-            ? this.label.length : 0).trim();
-          }
-        });
+        dev.step(99.534,{label:this.label,parsed:this.parsed,doclet:this});
 
         dev.step(6);  // properties
         v.r = new PropList(doclet.properties);

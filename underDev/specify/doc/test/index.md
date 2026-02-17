@@ -2,7 +2,7 @@
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
-| [class01](class01.md) | class01 |
+| [class01](class01.md) | テスト用クラス(desc) |
 | [func01](func01.md) | func01: 関数テスト |
 
 # データ型定義一覧
