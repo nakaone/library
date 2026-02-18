@@ -72,6 +72,8 @@ async function createSpec(opt={}){
       - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
       - コンストラクタには「＠constructor」必須
       - 「＠history」を独自タグとして定義
+      - 先頭のラベルとそれに続く文字列、および他で出現する＠descは
+        まとめて一つの@descとして扱われる
       - 説明文(=Markdownとして出力する説明)
         - 「＠name (説明文のタイトル)」＋「＠desc」で開始
         - 「＠name」がない説明文は出力されない(廃棄)
@@ -410,12 +412,29 @@ async function createSpec(opt={}){
    */
   /** DocletEx: jsdocから出力されるDocletに情報を付加したもの
    * @class
+   * @desc メンバ各値の設定箇所は以下の通り。
+   * - opt ~ returns:       DocletEx.constructor()
+   * - parent, children:    DocletTree.determineParent()
+   * - unique ~ longnameId: DocletTree.registration()
+   * 
+   * @prop {Object} opt - DocletExインスタンス作成時のオプション
+   *   現状未使用
    * @prop {string} uuid - DocletExを一意に識別するためのUUID
    * @prop {string} docletType - Docletの種類。下記「docletTypeの判定ロジック」参照
+   * @prop {Object.<string, string>} parsed - Doclet内で定義されたタグの値
+   *   例： parsed: {
+   *     label:"method01: メソッドテスト", // string
+   *     ＠description:"method01: メソッドテスト", // string
+   *     ＠memberof:"class01", // string
+   *     ＠param:"{number} arg - method01の引数", // string
+   *     ＠returns:"{{qId:number,name:string}} NG: qId,name指定無しのObjectになる", // string
+   *   }
    * @prop {string} label - 1行で簡潔に記述された概要説明
-   *   ① `／** `に続く文字列
-   *   ② description, classdesc があれば先頭行
-   *   ③ longname
+   *   ① JSDoc先頭の「/**」に続く文字列
+   *   ② "＠name"に続く文字列
+   *   ③ typdef, interface
+   *   ④ description, classdescの先頭行
+   *   ⑤ doclet.longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
    * @prop {PropList} [properties] - メンバ一覧(※DocletのそれをPropListで置換)
    * @prop {PropList} [params] - 引数。クラスの場合はconstructorの引数(※同上)
@@ -427,14 +446,16 @@ async function createSpec(opt={}){
    * @prop {string} [unique] - 固有パス
    *   ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/")
    * @prop {string} [basename] - ファイル名
-   * @prop {string} [prefix] - 固有パス＋ファイル名＋'::'
+   * @prop {string} [prefix] - 固有パス＋ファイル名
    *   以下の各種IDの共通部分(固有パスの先頭・末尾の'/'有無処理済)
-   * @prop {string} [rangeId] - 固有パス＋ファイル名＋meta.range[0]
+   * @prop {string} [rangeId] - 固有パス＋ファイル名＋':R'＋meta.range[0]
    *   ※ Doclet以外のファイル情報が必要なため、DocletTree側で追加される項目
-   * @prop {string} [linenoId] - 固有パス＋ファイル名＋meta.lineno ※同上
+   * @prop {string} [linenoId] - 固有パス＋ファイル名＋':N'＋meta.lineno ※同上
    * @prop {string} [commentId] - 「固有パス＋ファイル名＋comment」のSHA256
    *   同一commentが同一ファイル内に複数有った場合は設定しない
-   * @prop {string} [longnameId] - 固有パス＋ファイル名＋longname
+   * @prop {string} [longnameId] - 固有パス＋ファイル名＋'::'＋longname
+   *   なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない
+   *   
    * 
    * # docletTypeの判定ロジック
    * 
@@ -494,7 +515,7 @@ async function createSpec(opt={}){
 
         dev.step(4);  // docletType
         this.docletType = this.determineType(doclet);
-        if( this.determineType instanceof Error) throw this.determineType;
+        if( this.docletType instanceof Error) throw this.docletType;
 
         dev.step(5);    // label
         dev.step(5.1);  // 原文(comment)からタグの内容を整理
@@ -544,11 +565,11 @@ async function createSpec(opt={}){
         }
 
         dev.step(5.2);  // 以下の優先順位でlabelを設定
-        // ①JSDoc先頭の「/**」に続く文字列
-        // ②"@name"に続く文字列
-        // ③typdef, interface
-        // ④description, classdescの先頭行
-        // ⑤doclet.longname
+        // ① JSDoc先頭の「/**」に続く文字列
+        // ② "@name"に続く文字列
+        // ③ typdef, interface
+        // ④ description, classdescの先頭行
+        // ⑤ doclet.longname
         if( this.parsed.label !== null ){
           this.label = this.parsed.label;
         } else if( Object.hasOwn(this.parsed,'@name') ){
@@ -560,7 +581,6 @@ async function createSpec(opt={}){
           v.m2 = this.parsed['@typedef'].match(/\}\s+(.+)$/);
           this.label = v.m1 !== null ? v.m1[1]
             : (v.m2 !== null ? v.m2[1] : '(ラベル未設定)');
-          dev.step(99.567,{str:this.parsed['@typedef'],m1:v.m1,m2:v.m2,label:this.label});
         } else if( Object.hasOwn(this.parsed,'@interface') ){
           this.label = this.parsed['@interface'];
         } else if( Object.hasOwn(this.parsed,'@description') ){
@@ -576,7 +596,6 @@ async function createSpec(opt={}){
         } else {
           this.label = '(ラベル未設定)';
         }
-        dev.step(99.534,{label:this.label,parsed:this.parsed,doclet:this});
 
         dev.step(6);  // properties
         v.r = new PropList(doclet.properties);
@@ -675,7 +694,7 @@ async function createSpec(opt={}){
    * @prop {DocletEx[]} doclet - 独自情報を付加したDocletExの配列
    * @prop {Object.<string, DocletEx>} map - rangeId/linenoId/commentIdをキーにしたDocletExのマップ
    * @prop {Object.<string, DocletTreeFolder>} folder - パス毎の所属Doclet管理。キーはフォルダ名
-   * @prop {Object} [opt={}] - オプション設定値
+   * @prop {Object} [opt={}] - オプション設定値。設定値はconstructor参照
    */
   class DocletTree {
     /**
@@ -719,6 +738,51 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
+    /** article: タイトル行＋記事のMarkdown文字列作成
+     * @param {Object} arg
+     * @param {string} arg.title - タイトルの文字列
+     * @param {number} [arg.level=1] - タイトル行のレベル
+     * @param {string} [arg.url] - タイトル行からのリンク(飛び先のURL)
+     * @param {string} [arg.anchor] - アンカー文字列
+     * @param {string} arg.content - 本文
+     * @returns {string|Error}
+     */
+    article(arg){
+      const v = {whois:`${this.constructor.name}.article`, arg:{arg}, rv:[]};
+      const dev = new devTools(v);
+      try {
+
+        dev.step(1);  // 事前準備
+        if( !arg.title ) throw new Error('no title');
+        if( !arg.level ) arg.level = 1;
+
+        dev.step(2);  // アンカーの設定
+        if( Object.hasOwn(arg,'anchor') && arg.anchor.length > 0 ){
+          arg.title = `<span id="${arg.anchor}">${arg.title}</span>`;
+        }
+
+        dev.step(3);  // リンクの設定
+        if( Object.hasOwn(arg,'url') && arg.url.length > 0 ){
+          arg.title = `<a href="${arg.url}">${arg.title}</a>`;
+        }
+
+        dev.step(4);  // タイトルを戻り値に保存
+        v.rv.push('',`${'#'.repeat(arg.level)} ${arg.title}`);
+
+        dev.step(5);  // 本文を戻り値に保存
+        if( Object.hasOwn(arg,'content') && arg.content.length > 0 ){
+          // タイトルのレベルに合わせて記事内のタイトルのレベルをシフト
+          v.rv.push('',arg.content
+            //.replaceAll(/^#/g,'#'.repeat(arg.level+1))
+          );
+        }
+
+        v.rv = v.rv.join('\n');
+        dev.end(v.rv); // 終了処理
+        return v.rv;
+      } catch (e) { return dev.error(e); }
+    }
+
     /** determineParent: 対象要素が子要素であるとき親要素を特定
      * メソッド⇒クラス、内部関数⇒グローバル関数、等
      * 1. child.memberof === parent.longname
@@ -730,9 +794,13 @@ async function createSpec(opt={}){
       try {
 
         for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
-          v.d = this.doclet[v.i];
 
-          dev.step(1);  // ①：child.memberof === parent.longnameで判定
+          dev.step(1);  // parent, childrenの初期値設定
+          v.d = this.doclet[v.i];
+          v.d.parent = null;
+          v.d.children = [];
+
+          dev.step(2);  // ①：child.memberof === parent.longnameで判定
           if( Object.hasOwn(v.d,'memberof' )){
             v.key = v.d.prefix + v.d.memberof;
             if( Object.hasOwn(this.map,v.key) && this.map[v.key] !== null ){
@@ -741,7 +809,7 @@ async function createSpec(opt={}){
             }
           }
 
-          dev.step(2);  // ②：①で決まらない場合、子要素を包摂する直近の要素
+          dev.step(3);  // ②：①で決まらない場合、子要素を包摂する直近の要素
           if( v.d.parent === null && typeof v.d.meta?.range !== 'undefined' ){
             v.minSize = Infinity;
             for( v.t of this.doclet ){
@@ -759,7 +827,7 @@ async function createSpec(opt={}){
             }
           }
 
-          dev.step(3);  // 親要素のchildrenに比較元を登録
+          dev.step(4);  // 親要素のchildrenに比較元を登録
           if( v.d.parent !== null )
             this.map[v.d.parent].children.push(v.d.uuid);
         }
@@ -1020,19 +1088,6 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** makeMD: Markdownファイル作成のコントローラ */
-    makeMD(){
-      const v = {whois:`${this.constructor.name}.makeMD`, arg:{arg,opt}, rv:null};
-      const dev = new devTools(v);
-      try {
-
-
-
-        dev.end(); // 終了処理
-        return v.rv;
-      } catch (e) { return dev.error(e); }
-    }
-
     /** makeDocletMD: 単一DocletExのインスタンスからMarkdownを作成
      * - フォルダ内クラス・グローバル関数一覧＋データ型定義一覧(index.html)は
      *   DocletTreeFolder.markdownで作成
@@ -1041,7 +1096,7 @@ async function createSpec(opt={}){
      * @returns {string|Error}
      */
     makeDocletMD(uuid,level=1) {
-      const v = {whois:`${this.constructor.name}.makeDocletMD`, arg:{uuid,level}, rv:null};
+      const v = {whois:`${this.constructor.name}.makeDocletMD`, arg:{uuid,level}, rv:[]};
       const dev = new devTools(v,{mode:'dev'});
       /**
        * @name 文書の構成
@@ -1053,7 +1108,6 @@ async function createSpec(opt={}){
        * | ヘッダ部    |    |    |   | _top |  |
        * | — タイトル  | ⭕ | ⭕ | ⭕ |         | ○○クラス(データ型)仕様書、等 |
        * | — ラベル    | ⭕ | ⭕ | ❌ |         | 一行にまとめた説明 |
-       * | — 概要説明  | ⭕ | ⭕ | ⭕ |         | 数行程度 |
        * | メンバ一覧  | ⭕ | ⭕ | ❌ | _prop    |  |
        * | メソッド一覧 | ⭕ | ❌ | ❌ | _func   |  |
        * | 詳細説明    | ⭕ | ❌ | ❌ | _desc   |  |
@@ -1070,6 +1124,100 @@ async function createSpec(opt={}){
        */
       try {
 
+        dev.step(1);  // 事前準備
+        v.d = this.map[uuid];
+        dev.step(99.1129,v.d);
+        v.anchor = v.d.longnameId;
+
+        dev.step(2);  // ヘッダ部
+        v.r = this.article({
+          title: `🧩 ${this.opt.title[v.d.docletType].replace('_',v.d.name)}`,
+          level: level,
+          url: '',
+          anchor: `${v.anchor}_top`,
+          content: v.d.label,
+        });
+        dev.step(99.1141,{r:v.r,rv:v.rv});
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.push(v.r);
+
+        dev.step(3,v.rv); // メンバ一覧
+        /*
+        if( v.d.properties instanceof PropList ){
+          v.t = v.d.properties.makeTable();
+          if( v.t instanceof Error ) throw v.t;
+          v.r = this.article({
+            title: `🔢 メンバ一覧`,
+            level: level+1,
+            url: `#${v.anchor}_top`,
+            anchor: `${v.anchor}_prop`,
+            content: v.t,
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(v.r);
+        }
+
+        dev.step(4); // メソッド一覧
+        if( v.d.children && v.d.children.length > 0 ){
+          // 一覧用のデータ作成
+          v.list = [];
+          for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
+            v.c = this.map[v.d.children[v.i].uuid];
+            v.list.push({
+              no:    v.i+1,
+              name:  v.c.name,
+              label: v.c.label
+            });
+          }
+          v.r = DocletTree.makeTable(v.list,{header:[
+            {key:'no',label:'No',align:'--:'},
+            {key:'name',label:'名前',align:':--'},
+            {key:'label',label:'概要',align:':--'},
+          ]});
+          if( v.r instanceof Error ) throw v.r;
+
+          // 記事の作成
+          v.r = this.article({
+            title: `🧱 メソッド・内部関数一覧`,
+            level: level+1,
+            url: `#${v.anchor}_top`,
+            anchor: `${v.anchor}_func`,
+            content: v.r,
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(v.r);
+        }
+
+        dev.step(5); // 説明文
+        ['description','classdesc'].forEach(x => {
+          // 元データであるdoclet.descriptionは@descが複数有った場合、最後のみ有効
+          // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
+          if( v.d[x] && v.d.parsed[`@${x}`].length > 0 )
+            v.content += `\n${v.d.parsed[`@${x}`]}`;
+        });
+        v.desc = [];
+        if( v.desc.length > 0 ){
+          v.rv.push(...['',`${'#'.repeat(level+1)} 🧾 概説`],...v.desc);
+        }
+
+        dev.step(6); // 引数
+        if( v.d.params instanceof PropList ){
+          v.r = v.d.params.makeTable();
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(...['',`${'#'.repeat(level+1)} ▶️ 引数`,''],v.r)
+        }
+
+        dev.step(7); // 戻り値
+        if( v.d.returns instanceof PropList ){
+          v.r = v.d.returns.makeTable();
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(...['',`${'#'.repeat(level+1)} ◀️ 戻り値`,''],v.r)
+        }
+
+        dev.step(8); // 個別メソッド、内部関数
+        */
+
+        /*
         dev.step(1);  // ヘッダ部
         v.d = this.map[uuid];
         v.rv = ['#'.repeat(level) + ' 🧩 '
@@ -1129,41 +1277,10 @@ async function createSpec(opt={}){
         // 📥 引数
         // 📤 戻り値
         // 🧱 authClient.exec()
-
-        /*
-        dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
-        doc.unique.forEach(x => {
-          v.path = doc.source.outDir + '/' + x;
-          if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
-        })
-
-        v.list = {};
-        for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
-          v.d = doc.doclet[v.i];
-          if( typeof v.list[v.d.unique] === 'undefined' )
-            v.list[v.d.unique] = {funclass:[],typedef:[]};
-
-          if( ['function','class'].includes(v.d.docletType) ){
-            dev.step(2.1);  // グローバル関数・クラス
-            // リストに登録
-            if( !v.list[v.d.unique].funclass.includes(v.d.id) )
-              v.list[v.d.unique].funclass.push(v.d.id);
-            // MDファイル出力
-            v.r = markdown(v.d.id);
-            if( v.r instanceof Error ) throw v.r;
-            writeFileSync(`${doc.source.outDir}/${v.d.unique}/${v.d.name}.md`,v.r);
-          } else if( ['typedef','interface'].includes(v.d.docletType) && v.d.parent === null ){
-            dev.step(2.2);  // データ型定義なら登録のみ
-            // 関数・クラス内部のデータ型定義も一覧に入れておく(複数箇所表示)
-            if( !v.list[v.d.unique].typedef.includes(v.d.id) )
-              v.list[v.d.unique].typedef.push(v.d.id);
-          }
-        }
         */
 
-        v.rv = v.rv.join('\n');
-        dev.end();
-        return v.rv;
+        dev.end(v.rv);
+        return v.rv.join('\n').trim();
 
       } catch (e) { return dev.error(e); }
     }
@@ -1341,7 +1458,7 @@ async function createSpec(opt={}){
         doclet.prefix = `${
           (/^\//.test(file.unique) ? '' : '/')
           + file.unique
-          + (/\/$/.test(file.unique) ? '' : '/')}${file.basename}:`;
+          + (/\/$/.test(file.unique) ? '' : '/')}${file.basename}`;
 
         // 信頼性の低い順にチェックし、より信頼度の高いものが一致すれば置換する
         dev.step(2.1);  // 「固有パス＋ファイル名＋comment」のハッシュ
@@ -1355,19 +1472,19 @@ async function createSpec(opt={}){
         }
         dev.step(2.2);  // 固有パス＋ファイル名＋lineno
         if( typeof doclet.meta?.lineno !== 'undefined' ){
-          doclet.linenoId = doclet.prefix + `N${doclet.meta.lineno}`;
+          doclet.linenoId = doclet.prefix + `:N${doclet.meta.lineno}`;
           if( typeof this.map[doclet.linenoId] !== 'undefined' )
             v.dupkey = doclet.linenoId;
         }
         dev.step(2.3);  // 固有パス＋ファイル名＋range[0]
         if( typeof doclet.meta?.range !== 'undefined' ){
-          doclet.rangeId = doclet.prefix + `R${doclet.meta.range[0]}`;
+          doclet.rangeId = doclet.prefix + `:R${doclet.meta.range[0]}`;
           if( typeof this.map[doclet.rangeId] !== 'undefined' )
             v.dupkey = doclet.rangeId;
         }
         dev.step(2.4);  // 固有パス＋ファイル名＋longname
         if( typeof doclet.longname !== 'undefined' ){
-          doclet.longnameId = doclet.prefix + `L${doclet.longname}`;
+          doclet.longnameId = doclet.prefix + `::${doclet.longname}`;
           // longnameは重複判定に使用しないので作成のみ
           // this.mapへの登録は他のIDと異なり
           // 「未登録なら追加、登録済(longname重複)ならnull」
@@ -1376,7 +1493,7 @@ async function createSpec(opt={}){
         }
 
         if( v.dupkey.length > 0 ){
-          dev.step(3);  // 登録済なら既存DocletExに情報追加
+          dev.step(3);  // DocletEx.mapに登録済なら既存DocletExに情報追加
           this.map[v.dupkey] = mergeDeeply(this.map[v.dupkey],doclet);
         } else {
           // 未登録なので新規追加
@@ -1528,10 +1645,14 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
 
     console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc.folder)));
-    dev.end(doc.dump({
-      paths:['parsed'],
-      //filter:x=>x.docletType==='description'
-    }));
+    dev.end(
+      /*
+      doc.dump({
+        paths:['longname','longnameId','anchor'],
+        //filter:x => !Object.hasOwn(x,'longname'),
+      })
+      */
+    );
     // doc.dump
     // labelの設定値確認
     // {paths:['label'],}

@@ -19,37 +19,37 @@
 
 ## <span id="arrowDef">"arrowDef" データ型定義</span>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| name | type | value | desc | note |
 | :-- | :-- | :-- | :-- | :-- |
-| name | string | 必須 | 関数・メソッド名 |  |
-| list | arrowDef[] \| typeDef[] \| columnDef[] | 必須 | 関数・メソッド内のJSDoc |  |
+| name | string | required | 関数・メソッド名 |  |
+| list | arrowDef[] \| typeDef[] \| columnDef[] | required | 関数・メソッド内のJSDoc |  |
 
 ## <span id="funcDef">"funcDef" データ型定義</span>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| name | type | value | desc | note |
 | :-- | :-- | :-- | :-- | :-- |
-| name | string | 必須 | 関数・メソッド名 |  |
-| list | funcDef[] \| typeDef[] \| columnDef[] | 必須 | 関数・メソッド内のJSDoc |  |
+| name | string | required | 関数・メソッド名 |  |
+| list | funcDef[] \| typeDef[] \| columnDef[] | required | 関数・メソッド内のJSDoc |  |
 
 ## <span id="globalDef">"globalDef" データ型定義</span>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| name | type | value | desc | note |
 | :-- | :-- | :-- | :-- | :-- |
 | main | typeDef[] \| columnDef[] | [] | グローバル領域にあるJSDoc |  |
-| class | Object | 必須 | クラス定義にかかるJSDoc |  |
-| class.method | columnDef[] | 任意 | 任意項目確認用 |  |
+| class | Object | required | クラス定義にかかるJSDoc |  |
+| class.method | columnDef[] | optional | 任意項目確認用 |  |
 
 ## <span id="typeDef">"typeDef" データ型定義</span>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| name | type | value | desc | note |
 | :-- | :-- | :-- | :-- | :-- |
-| name | string | 必須 | データ型の定義名 |  |
-| list | columnDef[] | 必須 | 項目(メンバ)のリスト |  |
+| name | string | required | データ型の定義名 |  |
+| list | columnDef[] | required | 項目(メンバ)のリスト |  |
 
 ## <span id="User">"User" データ型定義</span>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| name | type | value | desc | note |
 | :-- | :-- | :-- | :-- | :-- |
-| name | string | 必須 |  |  |
-| age | number | 必須 |  |  |
-| isAdmin | boolean | 必須 |  |  |
+| name | string | required |  |  |
+| age | number | required |  |  |
+| isAdmin | boolean | required |  |  |
