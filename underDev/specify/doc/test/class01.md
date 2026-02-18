@@ -14,3 +14,7 @@
 | --: | :-- | :-- |
 | 1 | class01 | class01のconstructor |
 | 2 | method01 | method01: メソッドテスト |
+
+## <a href="#/test.js::class01_top"><span id="/test.js::class01_desc">🧾 概説</span></a>
+
+テスト用クラス(classdesc)

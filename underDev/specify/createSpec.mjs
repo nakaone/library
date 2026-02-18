@@ -1190,33 +1190,42 @@ async function createSpec(opt={}){
         }
 
         dev.step(5,{r:v.r,rv:v.rv}); // 説明文
-        /*
+        v.r = '';
         ['description','classdesc'].forEach(x => {
           // 元データであるdoclet.descriptionは@descが複数有った場合、最後のみ有効
           // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
           if( v.d[x] && v.d.parsed[`@${x}`].length > 0 )
-            v.content += `\n${v.d.parsed[`@${x}`]}`;
+            v.r += `\n${v.d.parsed[`@${x}`]}`;
         });
-        v.desc = [];
-        if( v.desc.length > 0 ){
-          v.rv.push(...['',`${'#'.repeat(level+1)} 🧾 概説`],...v.desc);
+        if( v.r.length > 0 ){
+          // 記事の作成
+          v.r = this.article({
+            title: `🧾 概説`,
+            level: level+1,
+            url: `#${v.anchor}_top`,
+            anchor: `${v.anchor}_desc`,
+            content: v.r.trim(),
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(v.r);
         }
 
-        dev.step(6); // 引数
+        dev.step(6,{r:v.r,rv:v.rv}); // 引数
+        /*
         if( v.d.params instanceof PropList ){
           v.r = v.d.params.makeTable();
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(...['',`${'#'.repeat(level+1)} ▶️ 引数`,''],v.r)
         }
 
-        dev.step(7); // 戻り値
+        dev.step(7,{r:v.r,rv:v.rv}); // 戻り値
         if( v.d.returns instanceof PropList ){
           v.r = v.d.returns.makeTable();
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(...['',`${'#'.repeat(level+1)} ◀️ 戻り値`,''],v.r)
         }
 
-        dev.step(8); // 個別メソッド、内部関数
+        dev.step(8,{r:v.r,rv:v.rv}); // 個別メソッド、内部関数
         */
 
         /*
