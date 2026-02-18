@@ -1164,6 +1164,7 @@ async function createSpec(opt={}){
           v.list = [];
           for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
             v.c = this.map[v.d.children[v.i]];
+            if( v.c.docletType === 'unknown' ) continue;
             v.list.push({
               no:    v.i+1,
               name:  v.c.name,
@@ -1245,6 +1246,7 @@ async function createSpec(opt={}){
         dev.step(8,{r:v.r,rv:v.rv}); // 個別メソッド、内部関数
         if( v.d.children && v.d.children.length > 0 ){
           for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
+            if( this.map[v.d.children[v.i]].docletType === 'unknown' ) continue;
             v.r = this.makeDocletMD(v.d.children[v.i],level+1);
             if( v.r instanceof Error ) throw v.r;
             v.rv.push(v.r);

@@ -7,7 +7,6 @@ func01: 関数テスト
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
 | 1 | arrow01 | arrow01: アローテスト |
-| 2 | rv |  |
 
 ## <a href="#/test.js::func01_top"><span id="/test.js::func01_desc">🧾 概説</span></a>
 
@@ -33,7 +32,6 @@ arrow01: アローテスト
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | rv |  |
 
 ### <a href="#/test.js::func01~arrow01_top"><span id="/test.js::func01~arrow01_desc">🧾 概説</span></a>
 
@@ -50,5 +48,3 @@ arrow01: アローテスト
 | type | desc | note |
 | :-- | :-- | :-- |
 | string | 戻り値 |  |
-### <span id="/test.js::func01~arrow01~rv_top">🧩 rv</span>
-## <span id="/test.js::func01~rv_top">🧩 rv</span>

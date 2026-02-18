@@ -26,7 +26,6 @@ class01のconstructor
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | opt | class01#opt |
 
 ### <a href="#/test.js::class01_top"><span id="/test.js::class01_desc">🧾 概説</span></a>
 
@@ -38,9 +37,6 @@ class01のconstructor
 | name | type | value | desc | note |
 | :-- | :-- | :-- | :-- | :-- |
 | arg | bigint | required | typeはテスト用 |  |
-### <span id="/test.js::class01#opt_top">🧩 opt</span>
-
-class01#opt
 ## <span id="/test.js::class01#method01_top">🧩 method01()</span>
 
 method01: メソッドテスト
