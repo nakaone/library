@@ -616,10 +616,12 @@ async function createSpec(opt={}){
           this.returns = v.r;
         }
 
+        /*
         dev.step(9);  // parent, childrenの初期値設定
         // 実値は全Doclet作成後にDocletTree.determineParentで設定
         this.parent = null;
         this.children = [];
+        */
 
         dev.end();
 
@@ -1070,9 +1072,11 @@ async function createSpec(opt={}){
         for( v.i=0 ; v.i<v.rv.source.files.length ; v.i++ ){
           v.file = v.rv.source.files[v.i];
           for( v.j=0 ; v.j<v.file.jsdoc.length ; v.j++ ){
+
             dev.step(3.1);  // DocletExインスタンス作成
             v.r = new DocletEx(v.file.jsdoc[v.j]);
             if( v.r instanceof Error ) throw v.r;
+
             dev.step(3.2);  // 重複登録チェック＋マップ登録
             v.r = v.rv.registration(v.r,v.file);
             if( v.r instanceof Error ) throw v.r;
@@ -1126,7 +1130,6 @@ async function createSpec(opt={}){
 
         dev.step(1);  // 事前準備
         v.d = this.map[uuid];
-        dev.step(99.1129,v.d);
         v.anchor = v.d.longnameId;
 
         dev.step(2);  // ヘッダ部
@@ -1156,12 +1159,11 @@ async function createSpec(opt={}){
         }
 
         dev.step(4,{r:v.r,rv:v.rv}); // メソッド一覧
-        /*
         if( v.d.children && v.d.children.length > 0 ){
           // 一覧用のデータ作成
           v.list = [];
           for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
-            v.c = this.map[v.d.children[v.i].uuid];
+            v.c = this.map[v.d.children[v.i]];
             v.list.push({
               no:    v.i+1,
               name:  v.c.name,
@@ -1187,7 +1189,8 @@ async function createSpec(opt={}){
           v.rv.push(v.r);
         }
 
-        dev.step(5); // 説明文
+        dev.step(5,{r:v.r,rv:v.rv}); // 説明文
+        /*
         ['description','classdesc'].forEach(x => {
           // 元データであるdoclet.descriptionは@descが複数有った場合、最後のみ有効
           // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
@@ -1643,14 +1646,12 @@ async function createSpec(opt={}){
     pv.rv = doc.output();
     if( pv.rv instanceof Error ) throw pv.rv;
 
-    console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc.folder)));
+    console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc,null,2)));
     dev.end(
-      /*
       doc.dump({
-        paths:['longname','longnameId','anchor'],
+        paths:['uuid','longnameId','parent','children'],
         //filter:x => !Object.hasOwn(x,'longname'),
       })
-      */
     );
     // doc.dump
     // labelの設定値確認
