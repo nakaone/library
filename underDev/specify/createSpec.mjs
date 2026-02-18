@@ -1137,12 +1137,10 @@ async function createSpec(opt={}){
           anchor: `${v.anchor}_top`,
           content: v.d.label,
         });
-        dev.step(99.1141,{r:v.r,rv:v.rv});
         if( v.r instanceof Error ) throw v.r;
         v.rv.push(v.r);
 
-        dev.step(3,v.rv); // メンバ一覧
-        /*
+        dev.step(3,{r:v.r,rv:v.rv}); // メンバ一覧
         if( v.d.properties instanceof PropList ){
           v.t = v.d.properties.makeTable();
           if( v.t instanceof Error ) throw v.t;
@@ -1157,7 +1155,8 @@ async function createSpec(opt={}){
           v.rv.push(v.r);
         }
 
-        dev.step(4); // メソッド一覧
+        dev.step(4,{r:v.r,rv:v.rv}); // メソッド一覧
+        /*
         if( v.d.children && v.d.children.length > 0 ){
           // 一覧用のデータ作成
           v.list = [];
