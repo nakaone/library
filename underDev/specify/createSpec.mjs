@@ -1227,77 +1227,29 @@ async function createSpec(opt={}){
         }
 
         dev.step(7,{r:v.r,rv:v.rv}); // 戻り値
-        /*
         if( v.d.returns instanceof PropList ){
           v.r = v.d.returns.makeTable();
           if( v.r instanceof Error ) throw v.r;
-          v.rv.push(...['',`${'#'.repeat(level+1)} ◀️ 戻り値`,''],v.r)
+          // 記事の作成
+          v.r = this.article({
+            title: `◀️ 戻り値`,
+            level: level+1,
+            url: `#${v.anchor}_top`,
+            anchor: `${v.anchor}_return`,
+            content: v.r.trim(),
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(v.r);
         }
 
         dev.step(8,{r:v.r,rv:v.rv}); // 個別メソッド、内部関数
-        */
-
-        /*
-        dev.step(1);  // ヘッダ部
-        v.d = this.map[uuid];
-        v.rv = ['#'.repeat(level) + ' 🧩 '
-          + this.opt.title[v.d.docletType].replace('_',v.d.name)];  // タイトル
-        
-        dev.step(2); // ラベル
-        if( v.d.label ) v.rv.push(...['',v.d.label]);
-
-        dev.step(3); // 説明文
-        v.desc = [];
-        ['description','classdesc'].forEach(x => {
-          // doclet.descriptionは@descが複数有った場合最後のみ有効
-          // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
-          if( v.d[x] && v.d.parsed[`@${x}`].length > 0 )
-            v.desc.push('',v.d.parsed[`@${x}`]);
-        });
-        if( v.desc.length > 0 ){
-          v.rv.push(...['',`${'#'.repeat(level+1)} 🧾 概説`],...v.desc);
-        }
-
-        dev.step(4); // メンバ一覧
-        if( v.d.properties instanceof PropList ){
-          v.r = v.d.properties.makeTable();
-          if( v.r instanceof Error ) throw v.r;
-          v.rv.push(...['',`${'#'.repeat(level+1)} 🔢 メンバ一覧`,''],v.r)
-        }
-
-        dev.step(5); // 引数
-        if( v.d.params instanceof PropList ){
-          v.r = v.d.params.makeTable();
-          if( v.r instanceof Error ) throw v.r;
-          v.rv.push(...['',`${'#'.repeat(level+1)} ▶️ 引数`,''],v.r)
-        }
-
-        dev.step(6); // 戻り値
-        if( v.d.returns instanceof PropList ){
-          v.r = v.d.returns.makeTable();
-          if( v.r instanceof Error ) throw v.r;
-          v.rv.push(...['',`${'#'.repeat(level+1)} ◀️ 戻り値`,''],v.r)
-        }
-
-        dev.step(7); // メソッド一覧
         if( v.d.children && v.d.children.length > 0 ){
-          [v.children,v.num] = [[],1];
-          v.d.children.map(uuid => {
-            v.o = {
-              uuid: uuid,
-              no: v.num++,
-              name: this.map[uuid].name,
-              anchor: ``, // いまここ：アンカーの設定方法
-              label: this.map[uuid].label,
-            }
-          });
+          for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
+            v.r = this.makeDocletMD(v.d.children[v.i],level+1);
+            if( v.r instanceof Error ) throw v.r;
+            v.rv.push(v.r);
+          }
         }
-
-        // 🧩 想定する実装
-        // 📥 引数
-        // 📤 戻り値
-        // 🧱 authClient.exec()
-        */
 
         dev.end(v.rv);
         return v.rv.join('\n').trim();
