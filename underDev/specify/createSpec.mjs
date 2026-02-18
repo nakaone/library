@@ -1211,14 +1211,23 @@ async function createSpec(opt={}){
         }
 
         dev.step(6,{r:v.r,rv:v.rv}); // 引数
-        /*
         if( v.d.params instanceof PropList ){
           v.r = v.d.params.makeTable();
           if( v.r instanceof Error ) throw v.r;
-          v.rv.push(...['',`${'#'.repeat(level+1)} ▶️ 引数`,''],v.r)
+          // 記事の作成
+          v.r = this.article({
+            title: `▶️ 引数`,
+            level: level+1,
+            url: `#${v.anchor}_top`,
+            anchor: `${v.anchor}_param`,
+            content: v.r.trim(),
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(v.r);
         }
 
         dev.step(7,{r:v.r,rv:v.rv}); // 戻り値
+        /*
         if( v.d.returns instanceof PropList ){
           v.r = v.d.returns.makeTable();
           if( v.r instanceof Error ) throw v.r;

@@ -13,3 +13,9 @@ func01: 関数テスト
 
 func01: 関数テスト
 関数テスト説明文
+
+## <a href="#/test.js::func01_top"><span id="/test.js::func01_param">▶️ 引数</span></a>
+
+| name | type | value | desc | note |
+| :-- | :-- | :-- | :-- | :-- |
+| arg | number | required | 引数 |  |
