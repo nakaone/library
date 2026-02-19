@@ -1399,49 +1399,55 @@ async function createSpec(opt={}){
         .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })});
 
         dev.step(3);  // データ型定義一覧
-        v.rv.push('',`# データ型定義一覧`);
-        v.data = [];
         dev.step(3.1);  // テーブル用データ作成
-        v.list.forEach(doclet => {
+        v.data = [];
+        for( v.i=0 ; v.i<v.list.length ; v.i++ ){
           v.data.push({
-            name: `[${doclet.name}](#${doclet.name})`,
-            label: doclet.label,
+            no: v.i+1,
+            name: `[${v.list[v.i].name}](#${v.list[v.i].name})`,
+            label: v.list[v.i].label,
           });
-        });
+        }
         dev.step(3.2);  // Markdownテーブル作成
         v.r = DocletTree.makeTable(v.data,{header:[
+          {key:'no',label:'No',align:'--:'},
           {key:'name',label:'データ型名',align:':--'},
           {key:'label',label:'概要',align:':--'},
         ]});
         if( v.r instanceof Error ) throw v.r;
-        v.rv.push('',v.r);
+        dev.step(3.3);  // 記事作成
+        v.r = this.article({
+          title: `データ型定義一覧`,
+          level: 1,
+          url: '',
+          anchor: `typedefList`,
+          content: v.r,
+        });
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.push(v.r);
 
         dev.step(4);  // 個別データ型定義
         v.rv.push('',`# 個別データ型定義`)
         v.list.forEach(doclet => {
+          dev.step(4.1);  // 項目一覧
           v.r = DocletTree.makeTable(
             this.map[doclet.uuid].properties.map(x => x.row),
             {header: this.opt.propHeader}
           );
+          dev.step(4.2);  // 説明文を追加
+          if( Object.hasOwn(doclet,'description') && doclet.description.length > 0 )
+            v.r = doclet.description + '\n\n' + v.r;
+          dev.step(4.3);  // 記事作成
           v.r = this.article({
             title: `"${this.map[doclet.uuid].name}" データ型定義`,
             level: 2,
-            url: '',// 暫定：データ型定義一覧修正時に併せて修正`#${}_top`,
+            url: '#typedefList',
             anchor: `${this.map[doclet.uuid].name}`,
             content: v.r,
           });
           if( v.r instanceof Error ) throw v.r;
           v.rv.push('',v.r);
         });
-        /*
-        v.rv.push('',`# 個別データ型定義`)
-        v.list.forEach(doclet => {
-          v.rv.push('',`## <span id="${doclet.name}">"${doclet.name}" データ型定義</span>`);
-          v.r = doclet.properties.makeTable();
-          if( v.r instanceof Error ) throw v.r;
-          v.rv.push('',v.r);
-        });
-        */
 
         v.rv = v.rv.join('\n');
         dev.end(); // 終了処理
