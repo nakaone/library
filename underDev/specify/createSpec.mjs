@@ -235,7 +235,6 @@ async function createSpec(opt={}){
           this.list.push(v.o);
         });
 
-        dev.step(99.239,{original:doclet,instance:this});
         dev.end(); // 終了処理
 
       } catch (e) { return dev.error(e); }
@@ -697,7 +696,7 @@ async function createSpec(opt={}){
         // descriptionの2行目以降。先頭・末尾の空行は削除
         v.rv.note = v.desc.slice(1).join('\n').trim();
 
-        dev.end(v.rv); // 終了処理
+        dev.end(); // 終了処理
         return v.rv;
       } catch (e) { return dev.error(e); }
     }
@@ -871,7 +870,7 @@ async function createSpec(opt={}){
         }
 
         v.rv = v.rv.join('\n');
-        dev.end(v.rv); // 終了処理
+        dev.end(); // 終了処理
         return v.rv;
       } catch (e) { return dev.error(e); }
     }
@@ -1234,7 +1233,7 @@ async function createSpec(opt={}){
         if( v.r instanceof Error ) throw v.r;
         v.rv.push(v.r);
 
-        dev.step(3,{r:v.r,rv:v.rv}); // メンバ一覧
+        dev.step(3); // メンバ一覧
         if( Object.hasOwn(v.d,'properties') && v.d.properties.length > 0 ){
           v.r = DocletTree.makeTable(
             v.d.properties.map(x => x.row),
@@ -1266,7 +1265,7 @@ async function createSpec(opt={}){
         }
         */
 
-        dev.step(4,{r:v.r,rv:v.rv}); // メソッド一覧
+        dev.step(4); // メソッド一覧
         if( v.d.children && v.d.children.length > 0 ){
           // 一覧用のデータ作成
           v.list = [];
@@ -1298,7 +1297,7 @@ async function createSpec(opt={}){
           v.rv.push(v.r);
         }
 
-        dev.step(5,{r:v.r,rv:v.rv}); // 説明文
+        dev.step(5); // 説明文
         v.r = '';
         ['description','classdesc'].forEach(x => {
           // 元データであるdoclet.descriptionは@descが複数有った場合、最後のみ有効
@@ -1319,7 +1318,7 @@ async function createSpec(opt={}){
           v.rv.push(v.r);
         }
 
-        dev.step(6,{r:v.r,rv:v.rv}); // 引数
+        dev.step(6); // 引数
         if( v.d.params instanceof PropList ){
           v.r = v.d.params.makeTable();
           if( v.r instanceof Error ) throw v.r;
@@ -1335,7 +1334,7 @@ async function createSpec(opt={}){
           v.rv.push(v.r);
         }
 
-        dev.step(7,{r:v.r,rv:v.rv}); // 戻り値
+        dev.step(7); // 戻り値
         if( v.d.returns instanceof PropList ){
           v.r = v.d.returns.makeTable();
           if( v.r instanceof Error ) throw v.r;
@@ -1351,7 +1350,7 @@ async function createSpec(opt={}){
           v.rv.push(v.r);
         }
 
-        dev.step(8,{r:v.r,rv:v.rv}); // 個別メソッド、内部関数
+        dev.step(8); // 個別メソッド、内部関数
         if( v.d.children && v.d.children.length > 0 ){
           for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
             if( this.map[v.d.children[v.i]].docletType === 'unknown' ) continue;
@@ -1361,7 +1360,7 @@ async function createSpec(opt={}){
           }
         }
 
-        dev.end(v.rv);
+        dev.end();
         return v.rv.join('\n').trim();
 
       } catch (e) { return dev.error(e); }
