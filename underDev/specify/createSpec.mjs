@@ -14,7 +14,6 @@ createSpec();
  * @desc
  * 
  * - 以下のリンクを自動的に作成
- *   - メソッド・内部関数一覧から個別メソッド詳説
  *   - index.md#当該データ型名
  *     - メンバ一覧から
  *     - 引数一覧から
@@ -236,6 +235,7 @@ async function createSpec(opt={}){
           this.list.push(v.o);
         });
 
+        dev.step(99.239,{original:doclet,instance:this});
         dev.end(); // 終了処理
 
       } catch (e) { return dev.error(e); }
@@ -613,9 +613,18 @@ async function createSpec(opt={}){
         }
 
         dev.step(6);  // properties
+        if( Object.hasOwn(doclet,'properties') && doclet.properties.length > 0 ){
+          doclet.properties.forEach(prop => {
+            v.r = this.addRowToColumn(prop);
+            if( v.r instanceof Error ) throw v.r;
+            prop.row = v.r;
+          });
+        }
+        /*
         v.r = new PropList(doclet.properties);
         if( v.r instanceof Error ) throw v.r;
         if( v.r instanceof PropList ) this.properties = v.r;
+        */
 
         dev.step(7);  // params
         v.r = new PropList(doclet.params);
@@ -631,15 +640,65 @@ async function createSpec(opt={}){
           this.returns = v.r;
         }
 
-        /*
-        dev.step(9);  // parent, childrenの初期値設定
-        // 実値は全Doclet作成後にDocletTree.determineParentで設定
-        this.parent = null;
-        this.children = [];
-        */
-
         dev.end();
 
+      } catch (e) { return dev.error(e); }
+    }
+
+    /** DocletColRow: データ項目一覧作成用追加情報
+     * @typedef {Object} DocletColRow
+     * @prop {string} name - 項目名
+     * @prop {string} type - データ型
+     * @prop {string} value - 要否/既定値
+     * @prop {string} desc - 説明
+     * @prop {string} note - 備考
+     */
+    /** addRowToColumn: データ項目情報から一覧作成用情報を作成
+     * 
+     * データ項目情報：Doclet.properties/params/returnsの各要素。配列では無くオブジェクト
+     * @param {DocletColDef} prop - データ項目情報
+     * @returns {DocletColRow|Error}
+     */
+    addRowToColumn(prop,opt={}){
+      const v = {whois:`${this.constructor.name}.addRowToColumn`, arg:{prop}, rv:{}};
+      const dev = new devTools(v);
+      try {
+
+        dev.step(1);  // オプションの既定値設定
+        opt = mergeDeeply({
+          lang: 'ja-JP',
+          value: {
+            'ja-JP': {undef:'未定義',optional:'任意',required:'必須'},
+            'default': {undef:'undefined',optional:'optional',required:'required'},
+          }
+        },opt);
+        if( opt instanceof Error ) throw opt;
+
+        dev.step(2);  // 項目名
+        v.rv.name = prop.name;
+
+        dev.step(3);  // データ型
+        v.rv.type = prop.type.names // "Array.<xxx>"は"xxx[]"に変換
+          .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
+          .join(' \\| ');
+
+        dev.step(4);  // 要否/既定値
+        v.rv.value = Object.hasOwn(prop,'defaultvalue')
+        ? prop.defaultvalue // 既定値指定有り ⇒ prop.defaultvalue
+        : ( // 既定値指定無し
+          prop.optional === true  // 任意項目？
+          ? opt.value[opt.lang].optional : opt.value[opt.lang].required);
+
+        dev.step(5);  // 説明
+        v.desc = (prop.description ?? '').split('\n');
+        v.rv.desc = v.desc[0];  // descriptionの先頭行
+
+        dev.step(6);  // 備考
+        // descriptionの2行目以降。先頭・末尾の空行は削除
+        v.rv.note = v.desc.slice(1).join('\n').trim();
+
+        dev.end(v.rv); // 終了処理
+        return v.rv;
       } catch (e) { return dev.error(e); }
     }
 
@@ -749,7 +808,24 @@ async function createSpec(opt={}){
           description: '_',
           unknown: '_',
         },(opt.title ?? {}));
-
+        this.opt.lang = opt.lang ?? 'ja-JP'; // 使用言語
+        //Intl.DateTimeFormat().resolvedOptions().locale;
+        this.opt.propHeader = {  // 項目一覧テーブルのヘッダ
+          'ja': [
+            {key:'name',label:'項目名',align:':--'},
+            {key:'type',label:'データ型',align:':--'},
+            {key:'value',label:'要否/既定値',align:':--'},
+            {key:'desc',label:'説明',align:':--'},
+            {key:'note',label:'備考',align:':--'},
+          ],
+          'en': [
+            {key:'name',label:'name',align:':--'},
+            {key:'type',label:'type',align:':--'},
+            {key:'value',label:'value',align:':--'},
+            {key:'desc',label:'description',align:':--'},
+            {key:'note',label:'note',align:':--'},
+          ],
+        }[['ja','ja-JP'].includes(this.opt.lang) ? 'ja' : 'en'];
 
         dev.end(); // 終了処理
       } catch (e) { return dev.error(e); }
@@ -1159,6 +1235,22 @@ async function createSpec(opt={}){
         v.rv.push(v.r);
 
         dev.step(3,{r:v.r,rv:v.rv}); // メンバ一覧
+        if( Object.hasOwn(v.d,'properties') && v.d.properties.length > 0 ){
+          v.r = DocletTree.makeTable(
+            v.d.properties.map(x => x.row),
+            {header: this.opt.propHeader}
+          );
+          v.r = this.article({
+            title: `🔢 ${v.d.name} メンバ一覧`,
+            level: level+1,
+            url: `#${v.anchor}_top`,
+            anchor: `${v.anchor}_prop`,
+            content: v.r,
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(v.r);
+        }
+        /*
         if( v.d.properties instanceof PropList ){
           v.t = v.d.properties.makeTable();
           if( v.t instanceof Error ) throw v.t;
@@ -1172,6 +1264,7 @@ async function createSpec(opt={}){
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(v.r);
         }
+        */
 
         dev.step(4,{r:v.r,rv:v.rv}); // メソッド一覧
         if( v.d.children && v.d.children.length > 0 ){
@@ -1327,11 +1420,29 @@ async function createSpec(opt={}){
         dev.step(4);  // 個別データ型定義
         v.rv.push('',`# 個別データ型定義`)
         v.list.forEach(doclet => {
+          v.r = DocletTree.makeTable(
+            this.map[doclet.uuid].properties.map(x => x.row),
+            {header: this.opt.propHeader}
+          );
+          v.r = this.article({
+            title: `"${this.map[doclet.uuid].name}" データ型定義`,
+            level: 2,
+            url: '',// 暫定：データ型定義一覧修正時に併せて修正`#${}_top`,
+            anchor: `${this.map[doclet.uuid].name}`,
+            content: v.r,
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push('',v.r);
+        });
+        /*
+        v.rv.push('',`# 個別データ型定義`)
+        v.list.forEach(doclet => {
           v.rv.push('',`## <span id="${doclet.name}">"${doclet.name}" データ型定義</span>`);
           v.r = doclet.properties.makeTable();
           if( v.r instanceof Error ) throw v.r;
           v.rv.push('',v.r);
         });
+        */
 
         v.rv = v.rv.join('\n');
         dev.end(); // 終了処理
@@ -1633,7 +1744,7 @@ async function createSpec(opt={}){
     pv.rv = doc.output();
     if( pv.rv instanceof Error ) throw pv.rv;
 
-    console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc,null,2)));
+    writeFileSync('tmp/folder.json',JSON.stringify(doc,null,2));
     dev.end(
       doc.dump({
         paths:['uuid','longnameId','parent'],

@@ -4,9 +4,9 @@
 
 ## <a href="#/test.js::class01_top"><span id="/test.js::class01_prop">🔢 class01 メンバ一覧</span></a>
 
-| name | type | value | desc | note |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| opt | Object | required | 起動時オプション |  |
+| opt | Object | 必須 | 起動時オプション |  |
 
 ## <a href="#/test.js::class01_top"><span id="/test.js::class01_func">🧱 class01 メソッド・内部関数一覧</span></a>
 
