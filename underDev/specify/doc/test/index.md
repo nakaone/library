@@ -25,7 +25,7 @@ JSDocの関数・メソッド単位のオブジェクト
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | name | string | 必須 | 関数・メソッド名 |  |
-| list | arrowDef[] \| typeDef[] \| columnDef[] | 必須 | 関数・メソッド内のJSDoc |  |
+| list | <a href="index.md#arrowDef">arrowDef</a>[] \| <a href="index.md#typeDef">typeDef</a>[] \| columnDef[] | 必須 | 関数・メソッド内のJSDoc |  |
 
 
 ## <a href="#typedefList"><span id="funcDef">"funcDef" データ型定義</span></a>
@@ -35,7 +35,7 @@ JSDocの関数・メソッド単位のオブジェクト
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | name | string | 必須 | 関数・メソッド名 |  |
-| list | funcDef[] \| typeDef[] \| columnDef[] | 必須 | 関数・メソッド内のJSDoc |  |
+| list | <a href="index.md#funcDef">funcDef</a>[] \| <a href="index.md#typeDef">typeDef</a>[] \| columnDef[] | 必須 | 関数・メソッド内のJSDoc |  |
 
 
 ## <a href="#typedefList"><span id="globalDef">"globalDef" データ型定義</span></a>
@@ -44,7 +44,7 @@ JSDocの関数・メソッド単位のオブジェクト
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| main | typeDef[] \| columnDef[] | [] | グローバル領域にあるJSDoc |  |
+| main | <a href="index.md#typeDef">typeDef</a>[] \| columnDef[] | [] | グローバル領域にあるJSDoc |  |
 | class | Object | 必須 | クラス定義にかかるJSDoc |  |
 | class.method | columnDef[] | 任意 | 任意項目確認用 |  |
 

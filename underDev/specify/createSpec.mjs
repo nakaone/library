@@ -13,12 +13,6 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - 以下のリンクを自動的に作成
- *   - index.md#当該データ型名
- *     - メンバ一覧から
- *     - 引数一覧から
- *     - 戻り値から
- * 
  * - [bug] test.js class01.constructor
  *   - タイトルのnameが"constructor"ではなく"class01"になっている
  *   - メソッド・内部関数一覧：要素無しなのに表示される
@@ -55,7 +49,6 @@ async function createSpec(opt={}){
     jsdocJson: opt.jsdocJson ?? `jsdoc.json`,  // jsdocコマンド設定ファイル名
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
-    indexMd: 'index.md',  // 各フォルダ直下に作成する管理ファイル名
     useage: `
       createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
       
@@ -166,7 +159,7 @@ async function createSpec(opt={}){
    * @prop {string} folderName
    * @prop {Object.<string, DocletEx>} funclass - グローバル関数・クラス定義(key=DocletEx.uuid)
    * @prop {Object.<string, DocletEx>} typedef - データ型定義(key=DocletEx.uuid)
-   * @prop {DocletTreeFolder[]} children - 子フォルダ
+   * @prop {Object.<string, DocletTreeFolder>} children - 子フォルダ。キーはフォルダ名
    */
   class DocletTreeFolder {
     constructor(folderName){
@@ -175,18 +168,16 @@ async function createSpec(opt={}){
       this.typedef = {};
       this.children = {};
     }
-
-    markdown(){
-      const v = {whois:`${this.constructor.name}.markdown`, arg:{}, rv:null};
-      const dev = new devTools(v);
-      try {
-
-        dev.end(); // 終了処理
-        return v.rv;
-      } catch (e) { return dev.error(e); }
-    }
   }
 
+  /** DocletColRow: データ項目一覧作成用追加情報
+   * @typedef {Object} DocletColRow
+   * @prop {string} name - 項目名
+   * @prop {string} type - データ型
+   * @prop {string} value - 要否/既定値
+   * @prop {string} desc - 説明
+   * @prop {string} note - 備考
+   */
   /** DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
    * @typedef {Object} DocletColDef
    * @prop {Object}   type - データ型情報オブジェクト
@@ -206,6 +197,7 @@ async function createSpec(opt={}){
    *   param/returnsには出ないがpropertiesには出ることがある
    * @prop {string}   defaultvalue - 既定値(文字列表現。ex.'[]')
    * @prop {boolean}  optional - trueの場合は任意項目
+   * @prop {DocletColRow} row - DocletEx.addRowToColumnで追加される項目情報
    */
   /** Doclet: `jsdoc -X`で配列で返されるオブジェクト
    * @typedef {Object} Doclet
@@ -341,10 +333,9 @@ async function createSpec(opt={}){
    *   ④ description, classdescの先頭行
    *   ⑤ doclet.longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
-   * @prop {Object} [properties] - メンバ一覧
-   *   ※addRowToColumn()でDocletColRow型の子要素"row"を追加
-   * @prop {Object} [params] - 引数。クラスの場合はconstructorの引数(※同上)
-   * @prop {Object} [returns=[]] - 戻り値(※同上)
+   * @prop {DocletColDef[]} [properties] - メンバ一覧
+   * @prop {DocletColDef[]} [params] - 引数。クラスの場合はconstructorの引数(※同上)
+   * @prop {DocletColDef[]} [returns=[]] - 戻り値(※同上)
    * 
    * @prop {string} [parent=null] - 親要素のDocletEx.id
    * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.id
@@ -535,14 +526,6 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** DocletColRow: データ項目一覧作成用追加情報
-     * @typedef {Object} DocletColRow
-     * @prop {string} name - 項目名
-     * @prop {string} type - データ型
-     * @prop {string} value - 要否/既定値
-     * @prop {string} desc - 説明
-     * @prop {string} note - 備考
-     */
     /** addRowToColumn: データ項目情報から一覧作成用情報を作成
      * 
      * データ項目情報：Doclet.properties/params/returnsの各要素。配列では無くオブジェクト
@@ -700,6 +683,7 @@ async function createSpec(opt={}){
         },(opt.title ?? {}));
         this.opt.lang = opt.lang ?? 'ja-JP'; // 使用言語
         //Intl.DateTimeFormat().resolvedOptions().locale;
+        this.opt.indexMd = 'index.md';  // 各フォルダ直下に作成する管理ファイル名
         this.opt.propHeader = {  // 項目一覧テーブルのヘッダ
           'ja': [
             {key:'name',label:'項目名',align:':--'},
@@ -1030,24 +1014,51 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** linkage: 対象要素が子要素であるとき親要素を特定
-     * メソッド⇒クラス、内部関数⇒グローバル関数、等
-     * 1. child.memberof === parent.longname
-     * 2. child.rangeが包含されている直近の要素
+    /** linkage: Doclet相互間の連携
+     * - 要素間の親子関係を特定(parent<->children)
+     *   メソッド⇒クラス、内部関数⇒グローバル関数、等
+     *   1. child.memberof === parent.longname
+     *   2. child.rangeが包含されている直近の要素
+     * - 項目一覧のデータ型からindex.md#個別データ型へのリンク作成
      */
     linkage(){
       const v = {whois:`${this.constructor.name}.linkage`, arg:{}, rv:null};
       const dev = new devTools(v,{mode:'dev'});
       try {
 
+        dev.step(1);  // 事前準備(ループ外での処理なので先頭で実行)
+        // データ型名->個別データ型定義のURLマップ作成
+        v.searchTypedef = (folder,rv={}) => {
+          Object.keys(folder.typedef).forEach(uuid => {
+            // ①URLを作成
+            v.url = (this.map[uuid].unique
+            + '/' + this.opt.indexMd
+            + '#' + this.map[uuid].name)
+            .replace(/^\/*/,'');  // 先頭の'/'は削除
+            // ②未登録なら新規登録、登録済ならnullを設定
+            rv[this.map[uuid].name] = Object.hasOwn(rv,this.map[uuid].name) ? null : v.url;
+            // ③子フォルダを再帰呼出
+            Object.keys(folder.children).forEach(x => v.searchTypedef(folder.children[x],rv));
+          });
+        }
+        v.searchTypedef(this.folder,(v.typedef={}));
+        v.typedefList = Object.keys(v.typedef).map(x => {return {
+          name: x, // データ型名
+          rex:  new RegExp(x,'g'),  // 正規表現
+          url:  `<a href="${v.typedef[x]}">${x}</a>`, // 置換文字列
+        }});
+
         for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
 
-          dev.step(1);  // parent, childrenの初期値設定
+          // --------------------------------
+          // 親子関係関連付け(parent,children)
+          // --------------------------------
+          dev.step(2);  // parent, childrenの初期値設定
           v.d = this.doclet[v.i];
           v.d.parent = null;
           v.d.children = [];
 
-          dev.step(2);  // ①：child.memberof === parent.longnameで判定
+          dev.step(3);  // ①：child.memberof === parent.longnameで判定
           if( Object.hasOwn(v.d,'memberof' )){
             v.key = v.d.prefix + v.d.memberof;
             if( Object.hasOwn(this.map,v.key) && this.map[v.key] !== null ){
@@ -1056,15 +1067,15 @@ async function createSpec(opt={}){
             }
           }
 
-          dev.step(3);  // ②：①で決まらない場合、子要素を包摂する直近の要素
+          dev.step(4);  // ②：①で決まらない場合、子要素を包摂する直近の要素
           if( v.d.parent === null && typeof v.d.meta?.range !== 'undefined' ){
             v.minSize = Infinity;
             for( v.t of this.doclet ){
-              dev.step(2.1);  // 比較元=比較先またはrangeが無ければスキップ
+              dev.step(4.1);  // 比較元=比較先またはrangeが無ければスキップ
               if( v.d === v.t || !v.t.meta?.range ) continue;
-              dev.step(2.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
+              dev.step(4.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
               if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
-                dev.step(2.3);  // 比較先の終了位置−開始位置が最小のものが直近
+                dev.step(4.3);  // 比較先の終了位置−開始位置が最小のものが直近
                 v.size = v.t.meta.range[1] - v.t.meta.range[0];
                 if( v.size < v.minSize ){
                   v.minSize = v.size;
@@ -1074,9 +1085,24 @@ async function createSpec(opt={}){
             }
           }
 
-          dev.step(4);  // 親要素のchildrenに比較元を登録
+          dev.step(5);  // 親要素のchildrenに比較元を登録
           if( v.d.parent !== null )
             this.map[v.d.parent].children.push(v.d.uuid);
+
+          // --------------------------------
+          // 項目一覧のデータ型から
+          // index.md個別データ型定義へのリンク
+          // --------------------------------
+          dev.step(6);
+          ['properties','params','returns'].forEach(prop => {
+            if( Object.hasOwn(v.d,prop)){
+              v.d[prop].forEach(col => {  // 項目毎の処理
+                v.typedefList.forEach(x => {  // 独自定義のデータ型が有れば置換
+                  col.row.type = col.row.type.replaceAll(x.rex,x.url);
+                });
+              });
+            }
+          });
         }
 
         dev.end(); // 終了処理
@@ -1419,7 +1445,7 @@ async function createSpec(opt={}){
         dev.step(3);  // トップシート(index.md)の作成
         v.r = this.makeIndexMD(folder);
         if( v.r instanceof Error ) throw v.r;
-        writeFileSync(`${v.path}/${cf.indexMd}`,v.r);
+        writeFileSync(`${v.path}/${this.opt.indexMd}`,v.r);
 
         dev.step(4);  // 子フォルダを再帰呼出
         for( v.i=0 ; v.i<folder.children.length ; v.i++ ){
@@ -1646,8 +1672,8 @@ async function createSpec(opt={}){
     writeFileSync('tmp/folder.json',JSON.stringify(doc,null,2));
     dev.end(
       doc.dump({
-        paths:['uuid','longnameId','parent'],
-        filter:x => ['typedef','interface'].includes(x.docletType),
+        paths:['properties'],
+        //filter:x => ['typedef','interface'].includes(x.docletType),
       })
     );
     // doc.dump
