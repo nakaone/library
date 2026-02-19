@@ -30,7 +30,7 @@ class01のconstructor
 ### <a href="#/test.js::class01#constructor_top"><span id="/test.js::class01#constructor_desc">🧾 constructor 概説</span></a>
 
 class01のconstructor
-   * - constructorの説明
+- constructorの説明
 
 ### <a href="#/test.js::class01#constructor_top"><span id="/test.js::class01#constructor_param">▶️ constructor 引数</span></a>
 

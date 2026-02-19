@@ -15,7 +15,6 @@ createSpec();
  * 
  * - [bug] test.js class01.constructor
  *   - メソッド・内部関数一覧：要素無しなのに表示される
- *   - 「* - constructorの説明」に先頭"* "が残っている
  * - ／＊＊行末尾は強制改行？
  * 
  * - DocletTree.dump -> devTools.dump
@@ -446,7 +445,7 @@ async function createSpec(opt={}){
 
             // 不要な余白・コメント指示を削除
             v.tag.val = v.tag.val.replace(/^\* /,'')  // 先頭の"* "
-            .replaceAll(/\n \* /g,'\n')  // 行頭の" * "
+            .replaceAll(/\n\s+\* /g,'\n')  // 行頭の" * "
             .replace(/\*\/?\s*$/,'')  // 末尾の"*/"
             .trim();
 
