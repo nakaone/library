@@ -29,11 +29,6 @@ func01: 関数テスト
 
 arrow01: アローテスト
 
-### <a href="#/test.js::func01~arrow01_top"><span id="/test.js::func01~arrow01_func">🧱 arrow01 メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-
 ### <a href="#/test.js::func01~arrow01_top"><span id="/test.js::func01~arrow01_desc">🧾 arrow01 概説</span></a>
 
 arrow01: アローテスト

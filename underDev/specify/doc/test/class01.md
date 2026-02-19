@@ -22,11 +22,6 @@
 
 class01のconstructor
 
-### <a href="#/test.js::class01#constructor_top"><span id="/test.js::class01#constructor_func">🧱 constructor メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-
 ### <a href="#/test.js::class01#constructor_top"><span id="/test.js::class01#constructor_desc">🧾 constructor 概説</span></a>
 
 class01のconstructor

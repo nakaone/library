@@ -13,10 +13,6 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - [bug] test.js class01.constructor
- *   - メソッド・内部関数一覧：要素無しなのに表示される
- * - ／＊＊行末尾は強制改行？
- * 
  * - DocletTree.dump -> devTools.dump
  *   要素の現在位置を"xxx.aaa.b[0]"という形の文字列として保持、
  *   正規表現/aaa\.b[[0-9]]/でマッチしたら出力という形にする
@@ -1056,11 +1052,13 @@ async function createSpec(opt={}){
 
         for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
 
+          v.d = this.doclet[v.i];
+          if( v.d.docletType === 'unknown' ) continue;
+
           // --------------------------------
           // 親子関係関連付け(parent,children)
           // --------------------------------
           dev.step(2);  // parent, childrenの初期値設定
-          v.d = this.doclet[v.i];
           v.d.parent = null;
           v.d.children = [];
 
@@ -1186,7 +1184,7 @@ async function createSpec(opt={}){
         }
 
         dev.step(4); // メソッド一覧
-        if( v.d.children && v.d.children.length > 0 ){
+        if( Object.hasOwn(v.d,'children') && v.d.children.length > 0 ){
           // 一覧用のデータ作成
           v.list = [];
           for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
