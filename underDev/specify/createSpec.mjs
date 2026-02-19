@@ -319,7 +319,7 @@ async function createSpec(opt={}){
    * @class
    * @desc メンバ各値の設定箇所は以下の通り。
    * - opt ~ returns:       DocletEx.constructor()
-   * - parent, children:    DocletTree.determineParent()
+   * - parent, children:    DocletTree.linkage()
    * - unique ~ longnameId: DocletTree.registration()
    * 
    * @prop {Object} opt - DocletExインスタンス作成時のオプション
@@ -778,61 +778,6 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
 
-    /** determineParent: 対象要素が子要素であるとき親要素を特定
-     * メソッド⇒クラス、内部関数⇒グローバル関数、等
-     * 1. child.memberof === parent.longname
-     * 2. child.rangeが包含されている直近の要素
-     */
-    determineParent(){
-      const v = {whois:`${this.constructor.name}.determineParent`, arg:{}, rv:null};
-      const dev = new devTools(v,{mode:'dev'});
-      try {
-
-        for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
-
-          dev.step(1);  // parent, childrenの初期値設定
-          v.d = this.doclet[v.i];
-          v.d.parent = null;
-          v.d.children = [];
-
-          dev.step(2);  // ①：child.memberof === parent.longnameで判定
-          if( Object.hasOwn(v.d,'memberof' )){
-            v.key = v.d.prefix + v.d.memberof;
-            if( Object.hasOwn(this.map,v.key) && this.map[v.key] !== null ){
-              // memberof:longnameが一意に親が決定されたらOK
-              v.d.parent = this.map[v.key].uuid;
-            }
-          }
-
-          dev.step(3);  // ②：①で決まらない場合、子要素を包摂する直近の要素
-          if( v.d.parent === null && typeof v.d.meta?.range !== 'undefined' ){
-            v.minSize = Infinity;
-            for( v.t of this.doclet ){
-              dev.step(2.1);  // 比較元=比較先またはrangeが無ければスキップ
-              if( v.d === v.t || !v.t.meta?.range ) continue;
-              dev.step(2.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
-              if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
-                dev.step(2.3);  // 比較先の終了位置−開始位置が最小のものが直近
-                v.size = v.t.meta.range[1] - v.t.meta.range[0];
-                if( v.size < v.minSize ){
-                  v.minSize = v.size;
-                  v.d.parent = v.t.uuid; // 比較先を比較元の親要素として設定
-                }
-              }
-            }
-          }
-
-          dev.step(4);  // 親要素のchildrenに比較元を登録
-          if( v.d.parent !== null )
-            this.map[v.d.parent].children.push(v.d.uuid);
-        }
-
-        dev.end(); // 終了処理
-        return v.rv;
-
-      } catch (e) { return dev.error(e); }
-    }
-
     /** dump: 【開発用】指定条件のDocletを抽出、指定メンバのみ抽出したオブジェクトを生成
      * @param {Object} arg
      * @param {string[]} arg.paths - '.'区切りで階層化された、抽出対象となるメンバ
@@ -1077,11 +1022,66 @@ async function createSpec(opt={}){
         }
 
         dev.step(4);  // Docletの親子関係関連付け
-        v.r = v.rv.determineParent();
+        v.r = v.rv.linkage();
         if( v.r instanceof Error ) throw v.r;
 
         dev.end(); // 終了処理
         return v.rv;
+      } catch (e) { return dev.error(e); }
+    }
+
+    /** linkage: 対象要素が子要素であるとき親要素を特定
+     * メソッド⇒クラス、内部関数⇒グローバル関数、等
+     * 1. child.memberof === parent.longname
+     * 2. child.rangeが包含されている直近の要素
+     */
+    linkage(){
+      const v = {whois:`${this.constructor.name}.linkage`, arg:{}, rv:null};
+      const dev = new devTools(v,{mode:'dev'});
+      try {
+
+        for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
+
+          dev.step(1);  // parent, childrenの初期値設定
+          v.d = this.doclet[v.i];
+          v.d.parent = null;
+          v.d.children = [];
+
+          dev.step(2);  // ①：child.memberof === parent.longnameで判定
+          if( Object.hasOwn(v.d,'memberof' )){
+            v.key = v.d.prefix + v.d.memberof;
+            if( Object.hasOwn(this.map,v.key) && this.map[v.key] !== null ){
+              // memberof:longnameが一意に親が決定されたらOK
+              v.d.parent = this.map[v.key].uuid;
+            }
+          }
+
+          dev.step(3);  // ②：①で決まらない場合、子要素を包摂する直近の要素
+          if( v.d.parent === null && typeof v.d.meta?.range !== 'undefined' ){
+            v.minSize = Infinity;
+            for( v.t of this.doclet ){
+              dev.step(2.1);  // 比較元=比較先またはrangeが無ければスキップ
+              if( v.d === v.t || !v.t.meta?.range ) continue;
+              dev.step(2.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
+              if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
+                dev.step(2.3);  // 比較先の終了位置−開始位置が最小のものが直近
+                v.size = v.t.meta.range[1] - v.t.meta.range[0];
+                if( v.size < v.minSize ){
+                  v.minSize = v.size;
+                  v.d.parent = v.t.uuid; // 比較先を比較元の親要素として設定
+                }
+              }
+            }
+          }
+
+          dev.step(4);  // 親要素のchildrenに比較元を登録
+          if( v.d.parent !== null )
+            this.map[v.d.parent].children.push(v.d.uuid);
+        }
+
+        dev.end(); // 終了処理
+        return v.rv;
+
       } catch (e) { return dev.error(e); }
     }
 
@@ -1434,6 +1434,10 @@ async function createSpec(opt={}){
     }
 
     /** registration: DocletEx生成時の重複登録チェック＋マップへの登録
+     * 
+     * 重複登録：同一の「／** 〜 *／」から複数のDocletが生成され、
+     * 特定のタグ情報が片方にしかない状態。
+     * 
      * @param {DocletEx} doclet - 生成直後のDocletExインスタンス
      * @param {DocletTreeFile} file - doclet抽出元の個別入力ファイル情報
      * @returns {null|Error}
