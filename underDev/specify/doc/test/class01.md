@@ -12,27 +12,27 @@
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/test.js::class01_top">class01</a> | class01のconstructor |
+| 1 | <a href="#/test.js::class01#constructor_top">constructor</a> | class01のconstructor |
 | 2 | <a href="#/test.js::class01#method01_top">method01</a> | method01: メソッドテスト |
 
 ## <a href="#/test.js::class01_top"><span id="/test.js::class01_desc">🧾 class01 概説</span></a>
 
 テスト用クラス(classdesc)
-## <span id="/test.js::class01_top">🧩 constructor()</span>
+## <span id="/test.js::class01#constructor_top">🧩 constructor()</span>
 
 class01のconstructor
 
-### <a href="#/test.js::class01_top"><span id="/test.js::class01_func">🧱 class01 メソッド・内部関数一覧</span></a>
+### <a href="#/test.js::class01#constructor_top"><span id="/test.js::class01#constructor_func">🧱 constructor メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
 
-### <a href="#/test.js::class01_top"><span id="/test.js::class01_desc">🧾 class01 概説</span></a>
+### <a href="#/test.js::class01#constructor_top"><span id="/test.js::class01#constructor_desc">🧾 constructor 概説</span></a>
 
 class01のconstructor
    * - constructorの説明
 
-### <a href="#/test.js::class01_top"><span id="/test.js::class01_param">▶️ class01 引数</span></a>
+### <a href="#/test.js::class01#constructor_top"><span id="/test.js::class01#constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |

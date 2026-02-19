@@ -14,7 +14,6 @@ createSpec();
  * @desc
  * 
  * - [bug] test.js class01.constructor
- *   - タイトルのnameが"constructor"ではなく"class01"になっている
  *   - メソッド・内部関数一覧：要素無しなのに表示される
  *   - 「* - constructorの説明」に先頭"* "が残っている
  * - ／＊＊行末尾は強制改行？
@@ -314,6 +313,8 @@ async function createSpec(opt={}){
    * - parent, children:    DocletTree.linkage()
    * - unique ~ longnameId: DocletTree.registration()
    * 
+   * @prop {string} name - 【書換】constructorの場合のみ固定値"constructor"に変更
+   * @prop {string} longname - 【書換】constructorの場合のみ"#constructor"を追加
    * @prop {Object} opt - DocletExインスタンス作成時のオプション
    *   現状未使用
    * @prop {string} uuid - DocletExを一意に識別するためのUUID
@@ -411,8 +412,14 @@ async function createSpec(opt={}){
         this.uuid = randomUUID();
 
         dev.step(4);  // docletType
+        dev.step(4.1);  // docletTypeの判定
         this.docletType = this.determineType(doclet);
         if( this.docletType instanceof Error) throw this.docletType;
+        dev.step(4.2);  // 特定docletTypeの対応
+        if( this.docletType === 'constructor' ){
+          this.name = "constructor"
+          this.longname += "#constructor";
+        }
 
         dev.step(5);    // label
         dev.step(5.1);  // 原文(comment)からタグの内容を整理
@@ -876,7 +883,7 @@ async function createSpec(opt={}){
 
         dev.step(3);  // 配列なら個別に、オブジェクトならそのまま指定メンバ抽出
         if( Array.isArray(v.target) ){
-          v.target.forEach(x => v.rv.push(pickPaths(x,arg.paths)));
+          v.target.forEach(x => v.rv.push(arg.paths.length > 0 ? pickPaths(x,arg.paths) : x));
         } else {
           v.rv = pickPaths(v.target,arg.paths);
         }
@@ -1672,8 +1679,8 @@ async function createSpec(opt={}){
     writeFileSync('tmp/folder.json',JSON.stringify(doc,null,2));
     dev.end(
       doc.dump({
-        paths:['properties'],
-        //filter:x => ['typedef','interface'].includes(x.docletType),
+        paths:[],
+        filter:x => ['constructor','method'].includes(x.docletType),
       })
     );
     // doc.dump
