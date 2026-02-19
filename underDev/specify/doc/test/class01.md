@@ -12,8 +12,8 @@
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | class01 | class01のconstructor |
-| 2 | method01 | method01: メソッドテスト |
+| 1 | <a href="#/test.js::class01_top">class01</a> | class01のconstructor |
+| 2 | <a href="#/test.js::class01#method01_top">method01</a> | method01: メソッドテスト |
 
 ## <a href="#/test.js::class01_top"><span id="/test.js::class01_desc">🧾 class01 概説</span></a>
 

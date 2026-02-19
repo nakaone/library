@@ -1182,7 +1182,7 @@ async function createSpec(opt={}){
             if( v.c.docletType === 'unknown' ) continue;
             v.list.push({
               no:    v.i+1,
-              name:  v.c.name,
+              name:  `<a href="#${v.c.longnameId}_top">${v.c.name}</a>`,
               label: v.c.label
             });
           }

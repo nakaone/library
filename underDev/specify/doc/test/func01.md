@@ -6,7 +6,7 @@ func01: 関数テスト
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | arrow01 | arrow01: アローテスト |
+| 1 | <a href="#/test.js::func01~arrow01_top">arrow01</a> | arrow01: アローテスト |
 
 ## <a href="#/test.js::func01_top"><span id="/test.js::func01_desc">🧾 func01 概説</span></a>
 
