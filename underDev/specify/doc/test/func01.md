@@ -16,9 +16,9 @@ func01: 関数テスト
 
 ## <a href="#/test.js::func01_top"><span id="/test.js::func01_param">▶️ func01 引数</span></a>
 
-| name | type | value | desc | note |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | number | required | 引数 |  |
+| arg | number | 必須 | 引数 |  |
 
 ## <a href="#/test.js::func01_top"><span id="/test.js::func01_return">◀️ func01 戻り値</span></a>
 
@@ -40,9 +40,9 @@ arrow01: アローテスト
 
 ### <a href="#/test.js::func01~arrow01_top"><span id="/test.js::func01~arrow01_param">▶️ arrow01 引数</span></a>
 
-| name | type | value | desc | note |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | string | required | 引数 |  |
+| arg | string | 必須 | 引数 |  |
 
 ### <a href="#/test.js::func01~arrow01_top"><span id="/test.js::func01~arrow01_return">◀️ arrow01 戻り値</span></a>
 

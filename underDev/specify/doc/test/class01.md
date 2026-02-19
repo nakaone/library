@@ -34,9 +34,9 @@ class01のconstructor
 
 ### <a href="#/test.js::class01_top"><span id="/test.js::class01_param">▶️ class01 引数</span></a>
 
-| name | type | value | desc | note |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | bigint | required | typeはテスト用 |  |
+| arg | bigint | 必須 | typeはテスト用 |  |
 ## <span id="/test.js::class01#method01_top">🧩 method01()</span>
 
 method01: メソッドテスト
@@ -47,9 +47,9 @@ method01: メソッドテスト
 
 ### <a href="#/test.js::class01#method01_top"><span id="/test.js::class01#method01_param">▶️ method01 引数</span></a>
 
-| name | type | value | desc | note |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | number | required | method01の引数 |  |
+| arg | number | 必須 | method01の引数 |  |
 
 ### <a href="#/test.js::class01#method01_top"><span id="/test.js::class01#method01_return">◀️ method01 戻り値</span></a>
 

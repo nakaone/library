@@ -619,16 +619,15 @@ async function createSpec(opt={}){
             prop.row = v.r;
           });
         }
-        /*
-        v.r = new PropList(doclet.properties);
-        if( v.r instanceof Error ) throw v.r;
-        if( v.r instanceof PropList ) this.properties = v.r;
-        */
 
         dev.step(7);  // params
-        v.r = new PropList(doclet.params);
-        if( v.r instanceof Error ) throw v.r;
-        if( v.r instanceof PropList ) this.params = v.r;
+        if( Object.hasOwn(doclet,'params') && doclet.params.length > 0 ){
+          doclet.params.forEach(prop => {
+            v.r = this.addRowToColumn(prop);
+            if( v.r instanceof Error ) throw v.r;
+            prop.row = v.r;
+          });
+        }
 
         dev.step(8);  // returns
         v.r = new PropList(doclet.returns
@@ -1249,21 +1248,6 @@ async function createSpec(opt={}){
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(v.r);
         }
-        /*
-        if( v.d.properties instanceof PropList ){
-          v.t = v.d.properties.makeTable();
-          if( v.t instanceof Error ) throw v.t;
-          v.r = this.article({
-            title: `🔢 ${v.d.name} メンバ一覧`,
-            level: level+1,
-            url: `#${v.anchor}_top`,
-            anchor: `${v.anchor}_prop`,
-            content: v.t,
-          });
-          if( v.r instanceof Error ) throw v.r;
-          v.rv.push(v.r);
-        }
-        */
 
         dev.step(4); // メソッド一覧
         if( v.d.children && v.d.children.length > 0 ){
@@ -1319,6 +1303,22 @@ async function createSpec(opt={}){
         }
 
         dev.step(6); // 引数
+        if( Object.hasOwn(v.d,'params') && v.d.params.length > 0 ){
+          v.r = DocletTree.makeTable(
+            v.d.params.map(x => x.row),
+            {header: this.opt.propHeader}
+          );
+          v.r = this.article({
+            title: `▶️ ${v.d.name} 引数`,
+            level: level+1,
+            url: `#${v.anchor}_top`,
+            anchor: `${v.anchor}_param`,
+            content: v.r,
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.rv.push(v.r);
+        }
+        /*
         if( v.d.params instanceof PropList ){
           v.r = v.d.params.makeTable();
           if( v.r instanceof Error ) throw v.r;
@@ -1333,6 +1333,7 @@ async function createSpec(opt={}){
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(v.r);
         }
+        */
 
         dev.step(7); // 戻り値
         if( v.d.returns instanceof PropList ){
