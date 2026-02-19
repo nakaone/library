@@ -6,33 +6,24 @@ import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
-import { basename } from 'node:path';
 createSpec();
 
 /** 開発工程・残課題
  * @name 開発工程・残課題
  * @desc
  * 
- * - DocletTree.dump -> devTools.dump
- *   要素の現在位置を"xxx.aaa.b[0]"という形の文字列として保持、
- *   正規表現/aaa\.b[[0-9]]/でマッチしたら出力という形にする
+ * - 独自タグ「setvalue」で戻り値に設定する値を指定可能に
+ *   ＠setvalue [データ型名] {キー:値,...}
+ *   ※指定無しならdefaultvalue
  * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
+ * 
  * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
  * - undocumentedチェックを追加
  * - 和文の他、英文のテンプレートも追加
  * - 文法チェック
  *   - ＠class の後に余計な文字列があればエラー
- * - 独自タグ「history」対応
- * - 独自タグ「setvalue」で戻り値に設定する値を指定可能に
- *   - ＠setvalue [データ型名] {キー:値,...}
  * - createSpecはシェルの起動時パラメータを引数とする関数に変更
- * - propList.makeTableをDocletTree.makeTableへ統合
- * 
- * - index.md
- *   - アンカー作成
- *   - ルートには全データ型定義の一覧作成
- * - 各種一覧「データ型」欄内の独自データ型にリンクを自動設定
- * - ルートのindex.mdにはデータ型一覧を作成(個々のデータ型は付記しない)
+ * - 独自タグ「history」対応
  */
 
 async function createSpec(opt={}){
