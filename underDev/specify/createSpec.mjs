@@ -13,14 +13,28 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - anchorの設定
+ * - index.md
+ *   - アンカー作成
+ *   - ルートには全データ型定義の一覧作成
+ * - 以下のリンクを自動的に作成
+ *   - index.md#当該データ型名
+ *     - メンバ一覧から
+ *     - 引数一覧から
+ *     - 戻り値から
+ *   - メソッド・内部関数一覧から個別メソッド詳説
  * - 各種一覧「データ型」欄内の独自データ型にリンクを自動設定
+ * - ルートのindex.mdにはデータ型一覧を作成(個々のデータ型は付記しない)
+ * 
+ * - [bug] test.js class01.constructor
+ *   - タイトルのnameが"constructor"ではなく"class01"になっている
+ *   - メソッド・内部関数一覧：要素無しなのに表示される
+ *   - 「* - constructorの説明」に先頭"* "が残っている
+ * - ／＊＊行末尾は強制改行？
  * 
  * - DocletTree.dump -> devTools.dump
  *   要素の現在位置を"xxx.aaa.b[0]"という形の文字列として保持、
  *   正規表現/aaa\.b[[0-9]]/でマッチしたら出力という形にする
  * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
- * - description内の'#'について自動的にレベル設定
  * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
  * - undocumentedチェックを追加
  * - 和文の他、英文のテンプレートも追加
@@ -28,9 +42,8 @@ createSpec();
  *   - ＠class の後に余計な文字列があればエラー
  * - 独自タグ「history」対応
  * - 独自タグ「setvalue」で戻り値に設定する値を指定可能に
+ *   - ＠setvalue [データ型名] {キー:値,...}
  * - createSpecはシェルの起動時パラメータを引数とする関数に変更
- * - class定義をcreateSpec内部に移動
- *   但しインスタンス作成前の宣言が必要
  * - propList.makeTableをDocletTree.makeTableへ統合
  */
 
@@ -1148,7 +1161,7 @@ async function createSpec(opt={}){
           v.t = v.d.properties.makeTable();
           if( v.t instanceof Error ) throw v.t;
           v.r = this.article({
-            title: `🔢 メンバ一覧`,
+            title: `🔢 ${v.d.name} メンバ一覧`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_prop`,
@@ -1180,7 +1193,7 @@ async function createSpec(opt={}){
 
           // 記事の作成
           v.r = this.article({
-            title: `🧱 メソッド・内部関数一覧`,
+            title: `🧱 ${v.d.name} メソッド・内部関数一覧`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_func`,
@@ -1201,7 +1214,7 @@ async function createSpec(opt={}){
         if( v.r.length > 0 ){
           // 記事の作成
           v.r = this.article({
-            title: `🧾 概説`,
+            title: `🧾 ${v.d.name} 概説`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_desc`,
@@ -1217,7 +1230,7 @@ async function createSpec(opt={}){
           if( v.r instanceof Error ) throw v.r;
           // 記事の作成
           v.r = this.article({
-            title: `▶️ 引数`,
+            title: `▶️ ${v.d.name} 引数`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_param`,
@@ -1233,7 +1246,7 @@ async function createSpec(opt={}){
           if( v.r instanceof Error ) throw v.r;
           // 記事の作成
           v.r = this.article({
-            title: `◀️ 戻り値`,
+            title: `◀️ ${v.d.name} 戻り値`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_return`,
@@ -1621,8 +1634,8 @@ async function createSpec(opt={}){
     console.log(writeFileSync('tmp/folder.json',JSON.stringify(doc,null,2)));
     dev.end(
       doc.dump({
-        paths:['uuid','longnameId','parent','children'],
-        //filter:x => !Object.hasOwn(x,'longname'),
+        paths:['uuid','longnameId','parent'],
+        filter:x => ['typedef','interface'].includes(x.docletType),
       })
     );
     // doc.dump

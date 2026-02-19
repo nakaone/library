@@ -49,6 +49,7 @@ const foo = {
 };
 
 /** func01: 関数テスト
+ * 
  * 関数テスト説明文
  * @param {number} arg - 引数
  * @returns {object} 戻り値
@@ -94,6 +95,7 @@ function func01(arg){
  */
 class class01 extends BaseClass {
   /**
+   * @memberof class01
    * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト
    * @property {string} name - データ型の定義名
    * @property {columnDef[]} list - 項目(メンバ)のリスト
