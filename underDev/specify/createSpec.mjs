@@ -13,17 +13,12 @@ createSpec();
  * @name 開発工程・残課題
  * @desc
  * 
- * - index.md
- *   - アンカー作成
- *   - ルートには全データ型定義の一覧作成
  * - 以下のリンクを自動的に作成
+ *   - メソッド・内部関数一覧から個別メソッド詳説
  *   - index.md#当該データ型名
  *     - メンバ一覧から
  *     - 引数一覧から
  *     - 戻り値から
- *   - メソッド・内部関数一覧から個別メソッド詳説
- * - 各種一覧「データ型」欄内の独自データ型にリンクを自動設定
- * - ルートのindex.mdにはデータ型一覧を作成(個々のデータ型は付記しない)
  * 
  * - [bug] test.js class01.constructor
  *   - タイトルのnameが"constructor"ではなく"class01"になっている
@@ -45,6 +40,12 @@ createSpec();
  *   - ＠setvalue [データ型名] {キー:値,...}
  * - createSpecはシェルの起動時パラメータを引数とする関数に変更
  * - propList.makeTableをDocletTree.makeTableへ統合
+ * 
+ * - index.md
+ *   - アンカー作成
+ *   - ルートには全データ型定義の一覧作成
+ * - 各種一覧「データ型」欄内の独自データ型にリンクを自動設定
+ * - ルートのindex.mdにはデータ型一覧を作成(個々のデータ型は付記しない)
  */
 
 async function createSpec(opt={}){
@@ -55,6 +56,7 @@ async function createSpec(opt={}){
     jsdocJson: opt.jsdocJson ?? `jsdoc.json`,  // jsdocコマンド設定ファイル名
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
+    indexMd: 'index.md',  // 各フォルダ直下に作成する管理ファイル名
     useage: `
       createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
       
@@ -1106,7 +1108,7 @@ async function createSpec(opt={}){
     }
 
     /** makeDocletMD: 単一DocletExのインスタンスからMarkdownを作成
-     * - フォルダ内クラス・グローバル関数一覧＋データ型定義一覧(index.html)は
+     * - フォルダ内クラス・グローバル関数一覧＋データ型定義一覧(index.md)は
      *   DocletTreeFolder.markdownで作成
      * @param {string} [uuid=this.uuid] - 対象DocletEx.uuid
      * @param {number} [level=1] - 階層の深さ
@@ -1411,7 +1413,7 @@ async function createSpec(opt={}){
         dev.step(3);  // トップシート(index.md)の作成
         v.r = this.makeIndexMD(folder);
         if( v.r instanceof Error ) throw v.r;
-        writeFileSync(`${v.path}/index.md`,v.r);
+        writeFileSync(`${v.path}/${cf.indexMd}`,v.r);
 
         dev.step(4);  // 子フォルダを再帰呼出
         for( v.i=0 ; v.i<folder.children.length ; v.i++ ){
