@@ -22,7 +22,7 @@ func01: 関数テスト
 
 ## <a href="#/test.js::func01_top"><span id="/test.js::func01_return">◀️ func01 戻り値</span></a>
 
-| type | desc | note |
+| データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | object | 戻り値 |  |
 ## <span id="/test.js::func01~arrow01_top">🧩 arrow01()</span>
@@ -46,6 +46,6 @@ arrow01: アローテスト
 
 ### <a href="#/test.js::func01~arrow01_top"><span id="/test.js::func01~arrow01_return">◀️ arrow01 戻り値</span></a>
 
-| type | desc | note |
+| データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | string | 戻り値 |  |

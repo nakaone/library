@@ -53,6 +53,6 @@ method01: メソッドテスト
 
 ### <a href="#/test.js::class01#method01_top"><span id="/test.js::class01#method01_return">◀️ method01 戻り値</span></a>
 
-| type | desc | note |
+| データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | Object | NG: qId,name指定無しのObjectになる |  |

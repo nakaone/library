@@ -161,115 +161,6 @@ async function createSpec(opt={}){
   };
   const dev = new devTools(pv,{mode:'dev',footer:true});
 
-  /** PropList: 属性一覧に表示する項目
-   * @class
-   * @prop {object[]} list - 項目一覧
-   * @prop {string}   list.name - 項目名
-   * @prop {string}   list.type - データ型。複数なら' | 'で区切って並記
-   * @prop {string}   list.value - 要否/既定値。「必須」「任意」または既定値
-   * @prop {string}   list.desc - 1行の簡潔な項目説明
-   * @prop {string}   list.note - 備考
-   * @prop {Object}   opt - オプション。内容はconstructorのparam参照
-   */
-  class PropList {
-    /** 属性一覧表示用のオブジェクトを作成
-     * @constructor
-     * @param {DocletColDef} doclet - Docletの項目定義オブジェクト
-     * @param {Object} [opt={}] - オプション
-     * @param {string} [opt.lang=ロケール] - ラベルに使用する言語(ex.'ja-JP')
-     * @param {Object} [opt.label] - 項目のメンバ名->Markdown作成時のラベル文字列への変換マップ
-     *   既定値に統合するので、変更・追加項目のみ指定すれば可。
-     *   例：valueを「要否/既定値」から「値」に変更 ⇒ {value:'値'}
-     *   　　独自項目'foo'を追加 ⇒ {foo:'ダミー'}
-     * @param {string} [opt.order=['name','type','value','desc','note']] - 項目の並び順
-     *   記載されていない項目はMarkdownで表を作成する際、非表示になる。
-     *   既定値を置換するので、変更する場合は全項目を指定する。
-     *   例：value,noteは表示不要、独自項目fooを追加 ⇒ ['name','type','desc','foo']
-     * @param {Object} [opt.value] - 項目の値->Markdown作成時の表示への変換マップ
-     * @returns {PropList|{}|Error} 処理対象属性が無い場合は{}
-     */
-    constructor(doclet,opt={}){
-      const v = {whois:`PropList.constructor`, arg:{doclet,opt}, rv:{}};
-      const dev = new devTools(v,{mode:'dev'});
-      try {
-
-        dev.step(1.1);  // 項目チェック
-        if( typeof doclet === 'undefined'       // docletに無い
-          || doclet.length === 0                // 要素が無い
-        ){
-          dev.end();
-          return v.rv;  // 空要素(!v.rv instance of PropList)
-        } else if( !Array.isArray(doclet) )     // 対象項目が配列では無い
-          throw new Error(`not an array.`);
-        
-        dev.step(1.2);  // 初期値設定
-        this.list = [];
-        this.opt = {
-          lang: opt.lang ?? Intl.DateTimeFormat().resolvedOptions().locale,
-          label: opt.label ?? {},
-          order: opt.order ?? ['name','type','value','desc','note'],
-          value: opt.value ?? {},
-        };
-        this.opt.label = Object.assign((this.opt.lang === 'ja-JP'
-          ? {name:'項目名',type:'データ型',value:'要否/既定値',desc:'説明',note:'備考'}
-          : {name:'name',type:'type',value:'value',desc:'desc',note:'note'}
-        ),this.opt.label);
-        this.opt.value = Object.assign((this.opt.lang === 'ja-JP'
-          ? {undef:'未定義',optional:'任意',required:'必須'}
-          : {undef:'undefined',optional:'optional',required:'required'}
-        ),this.opt.value);
-
-        dev.step(2);  // this.listの作成
-        doclet.forEach(col => {
-          v.desc = (col.description ?? '').split('\n');
-          v.o = {
-            name: col.name,
-            type: col.type.names
-              .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
-              .join(' \\| '),
-            value: typeof col.defaultvalue !== 'undefined' ? col.defaultvalue
-              : (col.optional === true ? this.opt.value.optional : this.opt.value.required),
-            desc: v.desc[0],
-            note: v.desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
-          };
-          this.list.push(v.o);
-        });
-
-        dev.end(); // 終了処理
-
-      } catch (e) { return dev.error(e); }
-
-    }
-
-    /** makeTable: Markdownのテーブル作成
-     * @param {number} [indent=0] - テーブルの左余白桁数
-     * @returns {string|Error}
-     */
-    makeTable(indent=0){
-      const v = {whois:`${this.constructor.name}.makeTable`, arg:{}, rv:null};
-      const dev = new devTools(v,{mode:'dev'});
-      try {
-
-        dev.step(1);  // ヘッダ部
-        v.lines = [[],[]];
-        this.opt.order.forEach(x => {
-          v.lines[0].push(this.opt.label[x]);
-          v.lines[1].push(':--');
-        });
-
-        dev.step(2);  // データ部
-        this.list.forEach(l => v.lines.push(this.opt.order.map(x => l[x])));
-
-        dev.step(3);  // テキストに変換
-        v.rv = v.lines.map(l => `${' '.repeat(indent)}| ${l.join(' | ')} |`).join('\n');
-
-        dev.end();
-        return v.rv;
-      
-      } catch (e) { return dev.error(e); }
-    }
-  }
-
   /** DocletTreeFolder: パス毎の所属Doclet管理(フォルダ管理)
    * @class DocletTreeFolder
    * @prop {string} folderName
@@ -450,9 +341,10 @@ async function createSpec(opt={}){
    *   ④ description, classdescの先頭行
    *   ⑤ doclet.longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
-   * @prop {PropList} [properties] - メンバ一覧(※DocletのそれをPropListで置換)
-   * @prop {PropList} [params] - 引数。クラスの場合はconstructorの引数(※同上)
-   * @prop {PropList} [returns=[]] - 戻り値(※同上)
+   * @prop {Object} [properties] - メンバ一覧
+   *   ※addRowToColumn()でDocletColRow型の子要素"row"を追加
+   * @prop {Object} [params] - 引数。クラスの場合はconstructorの引数(※同上)
+   * @prop {Object} [returns=[]] - 戻り値(※同上)
    * 
    * @prop {string} [parent=null] - 親要素のDocletEx.id
    * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.id
@@ -630,12 +522,12 @@ async function createSpec(opt={}){
         }
 
         dev.step(8);  // returns
-        v.r = new PropList(doclet.returns
-          // name, value は不要なのでorderから削除
-          ,{order:['type','desc','note']});
-        if( v.r instanceof Error ) throw v.r;
-        if( v.r instanceof PropList ){
-          this.returns = v.r;
+        if( Object.hasOwn(doclet,'returns') && doclet.returns.length > 0 ){
+          doclet.returns.forEach(prop => {
+            v.r = this.addRowToColumn(prop);
+            if( v.r instanceof Error ) throw v.r;
+            prop.row = v.r;
+          });
         }
 
         dev.end();
@@ -820,6 +712,18 @@ async function createSpec(opt={}){
             {key:'name',label:'name',align:':--'},
             {key:'type',label:'type',align:':--'},
             {key:'value',label:'value',align:':--'},
+            {key:'desc',label:'description',align:':--'},
+            {key:'note',label:'note',align:':--'},
+          ],
+        }[['ja','ja-JP'].includes(this.opt.lang) ? 'ja' : 'en'];
+        this.opt.returnHeader = {  // 戻り値テーブルのヘッダ
+          'ja': [
+            {key:'type',label:'データ型',align:':--'},
+            {key:'desc',label:'説明',align:':--'},
+            {key:'note',label:'備考',align:':--'},
+          ],
+          'en': [
+            {key:'type',label:'type',align:':--'},
             {key:'desc',label:'description',align:':--'},
             {key:'note',label:'note',align:':--'},
           ],
@@ -1318,34 +1222,19 @@ async function createSpec(opt={}){
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(v.r);
         }
-        /*
-        if( v.d.params instanceof PropList ){
-          v.r = v.d.params.makeTable();
-          if( v.r instanceof Error ) throw v.r;
-          // 記事の作成
-          v.r = this.article({
-            title: `▶️ ${v.d.name} 引数`,
-            level: level+1,
-            url: `#${v.anchor}_top`,
-            anchor: `${v.anchor}_param`,
-            content: v.r.trim(),
-          });
-          if( v.r instanceof Error ) throw v.r;
-          v.rv.push(v.r);
-        }
-        */
 
         dev.step(7); // 戻り値
-        if( v.d.returns instanceof PropList ){
-          v.r = v.d.returns.makeTable();
-          if( v.r instanceof Error ) throw v.r;
-          // 記事の作成
+        if( Object.hasOwn(v.d,'returns') && v.d.params.length > 0 ){
+          v.r = DocletTree.makeTable(
+            v.d.returns.map(x => x.row),
+            {header: this.opt.returnHeader}
+          );
           v.r = this.article({
             title: `◀️ ${v.d.name} 戻り値`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_return`,
-            content: v.r.trim(),
+            content: v.r,
           });
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(v.r);
