@@ -1683,5 +1683,12 @@ async function createSpec(opt={}){
     // {paths:['unique','meta.path','meta.filename','meta.range','meta.lineno','meta.columnno','kind','longname'],filter:x=>x.kind==='class'}
     return pv.rv;
 
-  } catch (e) { dev.error(e); return e; }
+  } catch (e) { dev.error(e); return e; } finally {
+    // jsdoc動作定義ファイルを削除
+    if( existsSync(cf.jsdocJson) )
+      unlinkSync(cf.jsdocJson);
+    // ダミーディレクトリを削除
+    if( existsSync(cf.dummyDir) )
+      rmSync(cf.dummyDir, { recursive: true, force: true });
+  }
 }
