@@ -1673,14 +1673,14 @@ async function createSpec(opt={}){
     pv.rv = doc.output();
     if( pv.rv instanceof Error ) throw pv.rv;
 
-    writeFileSync('tmp/folder.json',JSON.stringify(doc,null,2));
-    dev.end(
-      doc.dump({
-        paths:[],
-        filter:x => ['constructor','method'].includes(x.docletType),
-      })
-    );
-    // doc.dump
+    dev.end();
+    // 開発用メモ：終了時にDocletTree.docletの設定状況を参照する方法
+    //dev.end(
+    //  doc.dump({
+    //    paths:[],
+    //    filter:x => ['constructor','method'].includes(x.docletType),
+    //  })
+    //);
     // labelの設定値確認
     // {paths:['label'],}
     // class01重複チェック

@@ -1,5 +1,7 @@
 # auth開発・システム関係仕様書
 
+[bug]createSpec step.3: ENOENT: no such file or directory, open 'tmp/folder.json'
+
 ## 変更履歴
 
 - build0009: SPkey取得
