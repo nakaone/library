@@ -73,7 +73,7 @@ function ending {
 # documentation: JavaScriptソースからMarkdown作成
 function documentation {
   rm -rf $doc/*
-  node $createSpec $src/**/*.(js|mjs) -o $doc
+  node $createSpec $src/**/*.(js|mjs) -o $doc 2> $tmp/errorLog.txt
 }
 
 # concatSource: AI質問用に関連ソースを単一テキストに統合して出力

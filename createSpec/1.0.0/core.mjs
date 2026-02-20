@@ -1054,8 +1054,8 @@ async function createSpec(opt={}){
           // 親子関係関連付け(parent,children)
           // --------------------------------
           dev.step(2);  // parent, childrenの初期値設定
-          v.d.parent = null;
-          v.d.children = [];
+          if( !Object.hasOwn(v.d,'parent') ) v.d.parent = null;
+          if( !Object.hasOwn(v.d,'children') ) v.d.children = [];
 
           dev.step(3);  // ①：child.memberof === parent.longnameで判定
           if( Object.hasOwn(v.d,'memberof' )){
@@ -1085,8 +1085,13 @@ async function createSpec(opt={}){
           }
 
           dev.step(5);  // 親要素のchildrenに比較元を登録
-          if( v.d.parent !== null )
-            this.map[v.d.parent].children.push(v.d.uuid);
+          if( v.d.parent !== null ){
+            if( Object.hasOwn(this.map[v.d.parent],'children') ){
+              this.map[v.d.parent].children.push(v.d.uuid);
+            } else {
+              this.map[v.d.parent].children = [v.d.uuid];
+            }
+          }
 
           // --------------------------------
           // 項目一覧のデータ型から
