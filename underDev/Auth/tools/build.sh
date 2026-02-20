@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/bin/zsh
+setopt extended_glob
+setopt null_glob
 
 # ----------------------------------------------
 # 事前準備(buildの共通部分)
@@ -43,12 +45,37 @@ function documentation {
   $createSpec $src/**/*.(js|mjs) -o $doc
 }
 
+# concatSource: AI質問用に関連ソースを単一テキストに統合して出力
+function concatSource {
+  files=(
+    $lib/createSpec/1.0.0/core.mjs
+    $lib/devTools/3.1.0/core.mjs
+    $lib/mergeDeeply/2.0.0/core.mjs
+    $prj/*(D.N) #隠しファイルを含めフォルダを除く
+    $dep/**/*(DN)
+    $doc/**/*(.N)
+    $src/(client|common|server)/**/*(.N)
+    $prj/tools/**/*.(sh|json)(D.N)
+  )
+
+  # 出力ファイルの準備
+  outfile="$tmp/source.txt"
+  touch $outfile
+  for f in $files; do
+    {
+      echo "===== $f ====="
+      cat -- "$f"
+      echo "\n\f"  # 改ページコード（フォームフィード）
+    } >> $outfile
+  done
+}
+
 # ----------------------------------------------
 # メイン処理
 # ----------------------------------------------
 echo $dt
-documentation
-
+#documentation
+concatSource
 
 # ----------------------------------------------
 # 備忘
