@@ -1657,7 +1657,7 @@ async function createSpec(opt={}){
     dev.step(1.1);  // 最初の2つは全体とコマンド名、不要なので削除
     pv.argv = process.argv.slice(2);
 
-    dev.step(1.2);  // 起動時パラメータが無指定の場合、useageを表示して終了
+    dev.step(1.2,pv.argv);  // 起動時パラメータが無指定の場合、useageを表示して終了
     if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
       console.log(cf.useage);
       dev.end(); // 終了処理
@@ -1669,7 +1669,7 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
     const doc = await DocletTree.initialize(pv.rv);
 
-    dev.step(3);  // フォルダ作成＋ファイル出力
+    dev.step(3,pv.rv);  // フォルダ作成＋ファイル出力
     pv.rv = doc.output();
     if( pv.rv instanceof Error ) throw pv.rv;
 
