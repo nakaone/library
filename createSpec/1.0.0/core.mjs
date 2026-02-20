@@ -4,7 +4,7 @@ import process from 'process';
 import { createHash, randomUUID } from 'crypto';
 import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
-import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
+import { devTools } from '../../devTools/3.1.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
 createSpec();
 
@@ -1656,7 +1656,7 @@ async function createSpec(opt={}){
     if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
       console.log(cf.useage);
       dev.end(); // 終了処理
-      return v.rv;
+      return pv.rv;
     }
 
     dev.step(2);  // 対象ファイルの情報を取得
