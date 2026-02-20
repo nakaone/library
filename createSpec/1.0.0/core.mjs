@@ -141,7 +141,7 @@ async function createSpec(opt={}){
       \`\`\`
     `.replaceAll(/\n      /g,'\n'),
   };
-  const dev = new devTools(pv,{mode:'dev',footer:true});
+  const dev = new devTools(pv,{mode:'pipe',footer:true});
 
   /** DocletTreeFolder: パス毎の所属Doclet管理(フォルダ管理)
    * @class DocletTreeFolder
@@ -389,7 +389,7 @@ async function createSpec(opt={}){
      */
     constructor(doclet,opt={}){
       const v = {whois:`DocletEx.constructor`, arg:{doclet,opt}, rv:null};
-      const dev = new devTools(v,{mode:'dev'});
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // オリジナルのメンバをコピー
@@ -531,7 +531,7 @@ async function createSpec(opt={}){
      */
     addRowToColumn(prop,opt={}){
       const v = {whois:`${this.constructor.name}.addRowToColumn`, arg:{prop}, rv:{}};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // オプションの既定値設定
@@ -578,7 +578,7 @@ async function createSpec(opt={}){
      */
     determineType(doclet) {
       const v = {whois:`${this.constructor.name}.determineType`, arg:{doclet}, rv:'unknown'};
-      const dev = new devTools(v,{mode:'dev'});
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // 原文が無い場合は判定不能
@@ -651,7 +651,7 @@ async function createSpec(opt={}){
      */
     constructor(arg,opt={}){
       const v = {whois:`DocletTree.constructor`, arg:{arg,opt}, rv:null};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         this.source = {
@@ -725,7 +725,7 @@ async function createSpec(opt={}){
      */
     article(arg){
       const v = {whois:`${this.constructor.name}.article`, arg:{arg}, rv:[]};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // 事前準備
@@ -792,7 +792,7 @@ async function createSpec(opt={}){
      */
     dump(arg){
       const v = {whois:`${this.constructor.name}.dump`, arg:{arg}, rv:[]};
-      const dev = new devTools(v,{mode:'dev'});
+      const dev = new devTools(v,{mode:'pipe'});
       try {        
 
         const pickPaths = (obj, paths) => {
@@ -920,7 +920,7 @@ async function createSpec(opt={}){
       // step.2 : jsdocの実行
       return new Promise((resolve, reject) => {
         const v = {whois:`${this.constructor.name}.promise`, arg:{fn,resolve, reject}, rv:null};
-        const dev = new devTools(v,{mode:'dev'});
+        const dev = new devTools(v,{mode:'pipe'});
 
         dev.step(2.1);  // jsdoc -X を子プロセスとして起動
         v.p = spawn("jsdoc", [fn,'--configure',cf.jsdocJson,'-X'], {
@@ -972,7 +972,7 @@ async function createSpec(opt={}){
      */
     static async initialize(arg,opt={}){
       const v = {whois:`DocletTree.initialize`, arg:{arg,opt}, rv:null};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // DocletTreeの原型作成
@@ -1020,7 +1020,7 @@ async function createSpec(opt={}){
      */
     linkage(){
       const v = {whois:`${this.constructor.name}.linkage`, arg:{}, rv:null};
-      const dev = new devTools(v,{mode:'dev'});
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // 事前準備(ループ外での処理なので先頭で実行)
@@ -1124,7 +1124,7 @@ async function createSpec(opt={}){
      */
     makeDocletMD(uuid,level=1) {
       const v = {whois:`${this.constructor.name}.makeDocletMD`, arg:{uuid,level}, rv:[]};
-      const dev = new devTools(v,{mode:'dev'});
+      const dev = new devTools(v,{mode:'pipe'});
       /**
        * @name 文書の構成
        * @memberof makeDocletMD
@@ -1292,7 +1292,7 @@ async function createSpec(opt={}){
      */
     makeIndexMD(folder){
       const v = {whois:`${this.constructor.name}.makeIndexMD`, arg:{folder}, rv:[]};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1); // グローバル関数・クラス一覧
@@ -1386,7 +1386,7 @@ async function createSpec(opt={}){
      */
     static makeTable(data,opt={}){
       const v = {whois:`${this.constructor.name}.makeTable`, arg:{}, rv:[[],[]]};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // オプションの既定値設定
@@ -1430,7 +1430,7 @@ async function createSpec(opt={}){
      */
     output(folder=this.folder,outDir=this.source.outDir) {
       const v = {whois:`${this.constructor.name}.output`, arg:{}, rv:null};
-      const dev = new devTools(v,{mode:'dev'});
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
@@ -1474,7 +1474,7 @@ async function createSpec(opt={}){
      */
     registration(doclet,file){
       const v = {whois:`DocletTree.registration`, arg:{doclet,file}, rv:null};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // 固有パスとファイル名(meta.filenameが無い場合への備え)
@@ -1559,7 +1559,7 @@ async function createSpec(opt={}){
 
     proto(){
       const v = {whois:`${this.constructor.name}.constructor`, arg:{arg,opt}, rv:null};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.end(); // 終了処理
@@ -1576,7 +1576,7 @@ async function createSpec(opt={}){
   function listSource(argv) {
     const v = {whois:`${pv.whois}.listSource`, arg:{argv},
       rv:{common:'',outDir:'',num:0,files:[]}};
-    const dev = new devTools(v,{mode:'dev'});
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       /**

@@ -60,7 +60,7 @@ export function mergeDeeply(sub,pri,opt={}){
     isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
     isArr: arg => arg && Array.isArray(arg),
   };
-  const dev = new devTools(v);
+  const dev = new devTools(v,{mode:'pipe'});
   try {
 
     dev.step(1.1);  // 引数チェック

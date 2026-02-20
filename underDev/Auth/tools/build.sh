@@ -5,13 +5,19 @@ setopt null_glob
 # main: メイン処理
 function main {
   setup
-  concatSource
-  documentation
+  concatSource  # 約2秒
+  documentation  # 約80〜90秒
   ending
 }
 
 # setup: 事前準備
 function setup {
+  # 時刻表示時ミリ秒を表示するため"coreutils"を指定。coreutilsが存在しない場合は
+  # 1. `brew install coreutils`でインストール後
+  # 2. `~/.zshrc`に以下を追加
+  #    export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+  # 3. `source ~/.zshrc`を実行
+  export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
   # datetimeモジュールを読み込む
   zmodload zsh/datetime
   # 開始時刻を取得（UNIX時間のナノ秒）
