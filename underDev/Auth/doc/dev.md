@@ -129,33 +129,29 @@
 
 # <span id="folder">フォルダ構成</span>
 
+- 🔁 : buildの都度クリア・再作成されるフォルダ
+
 ```
 .
-├── __tests__       // Jestテストパターン別ソースファイル集
-│   └── b0004.mjs
 ├── archives        // バックアップファイル(Git対象外)
-├── deploy          // ブラウザ・GASに実装するソースファイル集
-│   └── onLoad.mjs  // クライアント側テスト用(index.htmlのonLoad)
-├── devlog.md       // 開発履歴
-├── doc             // 仕様書集 ※buildの都度クリアして作成
-├── node_modules    // Auth開発関係(Jest)
-├── package-lock.json // Jest用設定
-├── package.json      // Jest用設定
+├── deploy          // 🔁ブラウザ・GASに実装するソースファイル集
+├── doc             // 🔁仕様書集
 ├── src
 │   ├── client      // クライアント側ソースファイル集
-│   ├── doc         // 仕様書(原本・パーツ) ※buildの都度、これを加工してdocに出力
-│   ├── library     // ライブラリ(シンボリックリンク)
+│   ├── common      // クライアント側ソースファイル集
+│   ├── doc         // 仕様書(原本・パーツ)
+│   │   ├── appsscript.json  // clasp用設定ファイル(控)
+│   │   ├── .clasp.json      // clasp用設定ファイル(控)
+│   │   ├── jsrsasign-all-min.js  // RSAライブラリ
+│   │   ├── *.md    // 各種仕様書(パーツ埋込前のprototype)
+│   │   └── *.svg   // 仕様書に使用する図表
 │   └── server      // サーバ側ソースファイル集
-├── tmp
+├── tmp             // 🔁build.shで使用する一時ファイル置き場
 └── tools
     ├── archives.sh // バックアップファイルを作成(除、archives/,tmp/)
     ├── build.sh    // ソース・仕様書を作成
-    ├── mdTable.sh  // クリップボードのTSVからMarkdownの表を作成
-    ├── specify.mjs // クラス定義から各クラスの仕様書を作成
-    └── test.sh     // Jestテストを実行
+    └── mdTable.sh  // クリップボードのTSVからMarkdownの表を作成
 ```
-
-- test.shはtoolsをカレントディレクトリとして起動
 
 # <span id="build">build.sh</span>
 
