@@ -30,7 +30,7 @@ function setup {  # 事前準備
   # 1.2.プロジェクト固有
   prj="$lib/underDev/Auth"
   arc="$prj/archives"
-  dep="$prj/deploy"; rm -rf $dep/*
+  dep="$prj/deploy"; [ -d $dep ] && rm -rf $dep; mkdir $dep;
   doc="$prj/doc"; [ -d $doc ] && rm -rf $doc; mkdir $doc;
   src="$prj/src"
   tmp="$prj/tmp"; [ -d $tmp ] && rm -rf $tmp; mkdir $tmp;
