@@ -1574,7 +1574,7 @@ async function createSpec(opt={}){
   /** listSource: 事前準備、対象ファイルリスト作成
    * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
    * @param {void}
-   * @returns {DocletTreeSource|Error}
+   * @returns {DocletTreeSource|string|Error} 入力0件なら文字列"No input file"
    */
   function listSource(argv) {
     const v = {whois:`${pv.whois}.listSource`, arg:{argv},
@@ -1628,8 +1628,13 @@ async function createSpec(opt={}){
         }
       }
       v.rv.num = v.rv.files.length;
+      // 入力ファイルが0件なら文字列を返す
+      if( v.rv.num === 0 ){
+        dev.end();
+        return 'No input file';
+      }
 
-      dev.step(4);  // 共通部分を抽出
+      dev.step(4);  // 共通パス部分を抽出
       //v.rv.common = path.dirname(v.rv.files[0].full);  末尾'/'無し
       v.rv.common = v.rv.files[0].full.replace(/[^/\\]+$/, "");  // 末尾'/'有り
       for( v.i=1 ; v.i<v.rv.files.length ; v.i++ ){
@@ -1660,7 +1665,7 @@ async function createSpec(opt={}){
     dev.step(1.1);  // 最初の2つは全体とコマンド名、不要なので削除
     pv.argv = process.argv.slice(2);
 
-    dev.step(1.2,pv.argv);  // 起動時パラメータが無指定の場合、useageを表示して終了
+    dev.step(1.2,pv.argv);  // 起動時パラメータが無指定または"-h"の場合、useageを表示して終了
     if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
       console.log(cf.useage);
       dev.end(); // 終了処理
@@ -1668,7 +1673,12 @@ async function createSpec(opt={}){
     }
 
     dev.step(2);  // 対象ファイルの情報を取得
-    pv.rv = listSource(pv.argv)
+    pv.rv = listSource(pv.argv);
+    if( typeof pv.rv === 'string' ){
+      // 対象ファイルが0件なら終了
+      console.log(`Error: ${pv.rv}`);
+      return null;
+    }
     if( pv.rv instanceof Error ) throw pv.rv;
     pv.tree = await DocletTree.initialize(pv.rv);
 

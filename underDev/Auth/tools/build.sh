@@ -66,7 +66,7 @@ function ending { # 終了時処理
 }
 function documentation {  # JavaScriptソースからMarkdown作成
   rm -rf $doc/*
-  node $createSpec $src/**/*.(js|mjs) -o $doc
+  node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $doc
 }
 function concatSource { # AI質問用に関連ソースを単一テキストに統合して出力
   # 対象ファイルリスト作成
