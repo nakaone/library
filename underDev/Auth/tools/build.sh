@@ -2,7 +2,8 @@
 function main { # メイン処理
   setup
   concatSource
-  documentation
+  detailedDesign
+  overviewDesign
   ending
 }
 function setup {  # 事前準備
@@ -64,9 +65,23 @@ function ending { # 終了時処理
   elapsed_ms=$(printf "%.0f" "$(echo "($end_time - $start_time) * 1000" | bc -l)")
   echo "処理時間: ${elapsed_ms} ms"
 }
-function documentation {  # JavaScriptソースからMarkdown作成
+function detailedDesign {  # JavaScriptソースからMarkdown作成
   rm -rf $doc/*
   node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $doc
+}
+function overviewDesign {
+  # 図表
+  mkdir $doc/img
+  cp $src/doc/*.svg $doc/img/
+  
+  # docルート直下文書用に相対パスを修正したheader.mdを用意
+  cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md
+
+  # 総説
+  cat $tmp/header.md $src/doc/readme.md > $doc/readme.md
+
+  # 開発仕様
+  cat $tmp/header.md  $src/doc/dev.md > $doc/dev.md
 }
 function concatSource { # AI質問用に関連ソースを単一テキストに統合して出力
   # 対象ファイルリスト作成
