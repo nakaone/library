@@ -82,6 +82,8 @@ function overviewDesign {
   cat $tmp/header.md $src/doc/readme.md > $doc/readme.md
   # クライアント側
   cat $src/doc/header.md $src/doc/client.md > $doc/client/index.md
+  # サーバ側
+  cat $src/doc/header.md $src/doc/server.md > $doc/server/index.md
   # 開発仕様
   cat $tmp/header.md  $src/doc/dev.md > $doc/dev.md
 }

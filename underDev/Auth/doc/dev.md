@@ -22,7 +22,7 @@
 
 </div>
 
-<p class="l1">auth開発・システム関係仕様書</p>
+<p class="l1">"auth"開発・システム関係仕様書</p>
 
 | [変更履歴](#log) | [フォルダ構成](#folder) | [build.sh](#build) | [GCP Prj作成](#GCP) | [GASデプロイ](#GASdeploy) |
 
