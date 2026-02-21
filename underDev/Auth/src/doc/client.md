@@ -18,6 +18,7 @@
 
   // グローバル変数定義
   const dev = devTools();
+  const config = {...}; // authClient/Server共通設定情報
   let auth;  // authClient。HTML要素のイベント対応のためグローバル領域で宣言
 
   // 処理要求を発行するローカル関数

@@ -13,6 +13,7 @@ class Member{...};  // (中略)
 
 // グローバル変数定義
 const dev = devTools();
+const config = {...}; // authClient/Server共通設定情報
 const asv = authServer({
   // プロジェクト毎の独自パラメータ
 });
