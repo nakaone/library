@@ -1432,32 +1432,35 @@ async function createSpec(opt={}){
       const v = {whois:`${this.constructor.name}.output`, arg:{}, rv:null};
       const dev = new devTools(v,{mode:'pipe'});
       try {
+        console.log(`l.1435 output called`);
 
         dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
         v.path = outDir + '/' + folder.folderName;
         if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
 
-        dev.step(2);  // グローバル関数・クラス毎に個別ファイル作成
+        dev.step(2,{path:v.path,keys:Object.keys(folder.funclass)});  // グローバル関数・クラス毎に個別ファイル作成
         Object.keys(folder.funclass).map(x => this.map[x])  // 配列化して名前順に並べ替え
         .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })})
         .forEach(doclet => {
           v.r = this.makeDocletMD(doclet.uuid);
           if( v.r instanceof Error ) throw v.r;
+          console.log(`l.1446 ${JSON.stringify({path:v.path,name:doclet.name},null,2)}`);
+          dev.step(2.1,{path:v.path,name:doclet.name});
           writeFileSync(`${v.path}/${doclet.name}.md`,v.r);
         });
 
-        dev.step(3);  // トップシート(index.md)の作成
+        dev.step(3,'step.3');  // トップシート(index.md)の作成
         v.r = this.makeIndexMD(folder);
         if( v.r instanceof Error ) throw v.r;
         writeFileSync(`${v.path}/${this.opt.indexMd}`,v.r);
 
-        dev.step(4);  // 子フォルダを再帰呼出
+        dev.step(4,v.r);  // 子フォルダを再帰呼出
         for( v.i=0 ; v.i<folder.children.length ; v.i++ ){
           v.r = this.output(folder.children[v.i],v.path);
           if( v.r instanceof Error ) throw v.r;
         }
 
-        dev.end(); // 終了処理
+        dev.end(v.rv); // 終了処理
         return v.rv;
 
       } catch (e) { return dev.error(e); }
@@ -1667,11 +1670,14 @@ async function createSpec(opt={}){
     dev.step(2);  // 対象ファイルの情報を取得
     pv.rv = listSource(pv.argv)
     if( pv.rv instanceof Error ) throw pv.rv;
-    const doc = await DocletTree.initialize(pv.rv);
+    pv.tree = await DocletTree.initialize(pv.rv);
 
-    dev.step(3,pv.rv);  // フォルダ作成＋ファイル出力
-    pv.rv = doc.output();
+    dev.step(3,'createSpec.3 start');  // フォルダ作成＋ファイル出力
+    pv.rv = pv.tree.output();
     if( pv.rv instanceof Error ) throw pv.rv;
+
+    dev.step(4,'createSpec.4 start');
+    writeFileSync('DocletTree.json',JSON.stringify(pv.tree,null,2));
 
     dev.end();
     // 開発用メモ：終了時にDocletTree.docletの設定状況を参照する方法
