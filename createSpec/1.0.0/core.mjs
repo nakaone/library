@@ -1677,7 +1677,7 @@ async function createSpec(opt={}){
     if( pv.rv instanceof Error ) throw pv.rv;
 
     dev.step(4,'createSpec.4 start');
-    writeFileSync('DocletTree.json',JSON.stringify(pv.tree,null,2));
+    writeFileSync('../tmp/DocletTree.json',JSON.stringify(pv.tree,null,2));
 
     dev.end();
     // 開発用メモ：終了時にDocletTree.docletの設定状況を参照する方法
