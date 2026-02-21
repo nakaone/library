@@ -70,16 +70,18 @@ function detailedDesign {  # JavaScriptソースからMarkdown作成
   node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $doc
 }
 function overviewDesign {
-  # 図表
+  mkdir $doc/client
+  mkdir $doc/common
+  mkdir $doc/server
   mkdir $doc/img
+  # 図表
   cp $src/doc/*.svg $doc/img/
-  
   # docルート直下文書用に相対パスを修正したheader.mdを用意
   cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md
-
   # 総説
   cat $tmp/header.md $src/doc/readme.md > $doc/readme.md
-
+  # クライアント側
+  cat $src/doc/header.md $src/doc/client.md > $doc/client/index.md
   # 開発仕様
   cat $tmp/header.md  $src/doc/dev.md > $doc/dev.md
 }

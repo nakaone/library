@@ -1,8 +1,8 @@
-# auth開発・システム関係仕様書
+<p class="l1">"auth"開発・システム関係仕様書</p>
 
 | [変更履歴](#log) | [フォルダ構成](#folder) | [build.sh](#build) | [GCP Prj作成](#GCP) | [GASデプロイ](#GASdeploy) |
 
-## <span id="log">変更履歴</span>
+# <span id="log">変更履歴</span>
 
 - build0010: SPkey取得
   - authClientでauthRequest(SPkey要求)作成
@@ -103,7 +103,7 @@
 - build0001: 仕様書作成(α版)
   - 2025.12.09 とりあえず版完成、ChatGPTレビュー済
 
-## <span id="folder">フォルダ構成</span>
+# <span id="folder">フォルダ構成</span>
 
 ```
 .
@@ -133,23 +133,23 @@
 
 - test.shはtoolsをカレントディレクトリとして起動
 
-## <span id="build">build.sh</span>
+# <span id="build">build.sh</span>
 
-### ソース関係生成手順
+## ソース関係生成手順
 
 ![](img/dev.build.source.svg)
 
-### 仕様書関係生成手順
+## 仕様書関係生成手順
 
 ![](img/dev.build.doc.svg)
 
-## <span id="GCP">GCP プロジェクト作成手順（Apps Script / Cloud Logging 用）</span>
+# <span id="GCP">GCP プロジェクト作成手順（Apps Script / Cloud Logging 用）</span>
 
 Apps Script（GAS）で WebApp を開発し、`console.log()` 等のログを **Cloud Logging** で確認することを目的としています。
 
 ---
 
-### 前提
+## 前提
 
 - Google アカウントを所持していること
 - Google Apps Script プロジェクトを既に作成済みであること
@@ -157,7 +157,7 @@ Apps Script（GAS）で WebApp を開発し、`console.log()` 等のログを **
 
 ---
 
-### 手順概要
+## 手順概要
 
 1. GCP プロジェクトを新規作成
 2. Apps Script プロジェクトと GCP プロジェクトを紐付け
@@ -166,7 +166,7 @@ Apps Script（GAS）で WebApp を開発し、`console.log()` 等のログを **
 
 ---
 
-### 手順1：GCP プロジェクトを新規作成
+## 手順1：GCP プロジェクトを新規作成
 
 1. 以下にアクセス  
    https://console.cloud.google.com/
@@ -186,14 +186,14 @@ Apps Script（GAS）で WebApp を開発し、`console.log()` 等のログを **
 
 ---
 
-### 手順2：Apps Script と GCP プロジェクトを紐付け
+## 手順2：Apps Script と GCP プロジェクトを紐付け
 
-#### 2-1. Apps Script エディタを開く
+### 2-1. Apps Script エディタを開く
 
 1. https://script.google.com/ にアクセス
 2. 対象の Apps Script プロジェクトを開く
 
-#### 2-2. GCP プロジェクトを変更
+### 2-2. GCP プロジェクトを変更
 
 1. 右上の **歯車アイコン（⚙ プロジェクトの設定）** をクリック
 2. 「**Google Cloud Platform（GCP）プロジェクト**」欄を探す
@@ -205,7 +205,7 @@ Apps Script（GAS）で WebApp を開発し、`console.log()` 等のログを **
 
 ---
 
-### 手順3：Cloud Logging を有効化（初回のみ）
+## 手順3：Cloud Logging を有効化（初回のみ）
 
 通常は自動で有効になりますが、ログが出ない場合は以下を確認します。
 
@@ -215,9 +215,9 @@ Apps Script（GAS）で WebApp を開発し、`console.log()` 等のログを **
 
 ---
 
-### 手順4：GAS のログを確認する
+## 手順4：GAS のログを確認する
 
-#### 4-1. WebApp 実行ログを見る
+### 4-1. WebApp 実行ログを見る
 
 1. GCP コンソール → **Logging → ログエクスプローラ**
 2. クエリ例：
@@ -237,7 +237,7 @@ logName:"webapp"
 
 ---
 
-### 手順5：GAS 側のログ出力例
+## 手順5：GAS 側のログ出力例
 
 ```js
 function doPost(e) {
@@ -251,7 +251,7 @@ function doPost(e) {
 
 ---
 
-### 補足1：GCP プロジェクト数の制限
+## 補足1：GCP プロジェクト数の制限
 
 - 無料で **複数プロジェクト作成可能**
 - 明確な「3つまで」等の制限はなし
@@ -259,7 +259,7 @@ function doPost(e) {
 
 ---
 
-### 補足2：GCP を使わずにログを見る方法は？
+## 補足2：GCP を使わずにログを見る方法は？
 
 | 方法 | 状況 |
 |----|----|
@@ -271,7 +271,7 @@ function doPost(e) {
 
 ---
 
-### 補足3：ログをローカルに保存したい場合
+## 補足3：ログをローカルに保存したい場合
 
 完全自動DLは不可ですが、以下は可能：
 
@@ -280,13 +280,13 @@ function doPost(e) {
 
 ---
 
-### まとめ
+## まとめ
 
 - clasp + WebApp 開発では **GCP プロジェクト作成は事実上必須**
 - 一度設定すれば以後は意識不要
 - README にこの手順を入れておくと利用者が詰まらない
 
-## <span id="GASdeploy">GASデプロイ</span>
+# <span id="GASdeploy">GASデプロイ</span>
 
 1. 「デプロイ > 新しいデプロイ」
 2. 開発中：「デプロイ > デプロイをテスト」

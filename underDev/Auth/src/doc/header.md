@@ -1,4 +1,11 @@
 <style>
+  .l1 { /* トップレベル(level.1)のタイトル */
+    padding: 1rem 2rem;
+    border-left: 5px solid #000;
+    background: #f4f4f4;
+    font-size: 2.4rem;
+    font-weight: 900;
+  }
   .submenu {  /* MD内のサブメニュー。右寄せ＋文字サイズ小 */
     text-align: right;
     font-size: 0.8rem;

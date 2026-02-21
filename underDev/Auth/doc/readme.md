@@ -1,4 +1,11 @@
 <style>
+  .l1 { /* トップレベル(level.1)のタイトル */
+    padding: 1rem 2rem;
+    border-left: 5px solid #000;
+    background: #f4f4f4;
+    font-size: 2.4rem;
+    font-weight: 900;
+  }
   .submenu {  /* MD内のサブメニュー。右寄せ＋文字サイズ小 */
     text-align: right;
     font-size: 0.8rem;
@@ -15,7 +22,7 @@
 
 </div>
 
-# <span id="top">"auth"総説</span>
+<p id="top" class="l1">"auth"総説</p>
 
 <div class="submenu">
 
@@ -49,7 +56,7 @@ sequenceDiagram
 
 なおメンバがserverのどの機能を使用可能か(権限)は、管理者が事前にメンバ一覧(Google Spread)上で設定を行う。
 
-## <span id="require"><a href="#top">要求仕様</a></span>
+# <span id="require"><a href="#top">要求仕様</a></span>
 
 - 本システムは限られた人数のサークルや小学校のイベント等での利用を想定する。<br>
   よってセキュリティ上の脅威は極力排除するが、一定水準の安全性・恒久性を確保した上で導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
@@ -66,7 +73,7 @@ sequenceDiagram
 - 定義したクラスのインスタンス変数は、セキュリティ強度向上のため特段の記述がない限りprivateとする
 - 日時は特段の指定が無い限り全てUNIX時刻(number型)。比較も全てミリ秒単位で行う
 
-## <span id="dictionary"><a href="#top">用語</a></span>
+# <span id="dictionary"><a href="#top">用語</a></span>
 
 - メンバ、デバイス：「メンバ」とは利用者を、「デバイス」とは利用者が使用する端末を指す。マルチデバイス対応のためメンバ：デバイスは"1:n"対応となる。<br>
   メンバはメールアドレスで識別し、デバイスはauthClient呼出時に自動設定されるUUIDで識別する。
@@ -78,7 +85,7 @@ sequenceDiagram
   ※既定値。実際の桁数はauthConfig.trial.passcodeLengthで規定
 - 内発処理：ローカル関数からの要求に基づかない、authClientでの処理の必要上発生するauthServerへの問合せ
 
-## <span id="crypto"><a href="#top">暗号化・署名方式</a></span>
+# <span id="crypto"><a href="#top">暗号化・署名方式</a></span>
 
 ■ 概要
 
@@ -118,7 +125,7 @@ sequenceDiagram
   1. レスポンスを復号
   1. 署名検証
 
-### 目的と前提
+## 目的と前提
 
 本項はAuth プロジェクトにおける**暗号化・署名の最終仕様**を一箇所にまとめたものである。他のAuth関係仕様書で本項と矛盾する記述が有った場合、本項が優先する。
 
@@ -129,7 +136,7 @@ sequenceDiagram
 - `authConfig.md` の `RSAbits`(既定値 2048)で鍵長を指定する。
 - 環境はブラウザ（WebCrypto）クライアントと Google Apps Script（サーバ）を想定。GAS の制約（永続ストレージ・実行時間）に配慮する。
 
-### 用語と略称
+## 用語と略称
 
 - RSA-OAEP: RSA Encryption with OAEP padding（暗号化用）
 - RSA-PSS: RSA Probabilistic Signature Scheme（署名用）
@@ -138,7 +145,7 @@ sequenceDiagram
 - requestTime: クライアント生成 UNIX ms（例: Date.now()）
 - replay cache: サーバで管理する最近利用された nonce の履歴([authScriptProperties.requestLog](authScriptProperties.md#authscriptproperties_members)でTTL管理)
 
-### 設計方針
+## 設計方針
 
 1. **機密性**:
    - authRequest / authResponse 全体を AES-256-GCM で暗号化する
@@ -150,7 +157,7 @@ sequenceDiagram
 4. **可搬性**: 暗号パラメータは `authConfig.md` の `RSAbits` を参照する。
 5. **可観測性**: 失敗時は詳細な内部メッセージをログ（authErrorLog / authAuditLog）に残すが、クライアントには汎用的なエラーメッセージを返す。
 
-### パラメータ・初期値
+## パラメータ・初期値
 
 - RSA 鍵長: **2048**（`RSAbits` のデフォルト）
 - ハッシュ: **SHA-256**
@@ -159,7 +166,7 @@ sequenceDiagram
 - nonce 型: **UUID v4**（文字列）
 - 許容誤差: **±2分（120,000 ms）** authConfig.[allowableTimeDifference](sv/authConfig.md#authconfig_members)で規定。
 
-### 署名・暗号化対象JSON
+## 署名・暗号化対象JSON
 
 クライアントが署名・暗号化する対象は**JSONリクエスト構造ではなく authRequest インスタンスそのもの**とする。
 
@@ -190,12 +197,12 @@ sequenceDiagram
 }
 ```
 
-### Nonce と Replay 防止
+## Nonce と Replay 防止
 
 - サーバは `requestTime` と `nonce` の両方を検査する。リプレイ閾値を満たす場合でも `nonce` が既に使われていれば拒否する。
 - replay cacheの実装では、ScriptPropertiesにJSONバッファを持たせ、短時間のTTLとする
 
-#### サーバ側検査アルゴリズム
+### サーバ側検査アルゴリズム
 
 1. 受信 → `header.requestTime` が現在時刻と比較して許容誤差内か確認
 2. `header.nonce` が既に replay cache に存在するか確認
@@ -205,7 +212,7 @@ sequenceDiagram
 4. 復号（該当する場合）
 5. 正常処理後、nonce の TTL 更新は行わない（使い捨て）
 
-### 署名・検証の順序
+## 署名・検証の順序
 
 1. クライアントは canonical JSON を署名（RSA-PSS）
 2. クライアントは署名済みの JSON を暗号化（RSA-OAEP）して `envelope.cipher` に格納（暗号化する場合）
@@ -213,7 +220,7 @@ sequenceDiagram
 
 > 注: 署名を暗号化の後に検証するケースや、暗号化後に署名（外側）を行うケースもあるが、上記の順序は「署名の透明性」と「復号の後で署名検証」が保証され、安全です。
 
-#### canonical JSON 仕様
+### canonical JSON 仕様
 
 署名対象となる canonical JSON は、以下の条件を満たすものとする。
 
@@ -225,18 +232,18 @@ sequenceDiagram
 
 この canonical JSON 文字列に対して RSA-PSS(SHA-256) 署名を行う。
 
-### 互換性と拡張性の提案
+## 互換性と拡張性の提案
 
 - `meta.rsabits` を送ることでクライアントとサーバが鍵長を協調できる
 - `meta.sym` により共通鍵方式の将来的な差し替えが可能
 
-## <span id="policy"><a href="#top">実装上の方針</a></span>
+# <span id="policy"><a href="#top">実装上の方針</a></span>
 
 - サーバ・クライアント共に進捗・エラー管理に[devTools](JSLib.md#devtools)を使用
 - 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。
 - 呼出側は原則Errorオブジェクトが返されたら処理を中断(`if( v.rv instanceof Error ) throw v.rv;`)
 
-## <span id="protocol"><a href="#top">状態及び通信手順</a></span>
+# <span id="protocol"><a href="#top">状態及び通信手順</a></span>
 
 <div class="submenu">
 
@@ -248,7 +255,7 @@ sequenceDiagram
 
 なお「メンバ：デバイス = 1:n」のため、最初にクライアント・サーバ間通信に使用されるI/O項目(クラス)を整理した上で、メンバとデバイスを分けて記述する。
 
-### <span id="io"><a href="#protocol">I/O項目対応表</a></span>
+## <span id="io"><a href="#protocol">I/O項目対応表</a></span>
 
 ※ <span class="popup">緑文字</span>はカーソルを合わせると補足説明をポップアップ
 
@@ -280,9 +287,9 @@ sequenceDiagram
 
 - ⑬status：status は「アプリケーションステータス」であり HTTP レスポンスとは無関係
 
-### <span id="member"><a href="#protocol">メンバの状態遷移</a></span>
+## <span id="member"><a href="#protocol">メンバの状態遷移</a></span>
 
-#### <a href="#protocol">状態遷移図</a>
+### <a href="#protocol">状態遷移図</a>
 
 ```mermaid
 %% メンバ状態遷移図
@@ -323,7 +330,7 @@ stateDiagram-v2
 - ④未審査：管理者の認否が未決定<br>
   `approval === 0 && denial === 0`
 
-#### <span id="onLoad"><a href="#protocol">通信手順：初回HTMLロード時</a></span>
+### <span id="onLoad"><a href="#protocol">通信手順：初回HTMLロード時</a></span>
 
 - 「🔢」はクライアント側(IndexedDB)の、「🧩」はサーバ側(シート)の項目・格納値
   - mID: memberId
@@ -393,7 +400,7 @@ sequenceDiagram
 | ③仮登録 | —     | 有        | —      | —       | —    | <b>仮</b> | 有  | <b>仮</b> | <b>有</b> | 仮登録 |
 | ⑥SPkey保存 |<b>仮</b>| 有      |<b>仮</b>|<b>有</b>|<b>有</b>| 仮     | 有  | 仮        | 有        | 仮登録 |
 
-#### <span id="onRequest"><a href="#protocol">通信手順：初回処理要求時</a></span>
+### <span id="onRequest"><a href="#protocol">通信手順：初回処理要求時</a></span>
 
 「初回処理要求時」とは、初回HTMLロード時の処理終了後、初めての処理要求を出す状態を指す。
 
@@ -457,13 +464,13 @@ sequenceDiagram
 | ⑪iDB保存 |<b>有</b>| 有 |<b>有</b>| 有   | 有   | 仮    | 有   | 仮    | 有    | 仮登録 |
 | ⑭メアド保存 | 有    | 有   | 有    | 有    | 有   |<b>有</b>| 有 |<b>有</b>| 有    | 仮登録 |
 
-### <span id="device"><a href="#protocol">デバイスの状態遷移</a></span>
+## <span id="device"><a href="#protocol">デバイスの状態遷移</a></span>
 
 メンバが加入承認後、使用するデバイスの状態遷移
 
 ※ 上述の未使用から加入まではメンバ単位の状態遷移。マルチデバイス対応のため、認証状態はデバイス単位で管理。
 
-#### <a href="#protocol">状態遷移図</a>
+### <a href="#protocol">状態遷移図</a>
 
 ```mermaid
 %% メンバ状態遷移図
@@ -507,7 +514,7 @@ stateDiagram-v2
 - ⑦未認証：加入承認後認証要求されたことが無い<br>
   `0 < approval && loginRequest === 0`
 
-#### <span id="preparation"><a href="#protocol">通信手順：事前処理(処理要求〜サーバ側での復号)</a></span>
+### <span id="preparation"><a href="#protocol">通信手順：事前処理(処理要求〜サーバ側での復号)</a></span>
 
 以下は初回処理要求後に加入承認されたメンバであることが前提。
 
@@ -583,7 +590,7 @@ sequenceDiagram
 - ⑤新CPkey作成：authClient.IndexedDBの更新はこの時点では無く、authServerからの⑫変更終了通知を待って行う
 - ⑥新CPkey送付：`func = "::updateCPkey::"`
 
-#### <span id="login"><a href="#protocol">通信手順：「認証中」状態時</a></span>
+### <span id="login"><a href="#protocol">通信手順：「認証中」状態時</a></span>
 
 ※ ①authRequest = 事前処理⑲authRequest
 
@@ -623,7 +630,7 @@ sequenceDiagram
 ```
 
 
-#### <span id="unauthenticated"><a href="#protocol">通信手順：「未認証」状態時</a></span>
+### <span id="unauthenticated"><a href="#protocol">通信手順：「未認証」状態時</a></span>
 
 ※ ①authRequest = 事前処理⑲authRequest
 
@@ -658,7 +665,7 @@ sequenceDiagram
   end
 ```
 
-#### <span id="tring"><a href="#protocol">通信手順：「試行中」状態時</a></span>
+### <span id="tring"><a href="#protocol">通信手順：「試行中」状態時</a></span>
 
 ※ ①authRequest = 事前処理⑲authRequest
 
@@ -744,7 +751,7 @@ sequenceDiagram
 - ⑤(再発行要求後の)authRequest : `func="::reissue::"`
 - ⑫(パスコード入力後の)authRequest:`{func:"::passcode::",arguments:(入力されたパスコード)}`
 
-### <span id="internalProcessing"><a href="#protocol">内発処理</a></span>
+## <span id="internalProcessing"><a href="#protocol">内発処理</a></span>
 
 「内発処理」とはクライアント側ローカル関数からの処理要求に拠らない、Authシステム内部で発生する処理を指す。
 
