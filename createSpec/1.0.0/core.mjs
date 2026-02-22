@@ -1447,9 +1447,11 @@ async function createSpec(opt={}){
         });
 
         dev.step(3);  // トップシート(index.md)の作成
-        v.r = this.makeIndexMD(folder);
-        if( v.r instanceof Error ) throw v.r;
-        writeFileSync(`${v.path}/${this.opt.indexMd}`,v.r);
+        if( Object.keys(folder.funclass).length > 0 || Object.keys(folder.typedef).length > 0 ){
+          v.r = this.makeIndexMD(folder);
+          if( v.r instanceof Error ) throw v.r;
+          writeFileSync(`${v.path}/${this.opt.indexMd}`,v.r);
+        }
 
         dev.step(4);  // 子フォルダを再帰呼出
         v.children = Object.keys(folder.children);
@@ -1557,16 +1559,6 @@ async function createSpec(opt={}){
         return v.rv;
       } catch (e) { return dev.error(e); }
     }
-
-    proto(){
-      const v = {whois:`${this.constructor.name}.constructor`, arg:{arg,opt}, rv:null};
-      const dev = new devTools(v,{mode:'pipe'});
-      try {
-
-        dev.end(); // 終了処理
-        return v.rv;
-      } catch (e) { return dev.error(e); }
-    }
   }
 
   /** listSource: 事前準備、対象ファイルリスト作成
@@ -1663,14 +1655,14 @@ async function createSpec(opt={}){
     dev.step(1.1);  // 最初の2つは全体とコマンド名、不要なので削除
     pv.argv = process.argv.slice(2);
 
-    dev.step(1.2,pv.argv);  // 起動時パラメータが無指定または"-h"の場合、useageを表示して終了
+    dev.step(1.2);  // 起動時パラメータが無指定または"-h"の場合、useageを表示して終了
     if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
       console.log(cf.useage);
       dev.end(); // 終了処理
       return pv.rv;
     }
 
-    dev.step(2,pv.rv);  // 対象ファイルの情報を取得
+    dev.step(2);  // 対象ファイルの情報を取得
     pv.r = listSource(pv.argv);
     if( typeof pv.r === 'string' ){
       // 対象ファイルが0件なら終了
@@ -1680,11 +1672,11 @@ async function createSpec(opt={}){
     if( pv.r instanceof Error ) throw pv.r;
     pv.tree = await DocletTree.initialize(pv.r);
 
-    dev.step(3,'createSpec.3 start');  // フォルダ作成＋ファイル出力
+    dev.step(3);  // フォルダ作成＋ファイル出力
     pv.r = pv.tree.output();
     if( pv.r instanceof Error ) throw pv.r;
 
-    dev.step(4,'createSpec.4 start');
+    dev.step(4);
     writeFileSync('../tmp/DocletTree.json',JSON.stringify(pv.tree,null,2));
 
     dev.end();

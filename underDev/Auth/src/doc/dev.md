@@ -14,10 +14,6 @@
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大
   createSpec.mjsでソースはJSDocに一本化する。
-  - クラス・グローバル関数・データ型定義いずれも無ければindex.mdを出力しない
-    - build.shでcreateSpec出力専用フォルダ作成
-    - build.shでcreateSpec出力ファイルを再帰的に検索、docに追加
-    - build.shでindex.md未出力の場合の処理追加
 - build0008: 初回HTMLロード時処理
   - authClient動作確認
   - config構成見直し(20260118_configブランチ)
