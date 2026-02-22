@@ -32,6 +32,10 @@ function setup {  # 事前準備
   arc="$prj/archives"
   dep="$prj/deploy"; [ -d $dep ] && rm -rf $dep; mkdir $dep;
   doc="$prj/doc"; [ -d $doc ] && rm -rf $doc; mkdir $doc;
+  mkdir $doc/client
+  mkdir $doc/common
+  mkdir $doc/server
+  mkdir $doc/img
   src="$prj/src"
   tmp="$prj/tmp"; [ -d $tmp ] && rm -rf $tmp; mkdir $tmp;
 
@@ -66,15 +70,11 @@ function ending { # 終了時処理
   echo "処理時間: ${elapsed_ms} ms"
 }
 function detailedDesign {  # JavaScriptソースからMarkdown作成
-  rm -rf $doc/*
+  # 最終的にsrc/doc/header.mdを先頭に付けるため、出力先はtmp/
   node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $tmp \
   1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
 }
 function overviewDesign {  # readme/index.md他の全体的な仕様書
-  mkdir $doc/client
-  mkdir $doc/common
-  mkdir $doc/server
-  mkdir $doc/img
   # 図表
   cp $src/doc/*.svg $doc/img/
   # docルート直下文書用に相対パスを修正したheader.mdを用意

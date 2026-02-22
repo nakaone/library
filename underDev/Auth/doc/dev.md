@@ -38,7 +38,7 @@
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大
   createSpec.mjsでソースはJSDocに一本化する。
-  - [bug] createSpecで出力先がサブフォルダにならず全て"-o"になる
+  - [bug] クラス・グローバル関数の個別MDが生成されない
 - build0008: 初回HTMLロード時処理
   - authClient動作確認
   - config構成見直し(20260118_configブランチ)

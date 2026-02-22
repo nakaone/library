@@ -1434,8 +1434,8 @@ async function createSpec(opt={}){
       try {
         console.log(`l.1435 output called`);
 
-        dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
-        v.path = outDir + '/' + folder.folderName;
+        dev.step(1,{od:outDir,fn:folder.folderName});  // 出力先フォルダ配下に固有パス毎のフォルダを作成
+        v.path = outDir + (folder.folderName === '/' ? '' : '/') + folder.folderName;
         if( !existsSync(v.path) ) mkdirSync(v.path,{recursive: true});
 
         dev.step(2,{path:v.path,keys:Object.keys(folder.funclass)});  // グローバル関数・クラス毎に個別ファイル作成
