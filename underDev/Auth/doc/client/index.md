@@ -22,57 +22,50 @@
 
 </div>
 
-<p class="l1">"auth"クライアント側仕様書</p>
+# グローバル関数・クラス一覧
 
-# 実装イメージ
+| クラス/関数名 | 概要 |
+| :-- | :-- |
+| [authClient](authClient.md) | authClient: クライアント側中核クラス |
+| [clearAuthEnvironment](clearAuthEnvironment.md) | clearAuthEnvironment: IndexedDBの"Auth"データベースを削除し、環境をリセットする |
+| [cryptoClient](cryptoClient.md) | cryptoClient: クライアント側の暗号化・署名検証 |
+| [localFunc](localFunc.md) | localFunc: テスト用：処理要求発行 |
 
-```html
-<input type="text" id="testval" value="設定値" />
-<button onclick="getValue()">実行</button>
-<div id="testResult"></div>
+# <span id="typedefList">データ型定義一覧</span>
 
-<script type="text/javascript">
-  // ライブラリ関数定義
-  function devTools(){...}; // (中略)
+| No | データ型名 | 概要 |
+| --: | :-- | :-- |
+| 1 | [authClientConfig](#authClientConfig) | authClientConfig: 共通設定情報にauthClient特有項目を追加 |
+| 2 | [authIndexedDB](#authIndexedDB) | authIndexedDB: IndexedDBに保存する内容(=this.idb) |
 
-  // authClient関係クラス定義
-  class authClient{...}
-  class authConfig{...}
-  class authClientConfig{...} // (中略)
+# 個別データ型定義
 
-  // グローバル変数定義
-  const dev = devTools();
-  const config = {...}; // authClient/Server共通設定情報
-  let auth;  // authClient。HTML要素のイベント対応のためグローバル領域で宣言
 
-  // 処理要求を発行するローカル関数
-  function getValue(){
-    try {
-      const request = document.getElementById('testval').value;
+## <a href="#typedefList"><span id="authClientConfig">"authClientConfig" データ型定義</span></a>
 
-      // サーバ側関数'trans01'にrequestを渡して処理要求
-      const response = auth.exec('trans01',request);
-      if( response instance of Error ) throw resopnse;
+authClientConfig: 共通設定情報にauthClient特有項目を追加
 
-      document.getElementById('testResult').innerText = response;
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| api | string | 必須 | サーバ側WebアプリURLのID | https://script.google.com/macros/s/(この部分)/exec |
+| timeout | number | 300000 | サーバからの応答待機時間 | これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
+| storeName | string | "config" | IndexedDBのストア名 |  |
+| dbVersion | number | 1 | IndexedDBのバージョン |  |
 
-    } catch(e) { dev.error(e); return e; }
-  }
 
-  // onLoad処理は"async"で宣言
-  window.addEventListener('DOMContentLoaded', async () => {
-    const v = { whois: 'DOMContentLoaded', rv: null };
-    dev.start(v.whois, [...arguments]);
-    try {
+## <a href="#typedefList"><span id="authIndexedDB">"authIndexedDB" データ型定義</span></a>
 
-      // IndexedDBからの読み込み等、非同期処理を実行
-      auth = await authClient.initialize({
-        // プロジェクト毎の独自パラメータ
-      });
+authIndexedDB: IndexedDBに保存する内容(=this.idb)
 
-      dev.end(); // 終了処理
-      return v.rv;
-    } catch (e) { dev.error(e); return e; }
-  });
-</script>
-```
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| memberId | string | 'dummyMemberID' | メンバ識別子(メールアドレス。初期値は固定文字列) |  |
+| memberName | string | 'dummyMemberName' | メンバの氏名(初期値は固定文字列) |  |
+| deviceId | string | 'dummyDeviceID' | サーバ側で生成(UUIDv4。初期値は固定文字列) |  |
+| CSkeySign | CryptoKey | 必須 | 署名用秘密鍵 |  |
+| CPkeySign | CryptoKey | 必須 | 署名用公開鍵 |  |
+| CSkeyEnc | CryptoKey | 必須 | 暗号化用秘密鍵 |  |
+| CPkeyEnc | CryptoKey | 必須 | 暗号化用公開鍵 |  |
+| keyGeneratedDateTime | string | 必須 | 鍵ペア生成日時(UNIX時刻) |  |
+| SPkeySign | string |  | サーバ側署名用公開鍵 |  |
+| SPkeyEnc | string |  | サーバ側暗号化用公開鍵 |  |

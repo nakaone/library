@@ -2,8 +2,8 @@
 function main { # メイン処理
   setup
   concatSource
+  overviewDesign  # detailedDesignでtmp/header.mdを使用するので先行
   detailedDesign
-  overviewDesign
   ending
 }
 function setup {  # 事前準備
@@ -38,6 +38,7 @@ function setup {  # 事前準備
   mkdir $doc/img
   src="$prj/src"
   tmp="$prj/tmp"; [ -d $tmp ] && rm -rf $tmp; mkdir $tmp;
+  mkdir $tmp/createSpec
 
   # 1.3.$embedに渡すパラメータを一括指定
   opts="-GitHub:$GitHub -lib:$lib -prj:$prj -dep:$dep -doc:$doc -src:$src -tmp:$tmp"
@@ -70,9 +71,29 @@ function ending { # 終了時処理
   echo "処理時間: ${elapsed_ms} ms"
 }
 function detailedDesign {  # JavaScriptソースからMarkdown作成
-  # 最終的にsrc/doc/header.mdを先頭に付けるため、出力先はtmp/
-  node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $tmp \
+  # index.md及びクラス・グローバル関数個別MDをtmpに作成
+  # ※ 最終的にsrc/doc/header.mdを先頭に付けるため、出力先はtmp/
+  node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $tmp/createSpec \
   1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
+
+  # index.md及びクラス・グローバル関数個別MDにヘッダを付けてdoc以下にコピー
+  find $tmp/createSpec -type f -name '*.md' | while read -r filepath; do
+    # 相対パスを取得（例: client/authClient.md）
+    relpath="${filepath#$tmp/createSpec}"
+    # 出力先のパスを作成
+    outpath="$doc/$relpath"
+    # 出力先ディレクトリを作成（存在しない場合）
+    mkdir -p "$(dirname "$outpath")"
+    # header.md + 元ファイル を結合して出力
+    cat "$src/doc/header.md" "$filepath" > "$outpath"
+  done
+
+  # doc直下のindex.mdはクラス・グローバル関数個別MDとヘッダ部が異なるので削除
+  rm -f $doc/index.md
+
+  # ルートとなるindex.mdが出力されていればdocルート直下用header.mdを付けて出力
+  [ -f $tmp/createSpec/index.md ] && cat tmp/header.md $tmp/createSpec/index.md \
+  > $doc/index.md
 }
 function overviewDesign {  # readme/index.md他の全体的な仕様書
   # 図表
