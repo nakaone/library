@@ -1672,19 +1672,19 @@ async function createSpec(opt={}){
       return pv.rv;
     }
 
-    dev.step(2);  // 対象ファイルの情報を取得
-    pv.rv = listSource(pv.argv);
-    if( typeof pv.rv === 'string' ){
+    dev.step(2,pv.rv);  // 対象ファイルの情報を取得
+    pv.r = listSource(pv.argv);
+    if( typeof pv.r === 'string' ){
       // 対象ファイルが0件なら終了
-      console.log(`Error: ${pv.rv}`);
+      console.log(`Error: ${pv.r}`);
       return null;
     }
-    if( pv.rv instanceof Error ) throw pv.rv;
-    pv.tree = await DocletTree.initialize(pv.rv);
+    if( pv.r instanceof Error ) throw pv.r;
+    pv.tree = await DocletTree.initialize(pv.r);
 
     dev.step(3,'createSpec.3 start');  // フォルダ作成＋ファイル出力
-    pv.rv = pv.tree.output();
-    if( pv.rv instanceof Error ) throw pv.rv;
+    pv.r = pv.tree.output();
+    if( pv.r instanceof Error ) throw pv.r;
 
     dev.step(4,'createSpec.4 start');
     writeFileSync('../tmp/DocletTree.json',JSON.stringify(pv.tree,null,2));

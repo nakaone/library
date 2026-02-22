@@ -67,9 +67,10 @@ function ending { # 終了時処理
 }
 function detailedDesign {  # JavaScriptソースからMarkdown作成
   rm -rf $doc/*
-  node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $doc
+  node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $tmp \
+  1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
 }
-function overviewDesign {
+function overviewDesign {  # readme/index.md他の全体的な仕様書
   mkdir $doc/client
   mkdir $doc/common
   mkdir $doc/server
