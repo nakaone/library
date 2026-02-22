@@ -143,22 +143,6 @@ async function createSpec(opt={}){
   };
   const dev = new devTools(pv,{mode:'pipe',footer:true});
 
-  /** DocletTreeFolder: パス毎の所属Doclet管理(フォルダ管理)
-   * @class DocletTreeFolder
-   * @prop {string} folderName
-   * @prop {Object.<string, DocletEx>} funclass - グローバル関数・クラス定義(key=DocletEx.uuid)
-   * @prop {Object.<string, DocletEx>} typedef - データ型定義(key=DocletEx.uuid)
-   * @prop {Object.<string, DocletTreeFolder>} children - 子フォルダ。キーはフォルダ名
-   */
-  class DocletTreeFolder {
-    constructor(folderName){
-      this.folderName = folderName;
-      this.funclass = {};
-      this.typedef = {};
-      this.children = {};
-    }
-  }
-
   /** DocletColRow: データ項目一覧作成用追加情報
    * @typedef {Object} DocletColRow
    * @prop {string} name - 項目名
@@ -618,6 +602,7 @@ async function createSpec(opt={}){
       } catch (e) { return dev.error(e); }
     }
   }
+
   /** DocletTreeFile: 個別入力ファイル情報
    * @typedef {Object} DocletTreeFile
    * @prop {string} full - フルパス＋ファイル名
@@ -633,6 +618,13 @@ async function createSpec(opt={}){
    * @prop {string} [outDir=''] - 出力先フォルダ名(フルパス)
    * @prop {number} [num=0] - 対象ファイルの個数
    * @prop {DocletTreeFile[]} [files=[]] - 対象ファイルの情報
+   */
+  /** DocletTreeFolder: パス毎の所属Doclet管理(フォルダ管理)
+   * @class DocletTreeFolder
+   * @prop {string} folderName
+   * @prop {Object.<string, DocletEx>} funclass - グローバル関数・クラス定義(key=DocletEx.uuid)
+   * @prop {Object.<string, DocletEx>} typedef - データ型定義(key=DocletEx.uuid)
+   * @prop {Object.<string, DocletTreeFolder>} children - 子フォルダ。キーはフォルダ名
    */
   /** DocletTree: 処理対象ソース・Docletの全体構造を管理
    * @class DocletTree
@@ -662,7 +654,7 @@ async function createSpec(opt={}){
         };
         this.doclet = [];
         this.map = {};
-        this.folder = new DocletTreeFolder('/');
+        this.folder = this.makeFolder('/');
         this.opt = Object.assign({title:{}},opt);
         // Markdown文書のタイトル行の既定値(deepcopyなので個別)
         this.opt.title = Object.assign({
@@ -1116,8 +1108,6 @@ async function createSpec(opt={}){
     }
 
     /** makeDocletMD: 単一DocletExのインスタンスからMarkdownを作成
-     * - フォルダ内クラス・グローバル関数一覧＋データ型定義一覧(index.md)は
-     *   DocletTreeFolder.markdownで作成
      * @param {string} [uuid=this.uuid] - 対象DocletEx.uuid
      * @param {number} [level=1] - 階層の深さ
      * @returns {string|Error}
@@ -1282,6 +1272,29 @@ async function createSpec(opt={}){
 
         dev.end();
         return v.rv.join('\n').trim();
+
+      } catch (e) { return dev.error(e); }
+    }
+
+    /** makeFolder: DocletTreeFolder形式のオブジェクトを作成
+     * @memberof DocletTree
+     * @param {string} folderName - フォルダ名
+     * @returns {DocletTreeFolder|Error}
+     */
+    makeFolder(folderName) {
+      const v = {whois:`${this.constructor.name}.makeFolder`, arg:{folderName}, rv:null};
+      const dev = new devTools(v,{mode:'pipe'});
+      try {
+
+        v.rv = {
+          folderName: folderName,
+          funclass: {},
+          typedef: {},
+          children: {},
+        };
+
+        dev.end(); // 終了処理
+        return v.rv;
 
       } catch (e) { return dev.error(e); }
     }
@@ -1543,7 +1556,7 @@ async function createSpec(opt={}){
           if( v.path.length > 0 ){
             v.path.forEach(folderName => {
               if( typeof v.folder.children[folderName] === 'undefined' ){
-                v.folder.children[folderName] = new DocletTreeFolder(folderName);
+                v.folder.children[folderName] = this.makeFolder(folderName);
               }
               v.folder = v.folder.children[folderName];
             });
