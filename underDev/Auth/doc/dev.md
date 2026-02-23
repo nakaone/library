@@ -38,8 +38,8 @@
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大
   createSpec.mjsでソースはJSDocに一本化する。
-  - createSpec: DocletTreeFolderクラスを非クラス化
   - DocletEx, DocletTree を別ファイル化
+  - DocletTree.json生成を起動時パラメータで指定可能に
 - build0008: 初回HTMLロード時処理
   - authClient動作確認
   - config構成見直し(20260118_configブランチ)

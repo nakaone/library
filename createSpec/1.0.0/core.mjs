@@ -20,14 +20,12 @@ createSpec();
  *     {file:パス＋ファイル名}
  * - commentを<details>タグで表示
  * 
- * - DocletXXX内でcreateSpec.cfを参照している箇所をDocletXXXメンバに書き換え
  * - undocumentedチェックを追加
  * - 和文の他、英文のテンプレートも追加
  * - 文法チェック
  *   - ＠class の後に余計な文字列があればエラー
  * - createSpecはシェルの起動時パラメータを引数とする関数に変更
  * - 独自タグ「history」対応
- * - AI用一括ファイル出力
  */
 
 async function createSpec(opt={}){
@@ -37,7 +35,6 @@ async function createSpec(opt={}){
     command: path.resolve('./node_modules/.bin/jsdoc'), // jsdocコマンド
     jsdocJson: opt.jsdocJson ?? `jsdoc.json`,  // jsdocコマンド設定ファイル名
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
-    jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
     useage: `
       createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
       
@@ -626,13 +623,24 @@ async function createSpec(opt={}){
    * @prop {Object.<string, DocletEx>} typedef - データ型定義(key=DocletEx.uuid)
    * @prop {Object.<string, DocletTreeFolder>} children - 子フォルダ。キーはフォルダ名
    */
+  /** DocletTreeOpt: オプション設定値
+   * @typedef {Object} DocletTreeOpt
+   * @prop {Object.<string, string>} title - Markdown文書のタイトル行
+   * @prop {string} [lang='ja-JP'] - 使用言語
+   * @prop {string} [indexMd='index.md'] - フォルダ直下の管理ファイル名
+   * @prop {Object.<string, {key,label,align}[]>} [propHeader] - 項目一覧テーブルのヘッダ定義
+   * @prop {Object.<string, {key,label,align}[]>} [returnHeader] - 戻り値テーブルのヘッダ定義
+   * @prop {string} [jsdocJson="jsdoc.json"] - jsdoc設定ファイル名
+   * @prop {string} [dummyDir="./dummy"] - ダミーディレクトリ名
+   * @prop {string} [jsdocTarget=".+\\.(js|mjs|gs|txt)$"] - jsdoc処理対象ファイル名の正規表現
+   */
   /** DocletTree: 処理対象ソース・Docletの全体構造を管理
    * @class DocletTree
    * @prop {DocletTreeSource} source - 処理対象となるソースファイル
    * @prop {DocletEx[]} doclet - 独自情報を付加したDocletExの配列
    * @prop {Object.<string, DocletEx>} map - rangeId/linenoId/commentIdをキーにしたDocletExのマップ
    * @prop {Object.<string, DocletTreeFolder>} folder - パス毎の所属Doclet管理。キーはフォルダ名
-   * @prop {Object} [opt={}] - オプション設定値。設定値はconstructor参照
+   * @prop {DocletTreeOpt} [opt={}] - オプション設定値
    */
   class DocletTree {
     /**
@@ -701,6 +709,9 @@ async function createSpec(opt={}){
             {key:'note',label:'note',align:':--'},
           ],
         }[['ja','ja-JP'].includes(this.opt.lang) ? 'ja' : 'en'];
+        this.opt.jsdocJson = opt.jsdocJson ?? "jsdoc.json"; // jsdoc設定ファイル名
+        this.opt.dummyDir = opt.dummyDir ?? "./dummy";  // ダミーディレクトリ名
+        this.opt.jsdocTarget = opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$"; // jsdocの動作対象となるファイル名
 
         dev.end(); // 終了処理
       } catch (e) { return dev.error(e); }
@@ -899,15 +910,15 @@ async function createSpec(opt={}){
        */
 
       dev.step(1.1);  // jsdoc設定ファイルの作成
-      if( !existsSync(cf.jsdocJson) ){
-        writeFileSync(cf.jsdocJson,JSON.stringify({source:{
-          include:[cf.dummyDir],
-          includePattern: cf.jsdocTarget // 対象ファイル名の正規表現
+      if( !existsSync(this.opt.jsdocJson) ){
+        writeFileSync(this.opt.jsdocJson,JSON.stringify({source:{
+          include:[this.opt.dummyDir],
+          includePattern: this.opt.jsdocTarget // 対象ファイル名の正規表現
         }}));
       }
 
       dev.step(1.2);  // ダミーディレクトリを作成
-      if( !existsSync(cf.dummyDir) ) mkdirSync(cf.dummyDir);
+      if( !existsSync(this.opt.dummyDir) ) mkdirSync(this.opt.dummyDir);
 
       // step.2 : jsdocの実行
       return new Promise((resolve, reject) => {
@@ -915,7 +926,7 @@ async function createSpec(opt={}){
         const dev = new devTools(v,{mode:'pipe'});
 
         dev.step(2.1);  // jsdoc -X を子プロセスとして起動
-        v.p = spawn("jsdoc", [fn,'--configure',cf.jsdocJson,'-X'], {
+        v.p = spawn("jsdoc", [fn,'--configure',this.opt.jsdocJson,'-X'], {
           stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
           encoding: "utf8"
         });
@@ -960,6 +971,7 @@ async function createSpec(opt={}){
     /** initialize: DocletTreeインスタンス作成
      * @memberof DocletTree
      * @param {DocletTreeSource} arg - 入力ファイル(JSソース)情報
+     * @param {DocletTreeOpt} [opt={}] - オプション
      * @returns {DocletTree|Error}
      */
     static async initialize(arg,opt={}){
@@ -1683,7 +1695,10 @@ async function createSpec(opt={}){
       return null;
     }
     if( pv.r instanceof Error ) throw pv.r;
-    pv.tree = await DocletTree.initialize(pv.r);
+    pv.tree = await DocletTree.initialize(pv.r,{
+      jsdocJson: cf.jsdocJson,
+      dummyDir: cf.dummyDir,
+    });
 
     dev.step(3);  // フォルダ作成＋ファイル出力
     pv.r = pv.tree.output();
