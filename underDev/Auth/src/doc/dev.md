@@ -11,12 +11,22 @@
   - authClientで受信、内容確認、格納
 
 <!--
-[bug] authClientで出てこないメソッドがある
-[bug] authClientメソッド一覧にauthServer.dumpPropertiesが入っている
+[bug] dumpが使えない
 [bug] DocletTree.mapにおかしなキーがある
   "/common/config.mjs::config
   - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
   - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
+[bug] authClient._IndexedDBが仕様書上不存在(JSDocの書き方がわからない)
+[bug] データ型CryptoKeyにリンクが付けられていない
+[bug] _withStore引数の説明が意味不明
+[bug] exec引数anyの要否/既定値欄が'['のみで意味不明
+[bug] getIndexedDB引数の項目名が空欄
+[warn] exec()のラベル・概説の内容が全く同じ。概説は削除した方がベター
+[warn] ラベル冒頭のクラス・関数名は削除した方がベター
+[warn] authClient.constructorのラベルが"constructor"だけなら削除した方がベター
+[warn] 「constructor 概説」の内容が"constructor"だけなら削除した方がベター
+
+
 -->
 
 === いまここ =========================================
