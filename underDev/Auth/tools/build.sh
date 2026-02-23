@@ -73,7 +73,8 @@ function ending { # 終了時処理
 function detailedDesign {  # JavaScriptソースからMarkdown作成
   # index.md及びクラス・グローバル関数個別MDをtmpに作成
   # ※ 最終的にsrc/doc/header.mdを先頭に付けるため、出力先はtmp/
-  node $createSpec $src/(client|common|server)/**/*.(js|mjs) -o $tmp/createSpec \
+  node $createSpec $src/(client|common|server)/**/*.(js|mjs) \
+  -o $tmp/createSpec -r $tmp/DocletTree.json \
   1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
 
   # index.md及びクラス・グローバル関数個別MDにヘッダを付けてdoc以下にコピー

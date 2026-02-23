@@ -38,10 +38,11 @@ async function createSpec(opt={}){
     useage: `
       createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
       
-      useage: \`node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]\`
+      useage: \`node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...] [-r 調査結果ファイル]\`
       
       - 入力側のフォルダに合わせて出力フォルダを作成
       - 一覧＋データ型定義のindex.md＋クラス・グローバル関数毎のMarkdownを作成
+      - 調査結果ファイル：DocletTreeインスタンスのJSON
       - 詳細は後掲「入出力イメージ」の項を参照
       
       # 使用上の注意
@@ -615,6 +616,7 @@ async function createSpec(opt={}){
    * @prop {string} [outDir=''] - 出力先フォルダ名(フルパス)
    * @prop {number} [num=0] - 対象ファイルの個数
    * @prop {DocletTreeFile[]} [files=[]] - 対象ファイルの情報
+   * @prop {string} [research] - 調査結果ファイル名(=DocletTreeのJSON)
    */
   /** DocletTreeFolder: パス毎の所属Doclet管理(フォルダ管理)
    * @class DocletTreeFolder
@@ -659,6 +661,7 @@ async function createSpec(opt={}){
           outDir: arg.outDir ?? '',
           num:    arg.num ?? 0,
           files:  arg.files ?? [],
+          research: arg.research ?? '',
         };
         this.doclet = [];
         this.map = {};
@@ -1704,8 +1707,9 @@ async function createSpec(opt={}){
     pv.r = pv.tree.output();
     if( pv.r instanceof Error ) throw pv.r;
 
-    dev.step(4);
-    writeFileSync('../tmp/DocletTree.json',JSON.stringify(pv.tree,null,2));
+    dev.step(4);  // 調査結果ファイルの出力
+    if( pv.tree.source.research )
+      writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree,null,2));
 
     dev.end();
     // 開発用メモ：終了時にDocletTree.docletの設定状況を参照する方法
