@@ -39,6 +39,7 @@ export class authClient {
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
 
   /** constructor
+   * @memberof authClient
    * @constructor
    * @param {Object} config - authClient/Server共通設定情報
    */
@@ -116,6 +117,7 @@ export class authClient {
   }
 
   /** _exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
+   * @memberof authClient
    * @param {string} key - 鍵名。"CPkeySign"等
    * @param {CryptoKey} value - 鍵の内容
    * @returns {string}
@@ -128,6 +130,7 @@ export class authClient {
   }
 
   /** _importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換
+   * @memberof authClient
    * @param {string} key - 鍵名。"CPkeySign"等
    * @param {string} value - IndexedDBに保存された鍵の内容
    * @returns {CryptoKey}
@@ -158,6 +161,7 @@ export class authClient {
   }
 
   /** _withStore: IndexedDB操作共通ラッパ
+   * @memberof authClient
    * @param {'readonly'|'readwrite'} mode
    * param {(store: IDBObjectStore)=>Promise<any>} fn
    */
@@ -180,6 +184,7 @@ export class authClient {
   }
 
   /** exec: ローカル関数の処理要求を処理
+   * @memberof authClient
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg=[] - サーバ側関数に渡す引数
    * @param {number} depth=0 - 再帰呼出時の階層
@@ -350,6 +355,7 @@ export class authClient {
   */
 
   /** fetch: サーバ側APIの呼び出し
+   * @memberof authClient
    * @param {authRequest} request - 処理要求
    * @returns {authResponse|Error} 処理結果
    */
@@ -419,6 +425,7 @@ export class authClient {
   }
 
   /** getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
+   * @memberof authClient
    * @param {void}
    * @returns {Object<string,any>} this.idbに格納したIndexedDBの内容({キー:値}形式)
    */
@@ -465,6 +472,7 @@ export class authClient {
    * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
    * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
    * @static
+   * @memberof authClient
    * @param {Object} config - authClient/Server共通＋authClient専用設定情報
    *   ※共通/専用設定情報は事前に結合しておくこと(ex.mergeDeeply)
    * @returns {authClient|Error}
@@ -541,6 +549,7 @@ export class authClient {
   }
 
   /** setIndexedDB: IndexedDBの更新(upsert)
+   * @memberof authClient
    * @param {Object<string, string>} arg 
    * @returns {null|Error}
    */

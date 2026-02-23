@@ -50,34 +50,8 @@ authConfig: クライアント・サーバ共通設定情報
 クライアント・サーバ共通設定情報
 ## <span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top">🧩 constructor()</span>
 
-### <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top"><span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_func">🧱 constructor メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/server/Member.mjs::Member#checkPasscode_top">checkPasscode</a> | checkPasscode: 認証時のパスコードチェック |
-
 ### <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top"><span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | arg | authConfig | 必須 | 設定情報(既定値からの変更部分) |  |
-### <span id="/server/Member.mjs::Member#checkPasscode_top">🧩 checkPasscode()</span>
-
-checkPasscode: 認証時のパスコードチェック
-
-#### <a href="#/server/Member.mjs::Member#checkPasscode_top"><span id="/server/Member.mjs::Member#checkPasscode_desc">🧾 checkPasscode 概説</span></a>
-
-checkPasscode: 認証時のパスコードチェック
-入力されたパスコードをチェック、Member内部の各種メンバの値を更新
-
-#### <a href="#/server/Member.mjs::Member#checkPasscode_top"><span id="/server/Member.mjs::Member#checkPasscode_param">▶️ checkPasscode 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求 |  |
-
-#### <a href="#/server/Member.mjs::Member#checkPasscode_top"><span id="/server/Member.mjs::Member#checkPasscode_return">◀️ checkPasscode 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authResponse \| Error |  |  |

@@ -34,12 +34,36 @@
   - authServerでauthResponse作成
   - authClientで受信、内容確認、格納
 
+<!--
+[bug] authClientで出てこないメソッドがある
+[bug] authClientメソッド一覧にauthServer.dumpPropertiesが入っている
+[bug] DocletTree.mapにおかしなキーがある
+  "/common/config.mjs::config
+  - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
+  - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
+-->
+
 === いまここ =========================================
 - build0009: 仕様書とソースの一体化<br>
-  specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大
-  createSpec.mjsでソースはJSDocに一本化する。
-  - DocletEx, DocletTree を別ファイル化
-  - DocletTree.json生成を起動時パラメータで指定可能に
+  specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>
+  ⇒ createSpec.mjsでソースはJSDocに一本化する。
+  - src/client
+    - □ authClient.mjs: 出力内容確認
+    - □ cryptoClient.mjs: 出力内容確認
+    - □ localFunc.mjs: 出力内容確認
+    - □ onLoad.mjs: 出力内容確認
+  - src/common
+    - □ authConfig.mjs: 出力内容確認
+    - □ config.mjs: 出力内容確認
+  - src/server
+    - □ authServer.mjs: 出力内容確認
+    - □ cryptoServer.mjs: 出力内容確認
+    - □ Member.mjs: 出力内容確認
+    - □ onOpen.mjs: 出力内容確認
+    - □ serverFunc.mjs: 出力内容確認
+  - tools.mjs: 出力内容確認
+    - □ config.mjs: いる？
+  - □ src/common/specDef.js: 不足分を反映
 - build0008: 初回HTMLロード時処理
   - authClient動作確認
   - config構成見直し(20260118_configブランチ)

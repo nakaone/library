@@ -38,25 +38,149 @@ authClient: クライアント側中核クラス
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/client/authClient.mjs::authClient.initialize_top">initialize</a> | initialize: authClientインスタンス作成 |
-| 2 | <a href="#/client/authClient.mjs::authClient#setIndexedDB_top">setIndexedDB</a> | setIndexedDB: IndexedDBの更新(upsert) |
-| 3 | <a href="#/server/authServer.mjs::authServer#authLogger_top">authLogger</a> | authLogger: 監査ログ／エラーログを自動振り分けで出力 |
-| 4 | <a href="#/server/authServer.mjs::authServer.dumpProperties_top">dumpProperties</a> | dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用) |
+| 1 | <a href="#/client/authClient.mjs::authClient.exports.authClient#constructor_top">constructor</a> | constructor |
+| 2 | <a href="#/client/authClient.mjs::authClient#_exportIfCryptoKey_top">_exportIfCryptoKey</a> | _exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換 |
+| 3 | <a href="#/client/authClient.mjs::authClient#_importIfCryptoKey_top">_importIfCryptoKey</a> | _importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換 |
+| 4 | <a href="#/client/authClient.mjs::authClient#_withStore_top">_withStore</a> | _withStore: IndexedDB操作共通ラッパ |
+| 5 | <a href="#/client/authClient.mjs::authClient#exec_top">exec</a> | exec: ローカル関数の処理要求を処理 |
+| 6 | <a href="#/client/authClient.mjs::authClient#fetch_top">fetch</a> | fetch: サーバ側APIの呼び出し |
+| 7 | <a href="#/client/authClient.mjs::authClient#getIndexedDB_top">getIndexedDB</a> | getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得 |
+| 8 | <a href="#/client/authClient.mjs::authClient.initialize_top">initialize</a> | initialize: authClientインスタンス作成 |
+| 9 | <a href="#/client/authClient.mjs::authClient#setIndexedDB_top">setIndexedDB</a> | setIndexedDB: IndexedDBの更新(upsert) |
 
 ## <a href="#/client/authClient.mjs::authClient_top"><span id="/client/authClient.mjs::authClient_desc">🧾 authClient 概説</span></a>
 
 クライアント側中核クラス
 - 初期化の際に非同期処理が必要なため、インスタンス作成は
   `new authClient()`ではなく`authClient.initialize()`で行う
+## <span id="/client/authClient.mjs::authClient.exports.authClient#constructor_top">🧩 constructor()</span>
+
+constructor
+
+### <a href="#/client/authClient.mjs::authClient.exports.authClient#constructor_top"><span id="/client/authClient.mjs::authClient.exports.authClient#constructor_desc">🧾 constructor 概説</span></a>
+
+constructor
+
+### <a href="#/client/authClient.mjs::authClient.exports.authClient#constructor_top"><span id="/client/authClient.mjs::authClient.exports.authClient#constructor_param">▶️ constructor 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| config | Object | 必須 | authClient/Server共通設定情報 |  |
+## <span id="/client/authClient.mjs::authClient#_exportIfCryptoKey_top">🧩 _exportIfCryptoKey()</span>
+
+_exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
+
+### <a href="#/client/authClient.mjs::authClient#_exportIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_exportIfCryptoKey_desc">🧾 _exportIfCryptoKey 概説</span></a>
+
+_exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
+
+### <a href="#/client/authClient.mjs::authClient#_exportIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_exportIfCryptoKey_param">▶️ _exportIfCryptoKey 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| key | string | 必須 | 鍵名。"CPkeySign"等 |  |
+| value | CryptoKey | 必須 | 鍵の内容 |  |
+
+### <a href="#/client/authClient.mjs::authClient#_exportIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_exportIfCryptoKey_return">◀️ _exportIfCryptoKey 戻り値</span></a>
+
+| データ型 | 説明 | 備考 |
+| :-- | :-- | :-- |
+| string |  |  |
+## <span id="/client/authClient.mjs::authClient#_importIfCryptoKey_top">🧩 _importIfCryptoKey()</span>
+
+_importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換
+
+### <a href="#/client/authClient.mjs::authClient#_importIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_importIfCryptoKey_desc">🧾 _importIfCryptoKey 概説</span></a>
+
+_importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換
+
+### <a href="#/client/authClient.mjs::authClient#_importIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_importIfCryptoKey_param">▶️ _importIfCryptoKey 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| key | string | 必須 | 鍵名。"CPkeySign"等 |  |
+| value | string | 必須 | IndexedDBに保存された鍵の内容 |  |
+
+### <a href="#/client/authClient.mjs::authClient#_importIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_importIfCryptoKey_return">◀️ _importIfCryptoKey 戻り値</span></a>
+
+| データ型 | 説明 | 備考 |
+| :-- | :-- | :-- |
+| CryptoKey |  |  |
+## <span id="/client/authClient.mjs::authClient#_withStore_top">🧩 _withStore()</span>
+
+_withStore: IndexedDB操作共通ラッパ
+
+### <a href="#/client/authClient.mjs::authClient#_withStore_top"><span id="/client/authClient.mjs::authClient#_withStore_desc">🧾 _withStore 概説</span></a>
+
+_withStore: IndexedDB操作共通ラッパ
+
+### <a href="#/client/authClient.mjs::authClient#_withStore_top"><span id="/client/authClient.mjs::authClient#_withStore_param">▶️ _withStore 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| mode | 'readonly' \| 'readwrite' | 必須 | param {(store: IDBObjectStore)=>Promise<any>} fn |  |
+## <span id="/client/authClient.mjs::authClient#exec_top">🧩 exec()</span>
+
+exec: ローカル関数の処理要求を処理
+
+### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_desc">🧾 exec 概説</span></a>
+
+exec: ローカル関数の処理要求を処理
+
+### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_param">▶️ exec 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| func | string | 必須 | サーバ側関数名 |  |
+| arg | any[] | [ | サーバ側関数に渡す引数 |  |
+| depth | number | 0 | 再帰呼出時の階層 |  |
+
+### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_return">◀️ exec 戻り値</span></a>
+
+| データ型 | 説明 | 備考 |
+| :-- | :-- | :-- |
+| any \| Error | 処理結果 |  |
+## <span id="/client/authClient.mjs::authClient#fetch_top">🧩 fetch()</span>
+
+fetch: サーバ側APIの呼び出し
+
+### <a href="#/client/authClient.mjs::authClient#fetch_top"><span id="/client/authClient.mjs::authClient#fetch_desc">🧾 fetch 概説</span></a>
+
+fetch: サーバ側APIの呼び出し
+
+### <a href="#/client/authClient.mjs::authClient#fetch_top"><span id="/client/authClient.mjs::authClient#fetch_param">▶️ fetch 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| request | authRequest | 必須 | 処理要求 |  |
+
+### <a href="#/client/authClient.mjs::authClient#fetch_top"><span id="/client/authClient.mjs::authClient#fetch_return">◀️ fetch 戻り値</span></a>
+
+| データ型 | 説明 | 備考 |
+| :-- | :-- | :-- |
+| authResponse \| Error | 処理結果 |  |
+## <span id="/client/authClient.mjs::authClient#getIndexedDB_top">🧩 getIndexedDB()</span>
+
+getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
+
+### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_desc">🧾 getIndexedDB 概説</span></a>
+
+getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
+
+### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_param">▶️ getIndexedDB 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+|  | void | 必須 |  |  |
+
+### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_return">◀️ getIndexedDB 戻り値</span></a>
+
+| データ型 | 説明 | 備考 |
+| :-- | :-- | :-- |
+| Object.<string, any> | this.idbに格納したIndexedDBの内容({キー:値}形式) |  |
 ## <span id="/client/authClient.mjs::authClient.initialize_top">🧩 initialize()</span>
 
 initialize: authClientインスタンス作成
-
-### <a href="#/client/authClient.mjs::authClient.initialize_top"><span id="/client/authClient.mjs::authClient.initialize_func">🧱 initialize メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/server/authServer.mjs::authServer#authResponse_top">authResponse</a> | authResponse: authResponse型のオブジェクトを作成 |
 
 ### <a href="#/client/authClient.mjs::authClient.initialize_top"><span id="/client/authClient.mjs::authClient.initialize_desc">🧾 initialize 概説</span></a>
 
@@ -75,25 +199,6 @@ initialize: authClientインスタンス作成
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | authClient \| Error |  |  |
-### <span id="/server/authServer.mjs::authServer#authResponse_top">🧩 authResponse()</span>
-
-authResponse: authResponse型のオブジェクトを作成
-
-#### <a href="#/server/authServer.mjs::authServer#authResponse_top"><span id="/server/authServer.mjs::authServer#authResponse_desc">🧾 authResponse 概説</span></a>
-
-authResponse: authResponse型のオブジェクトを作成
-
-#### <a href="#/server/authServer.mjs::authServer#authResponse_top"><span id="/server/authServer.mjs::authServer#authResponse_param">▶️ authResponse 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求オブジェクト |  |
-
-#### <a href="#/server/authServer.mjs::authServer#authResponse_top"><span id="/server/authServer.mjs::authServer#authResponse_return">◀️ authResponse 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authResponse |  |  |
 ## <span id="/client/authClient.mjs::authClient#setIndexedDB_top">🧩 setIndexedDB()</span>
 
 setIndexedDB: IndexedDBの更新(upsert)
@@ -113,104 +218,3 @@ setIndexedDB: IndexedDBの更新(upsert)
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | null \| Error |  |  |
-## <span id="/server/authServer.mjs::authServer#authLogger_top">🧩 authLogger()</span>
-
-authLogger: 監査ログ／エラーログを自動振り分けで出力
-
-### <a href="#/server/authServer.mjs::authServer#authLogger_top"><span id="/server/authServer.mjs::authServer#authLogger_func">🧱 authLogger メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/client/authClient.mjs::authClient#getIndexedDB_top">getIndexedDB</a> | getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得 |
-| 2 | <a href="#/server/Member.mjs::Member.unfreeze_top">unfreeze</a> | unfreeze: 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除 |
-
-### <a href="#/server/authServer.mjs::authServer#authLogger_top"><span id="/server/authServer.mjs::authServer#authLogger_desc">🧾 authLogger 概説</span></a>
-
-authLogger: 監査ログ／エラーログを自動振り分けで出力
-- 監査ログ：authAuditLog型
-- エラーログ：authErrorLog型
-
-### <a href="#/server/authServer.mjs::authServer#authLogger_top"><span id="/server/authServer.mjs::authServer#authLogger_param">▶️ authLogger 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| response | authResponse | 必須 |  |  |
-
-### <a href="#/server/authServer.mjs::authServer#authLogger_top"><span id="/server/authServer.mjs::authServer#authLogger_return">◀️ authLogger 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authResponse |  |  |
-### <span id="/client/authClient.mjs::authClient#getIndexedDB_top">🧩 getIndexedDB()</span>
-
-getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
-
-#### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_func">🧱 getIndexedDB メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/server/Member.mjs::Member#updateCPkey_top">updateCPkey</a> | updateCPkey: 対象メンバ・デバイスの公開鍵を更新 |
-
-#### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_desc">🧾 getIndexedDB 概説</span></a>
-
-getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
-
-#### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_param">▶️ getIndexedDB 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | void | 必須 |  |  |
-
-#### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_return">◀️ getIndexedDB 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| Object.<string, any> | this.idbに格納したIndexedDBの内容({キー:値}形式) |  |
-#### <span id="/server/Member.mjs::Member#updateCPkey_top">🧩 updateCPkey()</span>
-
-updateCPkey: 対象メンバ・デバイスの公開鍵を更新
-
-##### <a href="#/server/Member.mjs::Member#updateCPkey_top"><span id="/server/Member.mjs::Member#updateCPkey_desc">🧾 updateCPkey 概説</span></a>
-
-updateCPkey: 対象メンバ・デバイスの公開鍵を更新
-
-##### <a href="#/server/Member.mjs::Member#updateCPkey_top"><span id="/server/Member.mjs::Member#updateCPkey_param">▶️ updateCPkey 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| arg | string | 必須 | 引数 |  |
-
-##### <a href="#/server/Member.mjs::Member#updateCPkey_top"><span id="/server/Member.mjs::Member#updateCPkey_return">◀️ updateCPkey 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| null \| Error | 戻り値 |  |
-### <span id="/server/Member.mjs::Member.unfreeze_top">🧩 unfreeze()</span>
-
-unfreeze: 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除
-
-#### <a href="#/server/Member.mjs::Member.unfreeze_top"><span id="/server/Member.mjs::Member.unfreeze_desc">🧾 unfreeze 概説</span></a>
-
-unfreeze: 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除
-- 引数でmemberIdが指定されなかった場合、凍結中デバイス一覧の要求と看做す
-- deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス全てを対象とする
-- memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
-
-#### <a href="#/server/Member.mjs::Member.unfreeze_top"><span id="/server/Member.mjs::Member.unfreeze_param">▶️ unfreeze 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| arg | string | 必須 | 引数 |  |
-
-#### <a href="#/server/Member.mjs::Member.unfreeze_top"><span id="/server/Member.mjs::Member.unfreeze_return">◀️ unfreeze 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| null \| Error | 戻り値 |  |
-## <span id="/server/authServer.mjs::authServer.dumpProperties_top">🧩 dumpProperties()</span>
-
-dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用)
-
-### <a href="#/server/authServer.mjs::authServer.dumpProperties_top"><span id="/server/authServer.mjs::authServer.dumpProperties_desc">🧾 dumpProperties 概説</span></a>
-
-dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用)

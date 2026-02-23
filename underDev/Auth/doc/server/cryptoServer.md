@@ -39,156 +39,99 @@ cryptoServer: サーバ側の暗号化・署名検証
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/client/authClient.mjs::authClient#exec_top">exec</a> | exec: ローカル関数の処理要求を処理 |
-| 2 | <a href="#/common/authConfig.mjs::authConfig_top">authConfig</a> | authConfig: クライアント・サーバ共通設定情報 |
-| 3 | <a href="#/server/cryptoServer.mjs::cryptoServer.initialize_top">initialize</a> | initialize: cryptoServerインスタンス作成 |
+| 1 | <a href="#/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_top">constructor</a> | constructor |
+| 2 | <a href="#/server/cryptoServer.mjs::cryptoServer#encrypt_top">encrypt</a> | encrypt: 処理結果を暗号化＋署名 |
+| 3 | <a href="#/server/cryptoServer.mjs::cryptoServer#decrypt_top">decrypt</a> | decrypt: 暗号化された処理要求を復号・署名検証 |
+| 4 | <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top">generateKeys</a> | generateKeys: PEM形式のRSA鍵ペアを生成 |
+| 5 | <a href="#/server/cryptoServer.mjs::cryptoServer#generateAndSave_top">generateAndSave</a> | generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する |
+| 6 | <a href="#/server/cryptoServer.mjs::cryptoServer.initialize_top">initialize</a> | initialize: cryptoServerインスタンス作成 |
 
 ## <a href="#/server/cryptoServer.mjs::cryptoServer_top"><span id="/server/cryptoServer.mjs::cryptoServer_desc">🧾 cryptoServer 概説</span></a>
 
 サーバ側の暗号化・署名検証
-## <span id="/client/authClient.mjs::authClient#exec_top">🧩 exec()</span>
+## <span id="/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_top">🧩 constructor()</span>
 
-exec: ローカル関数の処理要求を処理
+constructor
 
-### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_func">🧱 exec メソッド・内部関数一覧</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_top"><span id="/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_desc">🧾 constructor 概説</span></a>
 
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/server/Member.mjs::Member#getMember_top">getMember</a> | getMember: 指定メンバの情報をmemberListシートから取得 |
-| 2 | <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top">generateKeys</a> | generateKeys: PEM形式のRSA鍵ペアを生成 |
-| 3 | <a href="#/server/cryptoServer.mjs::cryptoServer#generateAndSave_top">generateAndSave</a> | generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する |
+constructor
 
-### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_desc">🧾 exec 概説</span></a>
-
-exec: ローカル関数の処理要求を処理
-
-### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_param">▶️ exec 引数</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_top"><span id="/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| func | string | 必須 | サーバ側関数名 |  |
-| arg | any[] | [ | サーバ側関数に渡す引数 |  |
-| depth | number | 0 | 再帰呼出時の階層 |  |
+| cf | authServerConfig | 必須 | authServer設定値 |  |
+## <span id="/server/cryptoServer.mjs::cryptoServer#encrypt_top">🧩 encrypt()</span>
 
-### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_return">◀️ exec 戻り値</span></a>
+encrypt: 処理結果を暗号化＋署名
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| any \| Error | 処理結果 |  |
-### <span id="/server/Member.mjs::Member#getMember_top">🧩 getMember()</span>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#encrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#encrypt_desc">🧾 encrypt 概説</span></a>
 
-getMember: 指定メンバの情報をmemberListシートから取得
+encrypt: 処理結果を暗号化＋署名
 
-#### <a href="#/server/Member.mjs::Member#getMember_top"><span id="/server/Member.mjs::Member#getMember_desc">🧾 getMember 概説</span></a>
-
-getMember: 指定メンバの情報をmemberListシートから取得
-
-#### <a href="#/server/Member.mjs::Member#getMember_top"><span id="/server/Member.mjs::Member#getMember_param">▶️ getMember 引数</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#encrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#encrypt_param">▶️ encrypt 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| memberId | string | 必須 | ユーザ識別子(メールアドレス) |  |
+| response | authResponse | 必須 | 処理結果 |  |
+| CPkeySign | string | 必須 | クライアント側署名用公開鍵 |  |
 
-#### <a href="#/server/Member.mjs::Member#getMember_top"><span id="/server/Member.mjs::Member#getMember_return">◀️ getMember 戻り値</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#encrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#encrypt_return">◀️ encrypt 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| Member \| Error | いまここ：元は"authResponse"だったが、"Member"の方がベター？ |  |
-### <span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_top">🧩 generateKeys()</span>
+| encryptedResponse |  |  |
+## <span id="/server/cryptoServer.mjs::cryptoServer#decrypt_top">🧩 decrypt()</span>
+
+decrypt: 暗号化された処理要求を復号・署名検証
+
+### <a href="#/server/cryptoServer.mjs::cryptoServer#decrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#decrypt_desc">🧾 decrypt 概説</span></a>
+
+decrypt: 暗号化された処理要求を復号・署名検証
+
+### <a href="#/server/cryptoServer.mjs::cryptoServer#decrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#decrypt_param">▶️ decrypt 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| request | encryptedRequest | 必須 | 暗号化されたサーバ側処理結果 |  |
+| CPkeySign | string | 必須 | クライアント側署名用公開鍵 |  |
+
+### <a href="#/server/cryptoServer.mjs::cryptoServer#decrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#decrypt_return">◀️ decrypt 戻り値</span></a>
+
+| データ型 | 説明 | 備考 |
+| :-- | :-- | :-- |
+| authRequest |  |  |
+## <span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: PEM形式のRSA鍵ペアを生成
 
-#### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_desc">🧾 generateKeys 概説</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_desc">🧾 generateKeys 概説</span></a>
 
 generateKeys: PEM形式のRSA鍵ペアを生成
 - 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない
 
-#### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_param">▶️ generateKeys 引数</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_param">▶️ generateKeys 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 |  | void | 必須 |  |  |
 
-#### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_return">◀️ generateKeys 戻り値</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_return">◀️ generateKeys 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | Object | 生成された鍵ペア |  |
-### <span id="/server/cryptoServer.mjs::cryptoServer#generateAndSave_top">🧩 generateAndSave()</span>
+## <span id="/server/cryptoServer.mjs::cryptoServer#generateAndSave_top">🧩 generateAndSave()</span>
 
 generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
 
-#### <a href="#/server/cryptoServer.mjs::cryptoServer#generateAndSave_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateAndSave_desc">🧾 generateAndSave 概説</span></a>
+### <a href="#/server/cryptoServer.mjs::cryptoServer#generateAndSave_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateAndSave_desc">🧾 generateAndSave 概説</span></a>
 
 generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
-## <span id="/common/authConfig.mjs::authConfig_top">🧩 authConfigクラス仕様書</span>
-
-authConfig: クライアント・サーバ共通設定情報
-
-### <a href="#/common/authConfig.mjs::authConfig_top"><span id="/common/authConfig.mjs::authConfig_prop">🔢 authConfig メンバ一覧</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| systemName | string | "auth" | システム名 |  |
-| adminMail | string | 必須 | 管理者のメールアドレス |  |
-| adminName | string | 必須 | 管理者氏名 |  |
-| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差既定値は2分 |  |
-| RSAbits | string | 2048 | 鍵ペアの鍵長 |  |
-| maxDepth | number | 10 | 再帰呼出時の最大階層 |  |
-| underDev | Object | 必須 | テスト時の設定 |  |
-| underDev.isTest | boolean | false | 開発モードならtrue |  |
-
-### <a href="#/common/authConfig.mjs::authConfig_top"><span id="/common/authConfig.mjs::authConfig_func">🧱 authConfig メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top">constructor</a> |  |
-
-### <a href="#/common/authConfig.mjs::authConfig_top"><span id="/common/authConfig.mjs::authConfig_desc">🧾 authConfig 概説</span></a>
-
-クライアント・サーバ共通設定情報
-### <span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top">🧩 constructor()</span>
-
-#### <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top"><span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_func">🧱 constructor メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/server/Member.mjs::Member#checkPasscode_top">checkPasscode</a> | checkPasscode: 認証時のパスコードチェック |
-
-#### <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top"><span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_param">▶️ constructor 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| arg | authConfig | 必須 | 設定情報(既定値からの変更部分) |  |
-#### <span id="/server/Member.mjs::Member#checkPasscode_top">🧩 checkPasscode()</span>
-
-checkPasscode: 認証時のパスコードチェック
-
-##### <a href="#/server/Member.mjs::Member#checkPasscode_top"><span id="/server/Member.mjs::Member#checkPasscode_desc">🧾 checkPasscode 概説</span></a>
-
-checkPasscode: 認証時のパスコードチェック
-入力されたパスコードをチェック、Member内部の各種メンバの値を更新
-
-##### <a href="#/server/Member.mjs::Member#checkPasscode_top"><span id="/server/Member.mjs::Member#checkPasscode_param">▶️ checkPasscode 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求 |  |
-
-##### <a href="#/server/Member.mjs::Member#checkPasscode_top"><span id="/server/Member.mjs::Member#checkPasscode_return">◀️ checkPasscode 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authResponse \| Error |  |  |
 ## <span id="/server/cryptoServer.mjs::cryptoServer.initialize_top">🧩 initialize()</span>
 
 initialize: cryptoServerインスタンス作成
-
-### <a href="#/server/cryptoServer.mjs::cryptoServer.initialize_top"><span id="/server/cryptoServer.mjs::cryptoServer.initialize_func">🧱 initialize メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
-| 1 | <a href="#/server/Member.mjs::Member.judgeMember_top">judgeMember</a> | judgeMember: 加入審査画面から審査結果入力＋結果通知 |
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer.initialize_top"><span id="/server/cryptoServer.mjs::cryptoServer.initialize_desc">🧾 initialize 概説</span></a>
 
@@ -207,24 +150,3 @@ initialize: cryptoServerインスタンス作成
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | cryptoServer \| Error |  |  |
-### <span id="/server/Member.mjs::Member.judgeMember_top">🧩 judgeMember()</span>
-
-judgeMember: 加入審査画面から審査結果入力＋結果通知
-
-#### <a href="#/server/Member.mjs::Member.judgeMember_top"><span id="/server/Member.mjs::Member.judgeMember_desc">🧾 judgeMember 概説</span></a>
-
-judgeMember: 加入審査画面から審査結果入力＋結果通知
-加入審査画面を呼び出し、管理者が記入した結果をmemberListに登録、審査結果をメンバに通知
-memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
-
-#### <a href="#/server/Member.mjs::Member.judgeMember_top"><span id="/server/Member.mjs::Member.judgeMember_param">▶️ judgeMember 引数</span></a>
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| arg | string | 必須 | 引数 |  |
-
-#### <a href="#/server/Member.mjs::Member.judgeMember_top"><span id="/server/Member.mjs::Member.judgeMember_return">◀️ judgeMember 戻り値</span></a>
-
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| null \| Error | 戻り値 |  |

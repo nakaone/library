@@ -310,8 +310,8 @@ async function createSpec(opt={}){
    * @prop {DocletColDef[]} [params] - 引数。クラスの場合はconstructorの引数(※同上)
    * @prop {DocletColDef[]} [returns=[]] - 戻り値(※同上)
    * 
-   * @prop {string} [parent=null] - 親要素のDocletEx.id
-   * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.id
+   * @prop {string} [parent=null] - 親要素のDocletEx.uuid
+   * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.uuid
    * 
    * @prop {string} [unique] - 固有パス
    *   ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/")
@@ -1030,8 +1030,11 @@ async function createSpec(opt={}){
       const dev = new devTools(v,{mode:'pipe'});
       try {
 
-        dev.step(1);  // 事前準備(ループ外での処理なので先頭で実行)
-        // データ型名->個別データ型定義のURLマップ作成
+        // 事前準備(ループ外での処理なので先頭で実行)
+        dev.step(1.1);  // longnameIdの一覧を作成委
+        v.longnameId = Object.keys(this.map).filter(x => /::/.test(x));
+
+        dev.step(1.2);  // データ型名->個別データ型定義のURLマップ作成
         v.searchTypedef = (folder,rv={}) => {
           Object.keys(folder.typedef).forEach(uuid => {
             // ①URLを作成
@@ -1040,12 +1043,16 @@ async function createSpec(opt={}){
             + '#' + this.map[uuid].name)
             .replace(/^\/*/,'');  // 先頭の'/'は削除
             // ②未登録なら新規登録、登録済ならnullを設定
-            rv[this.map[uuid].name] = Object.hasOwn(rv,this.map[uuid].name) ? null : v.url;
+            rv[this.map[uuid].name] = Object.hasOwn(
+              rv,this.map[uuid].name) ? null : v.url;
             // ③子フォルダを再帰呼出
-            Object.keys(folder.children).forEach(x => v.searchTypedef(folder.children[x],rv));
+            Object.keys(folder.children).forEach(x =>
+              v.searchTypedef(folder.children[x],rv));
           });
         }
         v.searchTypedef(this.folder,(v.typedef={}));
+
+        dev.step(1.3);  // データ型定義->リンク付きへの変換用作業マップ
         v.typedefList = Object.keys(v.typedef).map(x => {return {
           name: x, // データ型名
           rex:  new RegExp(x,'g'),  // 正規表現
@@ -1065,9 +1072,9 @@ async function createSpec(opt={}){
           if( !Object.hasOwn(v.d,'children') ) v.d.children = [];
 
           dev.step(3);  // ①：child.memberof === parent.longnameで判定
-          if( Object.hasOwn(v.d,'memberof' )){
-            v.key = v.d.prefix + v.d.memberof;
-            if( Object.hasOwn(this.map,v.key) && this.map[v.key] !== null ){
+          if( Object.hasOwn(v.d,'memberof') ){
+            v.key = v.d.prefix + `::${v.d.memberof}`;
+            if( v.longnameId.includes(v.key) && this.map[v.key] !== null ){
               // memberof:longnameが一意に親が決定されたらOK
               v.d.parent = this.map[v.key].uuid;
             }
@@ -1078,7 +1085,7 @@ async function createSpec(opt={}){
             v.minSize = Infinity;
             for( v.t of this.doclet ){
               dev.step(4.1);  // 比較元=比較先またはrangeが無ければスキップ
-              if( v.d === v.t || !v.t.meta?.range ) continue;
+              if( v.d === v.t || !v.t.meta?.range || v.d.prefix !== v.t.prefix ) continue;
               dev.step(4.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
               if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
                 dev.step(4.3);  // 比較先の終了位置−開始位置が最小のものが直近
@@ -1714,7 +1721,7 @@ async function createSpec(opt={}){
     dev.end();
     // 開発用メモ：終了時にDocletTree.docletの設定状況を参照する方法
     //dev.end(
-    //  doc.dump({
+    //  pv.tree.dump({
     //    paths:[],
     //    filter:x => ['constructor','method'].includes(x.docletType),
     //  })
