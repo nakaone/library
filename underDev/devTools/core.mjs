@@ -181,10 +181,10 @@ export class devTools {
 
   /**
    * @typedef {Object} ExtractCondition - devTools.extractメソッドの引数"cond"
-   * @prop {string|string[]|function} [keys=()=>true] - 出力対象メンバの指定
+   * @prop {string|string[]|function} [keys=()=>false] - 出力対象メンバの指定
    *   string: メンバ名、またはその配列
    *   function: メンバ名を引数に対象かを判断する関数(戻り値はboolean)
-   *   無指定の場合は全メンバ出力
+   *   無指定の場合は全メンバ不出力
    * @prop {function} [filter=()=>true] - 元データが配列だった場合の抽出条件
    *   元データを引数に、対象となるならtrueを返す。
    * @prop {Object.<string, ExtractCondition>} [children={}] - 子要素に対する抽出条件
@@ -197,8 +197,9 @@ export class devTools {
    * @param {ExtractCondition} cond - 抽出条件
    * @returns {Object|Error} 処理の結果新たに作成されたオブジェクト
    */
-  extract(data=null,cond=null){
+  extract(data=null,cond=null,depth=0){
     const v = {arg:{data,cond},isArray:true,rv:{}};
+    if( depth > 15 ) return new Error(`too deep`);
 
     // 引数チェック
     if( data === null ) return new Error('no data');
@@ -212,7 +213,7 @@ export class devTools {
 
     // 抽出条件の既定値設定
     cond = Object.assign({
-      keys: () => true,    // (オブジェクト内)全メンバ出力
+      keys: () => false,    // (オブジェクト内)全メンバ不出力
       filter: () => true,  // (配列内)全要素出力
       children: {},
     },cond);
@@ -236,9 +237,9 @@ export class devTools {
       v.o = {};
       // 出力対象項目なら戻り値に設定
       Object.keys(data[v.i]).forEach(col => {
-        if( v.childrenList.includes(col) ){
+        if( v.childrenList.includes(col) && Object.hasOwn(data[v.i],col) ){
           // 子要素(children)に対する抽出
-          v.o[col] = this.extract(data[v.i],cond.children[col]);
+          v.o[col] = this.extract(data[v.i][col],cond.children[col],depth+1);
           if( v.o[col] instanceof Error ) throw v.o[col];
         } else if( cond.keys(col) ){
           // 出力対象項目

@@ -20,6 +20,19 @@ function sample(arg) {
           filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
         }
       },
+      {
+        title: 'classのlongname＋meta.lineno, columnno',
+        data: v.iFile.doclet,
+        cond: {
+          keys: 'longname',
+          filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
+          children: {
+            meta:{
+              keys: ['lineno','columnno'],
+            }
+          }
+        }
+      },
     ];
 
     dev.step(3);  // テスト実行
