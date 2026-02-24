@@ -9,7 +9,10 @@ function sample(arg) {
 
     dev.step(1);  // テストファイルの読み込み
     v.iFile = readFileSync('./DocletTree.json',{encoding:'utf-8'});
-    v.rv = v.iFile;
+    v.rv = dev.extract(JSON.parse(v.iFile).doclet,{
+      keys: 'longname',
+      filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
+    });
 
     dev.end(v.rv); // 終了処理
     return v.rv;

@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 function main { # メイン処理
   setup
-  node $prj/test/sample.mjs
+  node $prj/test/sample.mjs > $prj/test/result.txt 2> $prj/test/error.txt
   ending
 }
 function setup {  # 事前準備
