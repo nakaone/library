@@ -8,14 +8,29 @@ function sample(arg) {
   try {
 
     dev.step(1);  // テストファイルの読み込み
-    v.iFile = readFileSync('./DocletTree.json',{encoding:'utf-8'});
-    v.rv = dev.extract(JSON.parse(v.iFile).doclet,{
-      keys: 'longname',
-      filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
-    });
+    v.iFile = JSON.parse(readFileSync('./DocletTree.json',{encoding:'utf-8'}));
 
-    dev.end(v.rv); // 終了処理
-    return v.rv;
+    dev.step(2);  // テストパターンの定義
+    v.pattern = [
+      {
+        title: 'classのlongname',
+        data: v.iFile.doclet,
+        cond: {
+          keys: 'longname',
+          filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
+        }
+      },
+    ];
+
+    dev.step(3);  // テスト実行
+    for( v.i=0 ; v.i<v.pattern.length ; v.i++ ){
+      console.log(`== pattern.${v.i} : ${v.pattern[v.i].title} ${'='.repeat(20)}`);
+      v.rv = dev.extract(v.pattern[v.i].data,v.pattern[v.i].cond);
+      console.log(JSON.stringify(v.rv,null,2));
+    }
+
+    dev.end(); // 終了処理
+    return null;
 
   } catch (e) { return dev.error(e); }
 }

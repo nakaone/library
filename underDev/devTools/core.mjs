@@ -181,12 +181,13 @@ export class devTools {
 
   /**
    * @typedef {Object} ExtractCondition - devTools.extractメソッドの引数"cond"
-   * @prop {string|string[]|function} keys - 出力対象メンバの指定
+   * @prop {string|string[]|function} [keys=()=>true] - 出力対象メンバの指定
    *   string: メンバ名、またはその配列
    *   function: メンバ名を引数に対象かを判断する関数(戻り値はboolean)
+   *   無指定の場合は全メンバ出力
    * @prop {function} [filter=()=>true] - 元データが配列だった場合の抽出条件
    *   元データを引数に、対象となるならtrueを返す。
-   * @prop {Object.<string, ExtractCondition>} [children] - 子要素に対する抽出条件
+   * @prop {Object.<string, ExtractCondition>} [children={}] - 子要素に対する抽出条件
    *   keysに記載が無くてもchildrenに存在する場合は出力対象。
    *   両方に記載されている場合、childrenの指定が優先される。
    */
@@ -196,21 +197,30 @@ export class devTools {
    * @param {ExtractCondition} cond - 抽出条件
    * @returns {Object|Error} 処理の結果新たに作成されたオブジェクト
    */
-  extract(data,cond){
+  extract(data=null,cond=null){
     const v = {arg:{data,cond},isArray:true,rv:{}};
 
-    // 強制的に配列に変換
+    // 引数チェック
+    if( data === null ) return new Error('no data');
+    if( cond === null ) return new Error('no condition');
+
+    // 元データは強制的に配列に変換
     if( !Array.isArray(data) ){
       v.isArray = false;  // 元は配列では無かったことを記録
       data = [data];
     };
 
+    // 抽出条件の既定値設定
+    cond = Object.assign({
+      keys: () => true,    // (オブジェクト内)全メンバ出力
+      filter: () => true,  // (配列内)全要素出力
+      children: {},
+    },cond);
+
     // 配列から対象行のみ抽出
-    //console.log(`l.206 data=${JSON.stringify({num:data.length,sample:data[0]},null,2)}`);
     if( Object.hasOwn(cond,'filter') && typeof cond.filter === 'function' ){
       data = data.filter(x => cond.filter(x));
     }
-    console.log(`l.209 data=${JSON.stringify({num:data.length,sample:data[0]},null,2)}`);
 
     // 出力対象メンバの指定を判定式に変換
     if( typeof cond.keys === 'string' ){
@@ -218,30 +228,21 @@ export class devTools {
     } else if( Array.isArray(cond.keys) ){
       cond.keys = new Function('x',`return ${JSON.stringify(cond.keys)}.includes(x);`);
     }
-    console.log(`l.219`,cond.keys.toString());
 
     // 出力対象項目のみ抽出
     v.rv = [];
-    v.childrenList = Object.keys(cond.children ?? {});
-    console.log(`l.226 ${JSON.stringify({len:data.length,childrenList:v.childrenList},null,2)}`);
+    v.childrenList = Object.keys(cond.children);
     for( v.i=0 ; v.i<data.length ; v.i++ ){
       v.o = {};
       // 出力対象項目なら戻り値に設定
       Object.keys(data[v.i]).forEach(col => {
-        console.log(`l.231 ${JSON.stringify({
-          cond: cond.keys.toString().replaceAll(/\n/g,''),
-          col: col,
-          is: cond.keys(col),
-        },null,2)}`)
         if( v.childrenList.includes(col) ){
           // 子要素(children)に対する抽出
           v.o[col] = this.extract(data[v.i],cond.children[col]);
           if( v.o[col] instanceof Error ) throw v.o[col];
-          console.log(`l.240 ${JSON.stringify({col:col,o:v.o},null,2)}`);
         } else if( cond.keys(col) ){
           // 出力対象項目
-          v.o[col] = v.data[col];
-          console.log(`l.244 ${JSON.stringify({col:col,o:v.o},null,2)}`);
+          v.o[col] = data[v.i][col];
         }
       });
       v.rv.push(v.o);
