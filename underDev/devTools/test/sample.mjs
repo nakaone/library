@@ -9,6 +9,7 @@ function sample(arg) {
 
     dev.step(1);  // テストファイルの読み込み
     v.iFile = JSON.parse(readFileSync('./DocletTree.json',{encoding:'utf-8'}));
+    v.sample01 = JSON.parse(readFileSync('./sample01.json',{encoding:'utf-8'}));
 
     dev.step(2);  // テストパターンの定義
     v.pattern = [
@@ -30,11 +31,17 @@ function sample(arg) {
         cond: `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:{`
         + `longname,properties:{type:{names}}}`,
       },
+      {
+        title: '項目の抽出',
+        data: v.sample01,
+        cond: `[x => x.type === 'a']:{name,`
+        + `prop}`,
+      },
     ];
 
     dev.step(3);  // テスト実行
     v.min = 0; v.max = v.pattern.length;
-    v.min = 2; v.max = v.min + 1;
+    v.min = 3; v.max = v.min + 1;
     for( v.i=v.min ; v.i<v.max ; v.i++ ){
       console.log(`== pattern.${v.i} : ${v.pattern[v.i].title} ${'='.repeat(20)}`);
       v.rv = dev.extract(v.pattern[v.i].data,v.pattern[v.i].cond);

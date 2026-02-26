@@ -13,7 +13,7 @@
  * }
  * 
  * @history
- *   - rev.3.2.0 : 2026/02/25
+ *   - rev.3.2.0 : 2026/02/26
  *     - extract()を追加
  *     - modeの既定値をdev->pipeに変更
  *     - seq表示時の0パディング不足について修正
@@ -181,23 +181,22 @@ export class devTools {
     }
   }
 
-  /**
-   * @typedef {Object} ExtractCondition - devTools.extractメソッドの引数"cond"
-   * @prop {string|string[]|function} [keys=()=>false] - 出力対象メンバの指定
-   *   string: メンバ名、またはその配列
-   *   function: メンバ名を引数に対象かを判断する関数(戻り値はboolean)
-   *   無指定の場合は全メンバ不出力
-   * @prop {function} [filter=()=>true] - 元データが配列だった場合の抽出条件
-   *   元データを引数に、対象となるならtrueを返す。
-   * @prop {Object.<string, ExtractCondition>} [children={}] - 子要素に対する抽出条件
-   *   keysに記載が無くてもchildrenに存在する場合は出力対象。
-   *   両方に記載されている場合、childrenの指定が優先される。
-   */
   /** extract: オブジェクトまたはその配列から指定メンバを抽出したオブジェクトを作成
    * @memberof devTools
    * @param {Object|Object[]} data - 抽出元オブジェクト
-   * @param {ExtractCondition} cond - 抽出条件
+   * @param {string} cond - 抽出条件
+   *   基本形：①配列の場合の抽出条件＋②抽出結果オブジェクト定義
+   *   1. 配列の場合の抽出条件：'['+filter関数(文字列)+']:'。抽出しない場合は省略。末尾':'必須
+   *      - `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:`
+   *   2. 抽出結果オブジェクト定義：'{'+抽出対象メンバ名+'}'。子孫要素指定は`{}`で記述
+   *      - `{longname}`
+   *      - `longname,meta:{lineno,columnno}}`
    * @returns {Object|Error} 処理の結果新たに作成されたオブジェクト
+   * 
+   * @example
+   * - `dev.extract(doclet,"{longname}")`
+   * - `dev.extract(doclet,"[x => Object.hasOwn(x,'kind') && x.kind === 'class']:"`<br>
+   *   `+ "{longname,properties:{type:{names}}}")`
    */
   extract(data=null,cond=null){
     const v = {arg:{data,cond},isArray:true,rv:{}};
@@ -206,7 +205,6 @@ export class devTools {
     if( data === null ) return new Error('no data');
     if( cond === null ) return new Error('no condition');
 
-    v.debug = {original:cond};
     // 抽出条件をオブジェクト化
     v.m = cond.match(/^(.*)\[(.+?)\]\s*:\s*({.+)$/);
     // 1:ラベル(通常空文字列) 2:ルートの抽出条件(フィルタ) 3:抽出項目定義
@@ -215,17 +213,12 @@ export class devTools {
     // 元データからの抽出
     if( v.filter !== null ) data = data.filter(v.filter);
     cond = this.parseStructure(v.def);
-    v.debug.cond = cond;
-    v.debug.len = data.length;
-    //v.debug.sample = Array.isArray(data) ? data[0] : data;
-    //console.log(`l.223 ${JSON.stringify(v.debug,null,2)}`);
 
     const recursive = (data,cond,depth=0) => {
-      //console.log(`l.224 data.length=${data.length}`);
       if( depth > this.opt.maxDepth ) return new Error(`too deep`);
 
-      // 子要素が無い ⇒ データそのまま使用
       const propList = Object.keys(cond);
+      // 子要素が無い ⇒ データそのまま使用
       if( propList.length === 0 ) return data;
       const propHasChild = propList.map(x => Object.keys(cond[x]).length > 0);
 
@@ -237,9 +230,8 @@ export class devTools {
         isArray = false;  // 元は配列では無かったことを記録
         data = [data];
       };
-      //console.log(`l.240 data.length=${data.length}`);
 
-      // とりあえず「ラベルに抽出条件が無い」という前提で作成中。
+      // 元データを1レコードずつ処理
       for( let i=0 ; i<data.length ; i++ ){
         const o = {};
         for( let j=0 ; j<propList.length ; j++ ){
@@ -257,19 +249,14 @@ export class devTools {
         }
         rv.push(o);
       }
-      //console.log(`l.260 data.length=${rv.length}`);
 
       // 元が配列で無かったなら単体に戻す
       return isArray === false ? rv[0] : rv;
     }
 
-    //console.log(`l.266 data.length=${data.length}`);
+    // メイン処理
     v.rv = recursive(data,cond);
     if( v.rv instanceof Error ) throw v.rv;
-    console.log(`== extract result\n${JSON.stringify({
-      len: Array.isArray(v.rv) ? v.rv.length : -1,
-      rv: v.rv,
-    },null,2)}`);
     return v.rv;
   }
 

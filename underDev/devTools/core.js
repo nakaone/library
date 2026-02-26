@@ -1,17 +1,22 @@
 /** devTools: 開発支援関係メソッド集
- * @class
- * @classdesc 開発支援関係メソッド集
- * @prop {string} whois='' - 関数名またはクラス名.メソッド名
- * @prop {number} seq - 関数・メソッドの呼出順
- * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
- * @prop {Object} v={} - 関数・メソッド内汎用変数
- * @prop {string} stepNo=1 - 関数・メソッド内の現在位置
- * @prop {string[]} log=[] - {string[]} 実行順に並べたdev.stepNo
- * @prop {number} startTime=Date.now() - 開始時刻
- * @prop {number} endTime - 終了時刻
- * @prop {number} elaps - 所要時間(ミリ秒)
+ * @example
+ * function xxx(o){
+ *   const v = {whois:'xxx',arg:{o},rv:null};
+ *   const dev = new devTools(v); // 従来のdev.startを代替
+ *   try {
+ *     dev.step(1);
+ *     ...
+ *     dev.end(); // 省略可
+ *   } catch(e) {
+ *     return dev.error(e);
+ *   }
+ * }
  * 
- * - 変更履歴
+ * @history
+ *   - rev.3.2.0 : 2026/02/26
+ *     - extract()を追加
+ *     - modeの既定値をdev->pipeに変更
+ *     - seq表示時の0パディング不足について修正
  *   - rev.3.1.0 : 2026/02/11
  *     - modeに"pipe"追加
  *   - rev.3.0.0 : 2025/12/19
@@ -37,38 +42,41 @@
  *     start/endでメッセージ表示を抑止するため、引数"rt(run time option)"を追加
  *   - rev.1.0.0 : 2025/01/26
  *     SpreadDb.1.2.0 test.jsとして作成していたのを分離
- * 
- * @example
- * function xxx(o){
- *   const v = {whois:'xxx',arg:{o},rv:null};
- *   const dev = new devTools(v); // 従来のdev.startを代替
- *   try {
- *     dev.step(1);
- *     ...
- *     dev.end(); // 省略可
- *   } catch(e) {
- *     return dev.error(e);
- *   }
- * }
- * 
+ */
+/** devToolsOpt: オプション設定値
+ * @typedef {Object} devToolsOpt
+ * @prop {string} [mode='pipe'] - 出力モード
+ *   | mode     | エラー | 開始・終了 | dump/step | 用途・備考    |
+ *   | :--      | :--:  | :--:     | :--:      | :--          |
+ *   | "none"   | ❌    | ❌        | ❌        | 出力無し      |
+ *   | "error"  | ⭕    | ❌        | ❌        | エラーのみ出力 |
+ *   | "normal" | ⭕    | ⭕        | ❌        | 本番用        |
+ *   | "dev"    | ⭕    | ⭕        | ⭕        | 開発用        |
+ *   | "pipe"   | ⭕    | ❌        | ⭕        | パイプ処理用   |
+ * @prop {number} [digit=4] - 処理順(seq)をログ出力する際の桁数
+ * @prop {boolean} [footer=false] - 実行結果(startTime,endTime,elaps)を出力するならtrue
+ * @prop {number} [maxDepth=10] - 再帰呼出時の最深階層数
+ */
+/**
+ * @class
+ * @prop {string} whois='' - 関数名またはクラス名.メソッド名
+ * @prop {number} seq - 関数・メソッドの呼出順
+ * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
+ * @prop {Object} v={} - 関数・メソッド内汎用変数
+ * @prop {string} stepNo=1 - 関数・メソッド内の現在位置
+ * @prop {string[]} log=[] - {string[]} 実行順に並べたdev.stepNo
+ * @prop {number} startTime=Date.now() - 開始時刻
+ * @prop {number} endTime - 終了時刻
+ * @prop {number} elaps - 所要時間(ミリ秒)
+ * @prop {devToolsOpt} opt - オプション設定値
  */
 class devTools {
 
   /** constructor
    * @constructor
+   * @memberof devTools
    * @param {Object} v={} - 関数・メソッド内汎用変数
-   * @param {Object} opt={}
-   * @param {string} [opt.mode]='dev' - 出力モード
-   * @param {number} [opt.digit=4] - 処理順(seq)をログ出力する際の桁数
-   * @param {boolean} [opt.footer=false] - 実行結果(startTime,endTime,elaps)を出力するならtrue
-	 * - 出力モード
-	 *   | mode     | エラー | 開始・終了 | dump/step | 用途・備考    |
-   *   | :--      | :--:  | :--:     | :--:      | :--          |
-	 *   | "none"   | ❌    | ❌        | ❌        | 出力無し      |
-	 *   | "error"  | ⭕    | ❌        | ❌        | エラーのみ出力 |
-	 *   | "normal" | ⭕    | ⭕        | ❌        | 本番用        |
-	 *   | "dev"    | ⭕    | ⭕        | ⭕        | 開発用        |
-	 *   | "pipe"   | ⭕    | ❌        | ⭕        | パイプ処理用   |
+   * @param {devToolsOpt} opt={}
    */
   constructor(v={},opt={}){
 
@@ -85,19 +93,23 @@ class devTools {
 
     // オプションの既定値設定
     this.opt = {
-      mode: opt.mode ?? 'dev',
+      mode: opt.mode ?? 'pipe',
       digit: opt.digit ?? 4,
       footer: opt.footer ?? false,
+      maxDepth: opt.maxDepth ?? 10,
     };
 
     // 開始ログ出力
     if( ['normal','dev'].includes(this.opt.mode) ){
       console.log(`${this.toLocale(this.startTime,'hh:mm:ss.nnn')} [${
-        ('000'+this.seq).slice(-this.opt.digit)}]${this.whois} start`);
+        ('0'.repeat(this.opt.digit)+this.seq)
+        .slice(-this.opt.digit)}]${this.whois} start`);
     }
   }
 
-  /** devToolsError: devTools専用拡張エラークラス */
+  /** devToolsError: devTools専用拡張エラークラス
+   * @memberof devTools
+   */
   static devToolsError(dtObj,...e){
     const rv = new Error(...e);
 
@@ -109,25 +121,8 @@ class devTools {
     return rv;
   }
 
-  /** step: 関数内の進捗状況管理＋変数のダンプ
-   * @param {number|string} label - dev.start〜end内での位置を特定するマーカー
-   * @param {any} [val=null] - ダンプ表示する変数
-   * @param {boolean} [cond=true] - 特定条件下でのみダンプ表示したい場合の条件
-   * @example 123行目でClassNameが"cryptoClient"の場合のみv.hogeを表示
-   *   dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');
-   *   ※ 99はデバック、0.123は行番号の意で設定
-   */
-  step(label, val=null, cond=true){
-    this.stepNo = String(label);
-    this.log.push(this.stepNo);
-    // valが指定されていたらステップ名＋JSON表示
-    if( ['dev','pipe'].includes(this.opt.mode) && val && cond ){
-      console.log(`== [${('000'+this.seq).slice(-this.opt.digit)
-        }]${this.whois} step.${label} ${this.formatObject(val)}`);
-    }
-  }
-
   /** end: 正常終了時処理
+   * @memberof devTools
    * @param {any} [arg] - 終了時ダンプする変数
    * @returns {void}
    */
@@ -138,7 +133,8 @@ class devTools {
     // ログ出力
     if( ['normal','dev'].includes(this.opt.mode) ){
       let msg = `${this.toLocale(this.endTime,'hh:mm:ss.nnn')} [${
-        ('000'+this.seq).slice(-this.opt.digit)}]${this.whois} normal end`;
+        ('0'.repeat(this.opt.digit)+this.seq).slice(-this.opt.digit)
+      }]${this.whois} normal end`;
       // 引数があればダンプ出力
       if( typeof arg !== 'undefined' ) msg += '\n' + this.formatObject(arg)
       // 大本の呼出元ではstart/end/elaps表示
@@ -151,6 +147,11 @@ class devTools {
     }
   }
 
+  /** error: 異常終了時処理
+   * @memberof devTools
+   * @param {Error} e
+   * @returns {Error}
+   */
   error(e){
     // 終了時に確定する項目に値設定
     this.finisher();
@@ -170,7 +171,7 @@ class devTools {
       e = devTools.devToolsError(this,e);
       if( this.opt.mode !== 'none' ){
         console.error(`[${
-          ('000'+e.seq).slice(-this.opt.digit)
+          ('0'.repeat(this.opt.digit)+e.seq).slice(-this.opt.digit)
         }]${e.whois} step.${e.stepNo}\n${
           e.message}\n${
           this.formatObject(e)}`
@@ -180,7 +181,90 @@ class devTools {
     }
   }
 
-  /** finisher: end/error共通の終了時処理 */
+  /** extract: オブジェクトまたはその配列から指定メンバを抽出したオブジェクトを作成
+   * @memberof devTools
+   * @param {Object|Object[]} data - 抽出元オブジェクト
+   * @param {string} cond - 抽出条件
+   *   基本形：①配列の場合の抽出条件＋②抽出結果オブジェクト定義
+   *   1. 配列の場合の抽出条件：'['+filter関数(文字列)+']:'。抽出しない場合は省略。末尾':'必須
+   *      - `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:`
+   *   2. 抽出結果オブジェクト定義：'{'+抽出対象メンバ名+'}'。子孫要素指定は`{}`で記述
+   *      - `{longname}`
+   *      - `longname,meta:{lineno,columnno}}`
+   * @returns {Object|Error} 処理の結果新たに作成されたオブジェクト
+   * 
+   * @example
+   * - `dev.extract(doclet,"{longname}")`
+   * - `dev.extract(doclet,"[x => Object.hasOwn(x,'kind') && x.kind === 'class']:"`<br>
+   *   `+ "{longname,properties:{type:{names}}}")`
+   */
+  extract(data=null,cond=null){
+    const v = {arg:{data,cond},isArray:true,rv:{}};
+
+    // 再帰階層・引数チェック
+    if( data === null ) return new Error('no data');
+    if( cond === null ) return new Error('no condition');
+
+    // 抽出条件をオブジェクト化
+    v.m = cond.match(/^(.*)\[(.+?)\]\s*:\s*({.+)$/);
+    // 1:ラベル(通常空文字列) 2:ルートの抽出条件(フィルタ) 3:抽出項目定義
+    v.filter = v.m ? eval(v.m[2]) : null;
+    v.def = v.m ? v.m[3] : cond;
+    // 元データからの抽出
+    if( v.filter !== null ) data = data.filter(v.filter);
+    cond = this.parseStructure(v.def);
+
+    const recursive = (data,cond,depth=0) => {
+      if( depth > this.opt.maxDepth ) return new Error(`too deep`);
+
+      const propList = Object.keys(cond);
+      // 子要素が無い ⇒ データそのまま使用
+      if( propList.length === 0 ) return data;
+      const propHasChild = propList.map(x => Object.keys(cond[x]).length > 0);
+
+      const rv = [];
+
+      // 元データは強制的に配列に変換
+      let isArray = true;
+      if( !Array.isArray(data) ){
+        isArray = false;  // 元は配列では無かったことを記録
+        data = [data];
+      };
+
+      // 元データを1レコードずつ処理
+      for( let i=0 ; i<data.length ; i++ ){
+        const o = {};
+        for( let j=0 ; j<propList.length ; j++ ){
+          const x = propList[j];
+          // 元データに抽出対象項目が無ければスキップ
+          if( !Object.hasOwn(data[i],propList[j]) ) continue;
+          if( propHasChild[j] ){
+            // 子要素が有る場合、再帰呼出
+            o[x] = recursive(data[i][x],cond[x],depth+1);
+            if( o[x] instanceof Error ) return o[x];
+          } else {
+            // 子要素が無い場合、該当dataをコピー
+            o[x] = data[i][x];
+          }
+        }
+        rv.push(o);
+      }
+
+      // 元が配列で無かったなら単体に戻す
+      return isArray === false ? rv[0] : rv;
+    }
+
+    // メイン処理
+    v.rv = recursive(data,cond);
+    if( v.rv instanceof Error ) throw v.rv;
+    return v.rv;
+  }
+
+  /** finisher: end/error共通の終了時処理
+   * @memberof devTools
+   * @param {void}
+   * @returns {void}
+   */
   finisher(){
     // 終了時に確定する項目に値設定
     if( Array.isArray(this.log) ) this.log = this.log.join(', ');
@@ -188,45 +272,8 @@ class devTools {
     this.elaps = `${this.endTime - this.startTime} msec`;
   }
 
-  /** toLocale: ログ出力用時刻文字列整形
-   * @param {Date} date - 整形対象Dateオブジェクト
-   * @param {string} template - テンプレート
-   */
-  toLocale(date,template='yyyy-MM-ddThh:mm:ss.nnnZ'){
-    const v = {rv:template,dObj:date};
-    if( typeof date === 'string' ) return date;
-
-    v.local = { // 地方時ベース
-      y: v.dObj.getFullYear(),
-      M: v.dObj.getMonth()+1,
-      d: v.dObj.getDate(),
-      h: v.dObj.getHours(),
-      m: v.dObj.getMinutes(),
-      s: v.dObj.getSeconds(),
-      n: v.dObj.getMilliseconds(),
-      Z: Math.abs(v.dObj.getTimezoneOffset())
-    }
-
-    // タイムゾーン文字列の作成
-    v.local.Z = v.local.Z === 0 ? 'Z'
-    : ((v.dObj.getTimezoneOffset() < 0 ? '+' : '-')
-    + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
-    + ':' + ('0' + (v.local.Z % 60)).slice(-2));
-
-    // 日付文字列作成
-    for( v.x in v.local ){
-      v.m = v.rv.match(new RegExp(v.x+'+'));
-      if( v.m ){
-        v.str = v.m[0].length > 1
-          ? ('000'+v.local[v.x]).slice(-v.m[0].length)
-          : String(v.local[v.x]);
-        v.rv = v.rv.replace(v.m[0],v.str);
-      }
-    }
-    return v.rv;
-  }
-
   /** formatObject: オブジェクトの各メンバーを「メンバ名: 値 // データ型」の形式で再帰的に整形する
+   * @memberof devTools
    * @param {any} obj - 整形対象のオブジェクトまたは配列
    * @param {number} indentLevel - 現在のインデントレベル
    * @returns {string} 整形された文字列
@@ -295,6 +342,191 @@ class devTools {
     }).join('\n');
 
     return `${indent}{\n${members}\n${indent}}`;
+  }
+
+  /** parseStructure: メンバ名・抽出条件指定文字列をオブジェクト化(extractの前処理)
+   * - "{メンバ名＋抽出条件:{子要素}}"
+   * - 子要素は上記パターンで再帰的に定義
+   * - 親子関係だけに絞る({name,filter,children}形式にしない)
+   * - 子要素が存在しない場合は空オブジェクト
+   * - 抽出条件はメンバ名の後ろに"[〜]"で付記
+   * - メンバ名・抽出条件には空白文字が存在
+   * 
+   * @memberof devTools
+   * @param {string} input 
+   * @returns {Object.<string, Object>}
+   * 
+   * @example
+   * 入力(文字列)："{longname,meta[x=>Object.hasOwn(x,'code')]:{range,type:{name}},kind}"
+   * 出力(オブジェクト)：
+   * {
+   *   "longname":{},
+   *   "meta[x=>Object.hasOwn(x,'code')]": {
+   *     "range": {},
+   *     "type": {
+   *       "name":{}
+   *     }
+   *   },
+   *   "kind":{}
+   * }
+   */
+  parseStructure(input) {
+    let index = 0; // 現在の読み取り位置を示すインデックス
+
+    // 空白文字をスキップする関数
+    function skipWhitespace() {
+      while (/\s/.test(input[index])) index++;
+    }
+
+    // メンバ名（＋抽出条件）をパースする関数
+    function parseKey() {
+      skipWhitespace();
+      let key = '';
+
+      // コロン・カンマ・波括弧が出るまで読み取る
+      while (index < input.length && ![':', ',', '{', '}'].includes(input[index])) {
+        if (input[index] === '[') {
+          // 抽出条件の開始（ネスト対応）
+          let start = index;
+          let depth = 1;
+          index++; // '[' をスキップ
+
+          while (index < input.length && depth > 0) {
+            if (input[index] === '[') depth++;
+            else if (input[index] === ']') depth--;
+            index++;
+          }
+
+          // 抽出条件全体を key に含める（例：meta[x=>x.id > 0]）
+          key += input.slice(start, index);
+        } else {
+          // 通常の文字を key に追加
+          key += input[index++];
+        }
+      }
+
+      return key.trim(); // 前後の空白を除いて返す
+    }
+
+    // 再帰的にオブジェクトをパースする関数
+    function parseObject() {
+      skipWhitespace();
+
+      // 最初の文字が '{' であることを確認
+      if (input[index] !== '{') {
+        throw new Error(`Expected '{' at position ${index}`);
+      }
+
+      index++; // '{' をスキップ
+      let result = {}; // 結果を格納するオブジェクト
+
+      while (index < input.length) {
+        skipWhitespace();
+
+        // 閉じ括弧 '}' に出会ったら終了
+        if (input[index] === '}') {
+          index++; // '}' をスキップ
+          break;
+        }
+
+        const key = parseKey(); // メンバ名＋抽出条件を取得
+        skipWhitespace();
+
+        let value = {}; // デフォルトは空オブジェクト
+
+        // 子要素がある場合（':' の後に '{' が続く）
+        if (input[index] === ':') {
+          index++; // ':' をスキップ
+          skipWhitespace();
+
+          if (input[index] === '{') {
+            value = parseObject(); // 再帰的に子要素をパース
+          } else {
+            throw new Error(`Expected '{' after ':' at position ${index}`);
+          }
+        }
+
+        result[key] = value; // 結果に追加
+
+        skipWhitespace();
+
+        // 次の要素がある場合は ',' をスキップ
+        if (input[index] === ',') {
+          index++;
+        } else if (input[index] === '}') {
+          // 次のループで閉じ括弧を処理
+          continue;
+        } else {
+          // 想定外の文字が出た場合はエラー
+          throw new Error(`Unexpected character '${input[index]}' at position ${index}`);
+        }
+      }
+
+      return result;
+    }
+
+    return parseObject(); // パース開始
+  }
+
+  /** step: 関数内の進捗状況管理＋変数のダンプ
+   * @memberof devTools
+   * @param {number|string} label - dev.start〜end内での位置を特定するマーカー
+   * @param {any} [val=null] - ダンプ表示する変数
+   * @param {boolean} [cond=true] - 特定条件下でのみダンプ表示したい場合の条件
+   * @returns {void}
+   * @example 123行目でClassNameが"cryptoClient"の場合のみv.hogeを表示
+   *   dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');
+   *   ※ 99はデバック、0.123は行番号の意で設定
+   */
+  step(label, val=null, cond=true){
+    this.stepNo = String(label);
+    this.log.push(this.stepNo);
+    // valが指定されていたらステップ名＋JSON表示
+    if( ['dev','pipe'].includes(this.opt.mode) && val && cond ){
+      console.log(`== [${
+        ('0'.repeat(this.opt.digit)+this.seq).slice(-this.opt.digit)
+      }]${this.whois} step.${label} ${this.formatObject(val)}`);
+    }
+  }
+
+  /** toLocale: ログ出力用時刻文字列整形
+   * @memberof devTools
+   * @param {Date} date - 整形対象Dateオブジェクト
+   * @param {string} template - テンプレート
+   * @returns {string} 整形済日時文字列
+   */
+  toLocale(date,template='yyyy-MM-ddThh:mm:ss.nnnZ'){
+    const v = {rv:template,dObj:date};
+    if( typeof date === 'string' ) return date;
+
+    v.local = { // 地方時ベース
+      y: v.dObj.getFullYear(),
+      M: v.dObj.getMonth()+1,
+      d: v.dObj.getDate(),
+      h: v.dObj.getHours(),
+      m: v.dObj.getMinutes(),
+      s: v.dObj.getSeconds(),
+      n: v.dObj.getMilliseconds(),
+      Z: Math.abs(v.dObj.getTimezoneOffset())
+    }
+
+    // タイムゾーン文字列の作成
+    v.local.Z = v.local.Z === 0 ? 'Z'
+    : ((v.dObj.getTimezoneOffset() < 0 ? '+' : '-')
+    + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
+    + ':' + ('0' + (v.local.Z % 60)).slice(-2));
+
+    // 日付文字列作成
+    for( v.x in v.local ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.local[v.x]).slice(-v.m[0].length)
+          : String(v.local[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+    return v.rv;
   }
 }
 devTools.sequence = 1; // 関数・メソッドの呼出順を初期化

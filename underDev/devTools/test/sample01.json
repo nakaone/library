@@ -1,0 +1,58 @@
+[
+  {
+    "name": "A",
+    "type": "a",
+    "prop": [
+      {
+        "key": true,
+        "val": 10
+      },
+      {
+        "key": true,
+        "val": 20
+      }
+    ]
+  },
+  {
+    "name": "B",
+    "type": "b",
+    "prop": [
+      {
+        "key": true,
+        "val": 10
+      },
+      {
+        "key": false,
+        "val": 20
+      }
+    ]
+  },
+  {
+    "name": "C",
+    "type": "a",
+    "prop": [
+      {
+        "key": false,
+        "val": 10
+      },
+      {
+        "key": true,
+        "val": 20
+      }
+    ]
+  },
+  {
+    "name": "D",
+    "type": "a",
+    "prop": [
+      {
+        "key": false,
+        "val": 10
+      },
+      {
+        "key": false,
+        "val": 20
+      }
+    ]
+  }
+]
