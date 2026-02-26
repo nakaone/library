@@ -11,7 +11,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-[bug] dumpが使えない
 [bug] DocletTree.mapにおかしなキーがある
   "/common/config.mjs::config
   - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする

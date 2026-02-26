@@ -4,7 +4,7 @@ import process from 'process';
 import { createHash, randomUUID } from 'crypto';
 import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
-import { devTools } from '../../devTools/3.1.0/core.mjs';
+import { devTools } from '../../devTools/3.2.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
 createSpec();
 
@@ -760,130 +760,6 @@ async function createSpec(opt={}){
         }
 
         v.rv = v.rv.join('\n');
-        dev.end(); // 終了処理
-        return v.rv;
-      } catch (e) { return dev.error(e); }
-    }
-
-    /** dump: 【開発用】指定条件のDocletを抽出、指定メンバのみ抽出したオブジェクトを生成
-     * @param {Object} arg
-     * @param {string[]} arg.paths - '.'区切りで階層化された、抽出対象となるメンバ
-     *   ex. 'longname','meta.range' ⇒ {longname:'xxx',meta:{range:[1,2]}}
-     * @param {Object|Object[]} [arg.data=this.doclet] - 抽出元データ
-     * @param {Function} [arg.filter=null] - 抽出対象指定関数。nullなら全件
-     * @returns {Object[]|Error}
-     * 
-     * @example
-     * doc.dump({paths:['meta.range','longname'],filter:x=>x.kind==='class'})
-		 * ⇒ [
-		 *   {
-		 *     meta:    {
-		 *       range:      [
-		 *         1879, // number
-		 *         2606, // number
-		 *       ], // Array
-		 *     }
-		 *     longname:"class01", // string
-		 *   }
-		 *   {
-		 *     meta:    {
-		 *       range:      [
-		 *         2180, // number
-		 *         2398, // number
-		 *       ], // Array
-		 *     }
-		 *     longname:"class01", // string
-		 *   }
-		 * ], // Array
-     */
-    dump(arg){
-      const v = {whois:`${this.constructor.name}.dump`, arg:{arg}, rv:[]};
-      const dev = new devTools(v,{mode:'pipe'});
-      try {        
-
-        const pickPaths = (obj, paths) => {
-          const result = {};
-
-          for (const path of paths) {
-            const keys = path.split('.');
-            let src = obj;
-            let dst = result;
-            let valid = true;
-
-            for (let i = 0; i < keys.length; i++) {
-              const key = keys[i];
-
-              if (!(key in src)) {
-                valid = false;
-                break;
-              }
-
-              if (i === keys.length - 1) {
-                // 最後のキーなら値をコピー
-                dst[key] = src[key];
-              } else {
-                // 中間ノードを作成または再利用
-                if (!(key in dst)) {
-                  dst[key] = {};
-                }
-                src = src[key];
-                dst = dst[key];
-              }
-            }
-          }
-
-          return result;
-        }
-
-        /* 【未使用】正規表現にマッチするキーだけを再帰的に抽出(copilot)
-        const input = {
-          a01: { b01: { a02: 10, b02: 20 } },
-          a03: 30,
-          b03: 31,
-          b04: { a04: 40, c01: 1 }
-        };
-        const regex = /^a0.＊/;
-        const filtered = filterKeysByRegex(input, regex);
-        console.log(filtered);
-        */
-        const filterKeysByRegex = (obj, regex) => {
-          if (typeof obj !== 'object' || obj === null) return undefined;
-
-          const result = Array.isArray(obj) ? [] : {};
-
-          for (const key in obj) {
-            if (Object.hasOwnProperty.call(obj, key)) {
-              const value = obj[key];
-              const filteredValue = filterKeysByRegex(value, regex);
-
-              if (regex.test(key)) {
-                result[key] = filteredValue !== undefined ? filteredValue : value;
-              } else if (filteredValue !== undefined) {
-                result[key] = filteredValue;
-              }
-            }
-          }
-
-          return Object.keys(result).length > 0 ? result : undefined;
-        }
-
-        dev.step(1);  // 既定値設定
-        arg = Object.assign({
-          data: this.doclet,
-          paths: [],
-          filter: null,
-        },arg);
-
-        dev.step(2);  // 指定条件に合致するDocletを抽出
-        v.target = typeof arg.filter === 'function' ? arg.data.filter(arg.filter) : arg.data;
-
-        dev.step(3);  // 配列なら個別に、オブジェクトならそのまま指定メンバ抽出
-        if( Array.isArray(v.target) ){
-          v.target.forEach(x => v.rv.push(arg.paths.length > 0 ? pickPaths(x,arg.paths) : x));
-        } else {
-          v.rv = pickPaths(v.target,arg.paths);
-        }
-
         dev.end(); // 終了処理
         return v.rv;
       } catch (e) { return dev.error(e); }
@@ -1719,22 +1595,6 @@ async function createSpec(opt={}){
       writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree,null,2));
 
     dev.end();
-    // 開発用メモ：終了時にDocletTree.docletの設定状況を参照する方法
-    //dev.end(
-    //  pv.tree.dump({
-    //    paths:[],
-    //    filter:x => ['constructor','method'].includes(x.docletType),
-    //  })
-    //);
-    // labelの設定値確認
-    // {paths:['label'],}
-    // class01重複チェック
-    // {paths:['rangeId','linenoId','commentId'],filter:x=>x.kind==='class'}
-    // meta.range未定義
-    // {paths:['comment'],filter:x=>typeof x.meta?.range === 'undefined'}
-    // ⇒ @name, @typedef, @interface, @function(@name付き)
-    // id作成関係メンバ
-    // {paths:['unique','meta.path','meta.filename','meta.range','meta.lineno','meta.columnno','kind','longname'],filter:x=>x.kind==='class'}
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; } finally {
