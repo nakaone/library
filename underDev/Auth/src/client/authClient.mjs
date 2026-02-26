@@ -9,6 +9,7 @@ import { authConfig } from "../common/authConfig.mjs";
  * @prop {authClientConfig} cf - authClient設定情報
  * @prop {Object} idb - IndexedDBと同期、authClient内で共有
  * @prop {cryptoClient} crypto - 暗号化・署名検証
+ * @prop {IDBObjectStore} _IndexedDB - データベース接続オブジェクトを格納する静的変数
  * 
  * @example インスタンス作成のサンプル
  * ```js
@@ -36,7 +37,14 @@ import { authConfig } from "../common/authConfig.mjs";
  */
 export class authClient {
 
-  static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
+  /**
+   * データベース接続オブジェクトを格納する静的変数
+   * @member {IDBDatabase|null}
+   * @static
+   * @private
+   * @memberof authClient
+   */
+  static _IndexedDB = null;
 
   /** constructor
    * @memberof authClient

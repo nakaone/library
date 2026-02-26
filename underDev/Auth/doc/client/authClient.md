@@ -33,6 +33,7 @@ authClient: クライアント側中核クラス
 | cf | authClientConfig | 必須 | authClient設定情報 |  |
 | idb | Object | 必須 | IndexedDBと同期、authClient内で共有 |  |
 | crypto | cryptoClient | 必須 | 暗号化・署名検証 |  |
+| _IndexedDB | IDBObjectStore | 必須 | データベース接続オブジェクトを格納する静的変数 |  |
 
 ## <a href="#/client/authClient.mjs::authClient_top"><span id="/client/authClient.mjs::authClient_func">🧱 authClient メソッド・内部関数一覧</span></a>
 
@@ -152,7 +153,7 @@ fetch: サーバ側APIの呼び出し
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求 |  |
+| request | authRequest | 必須 | ��理要求 |  |
 
 ### <a href="#/client/authClient.mjs::authClient#fetch_top"><span id="/client/authClient.mjs::authClient#fetch_return">◀️ fetch 戻り値</span></a>
 

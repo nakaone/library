@@ -46,7 +46,7 @@
 /** devToolsOpt: オプション設定値
  * @typedef {Object} devToolsOpt
  * @prop {string} [mode='pipe'] - 出力モード
- *   | mode     | エラー | 開始・終了 | dump/step | 用途・備考    |
+ *   | mode     | エラー | 開始・終了 | step | 用途・備考    |
  *   | :--      | :--:  | :--:     | :--:      | :--          |
  *   | "none"   | ❌    | ❌        | ❌        | 出力無し      |
  *   | "error"  | ⭕    | ❌        | ❌        | エラーのみ出力 |

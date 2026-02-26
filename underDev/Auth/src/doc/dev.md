@@ -15,7 +15,6 @@
   "/common/config.mjs::config
   - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
   - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
-[bug] authClient._IndexedDBが仕様書上不存在(JSDocの書き方がわからない)
 [bug] データ型CryptoKeyにリンクが付けられていない
 [bug] _withStore引数の説明が意味不明
 [bug] exec引数anyの要否/既定値欄が'['のみで意味不明
