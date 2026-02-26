@@ -218,15 +218,16 @@ export class devTools {
     v.debug.cond = cond;
     v.debug.len = data.length;
     //v.debug.sample = Array.isArray(data) ? data[0] : data;
-    console.log(`l.223 ${JSON.stringify(v.debug,null,2)}`);
+    //console.log(`l.223 ${JSON.stringify(v.debug,null,2)}`);
 
     const recursive = (data,cond,depth=0) => {
+      //console.log(`l.224 data.length=${data.length}`);
       if( depth > this.opt.maxDepth ) return new Error(`too deep`);
 
       // 子要素が無い ⇒ データそのまま使用
-      v.propList = Object.keys(cond);
-      if( v.propList.length === 0 ) return data;
-      v.propHasChild = v.propList.map(x => Object.keys(cond[x]).length > 0);
+      const propList = Object.keys(cond);
+      if( propList.length === 0 ) return data;
+      const propHasChild = propList.map(x => Object.keys(cond[x]).length > 0);
 
       const rv = [];
 
@@ -236,30 +237,33 @@ export class devTools {
         isArray = false;  // 元は配列では無かったことを記録
         data = [data];
       };
+      //console.log(`l.240 data.length=${data.length}`);
 
       // とりあえず「ラベルに抽出条件が無い」という前提で作成中。
-      for( v.i=0 ; v.i<data.length ; v.i++ ){
-        v.o = {};
-        for( v.j=0 ; v.j<v.propList.length ; v.j++ ){
-          v.x = v.propList[v.j];
+      for( let i=0 ; i<data.length ; i++ ){
+        const o = {};
+        for( let j=0 ; j<propList.length ; j++ ){
+          const x = propList[j];
           // 元データに抽出対象項目が無ければスキップ
-          if( !Object.hasOwn(data[v.i],v.propList[v.j]) ) continue;
-          if( v.propHasChild[v.j] ){
+          if( !Object.hasOwn(data[i],propList[j]) ) continue;
+          if( propHasChild[j] ){
             // 子要素が有る場合、再帰呼出
-            v.o[v.x] = recursive(data[v.i][v.x],cond[v.x],depth+1);
-            if( v.o[v.x] instanceof Error ) return v.o[v.x];
+            o[x] = recursive(data[i][x],cond[x],depth+1);
+            if( o[x] instanceof Error ) return o[x];
           } else {
             // 子要素が無い場合、該当dataをコピー
-            v.o[v.x] = data[v.i][v.x];
+            o[x] = data[i][x];
           }
         }
-        rv.push(v.o);
+        rv.push(o);
       }
+      //console.log(`l.260 data.length=${rv.length}`);
 
       // 元が配列で無かったなら単体に戻す
       return isArray === false ? rv[0] : rv;
     }
 
+    //console.log(`l.266 data.length=${data.length}`);
     v.rv = recursive(data,cond);
     if( v.rv instanceof Error ) throw v.rv;
     console.log(`== extract result\n${JSON.stringify({

@@ -22,7 +22,7 @@ function sample(arg) {
         data: v.iFile.doclet,
         // 抽出条件は戻り値booleanの関数として記述
         cond: `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:{`
-        + `longname,meta:{keys:{lineno,columnno}}}`,
+        + `longname,meta:{lineno,columnno}}`,
       },
       {
         title: 'classのlongname＋properties.type.names',
@@ -34,7 +34,7 @@ function sample(arg) {
 
     dev.step(3);  // テスト実行
     v.min = 0; v.max = v.pattern.length;
-    v.min = 0; v.max = v.min + 1;
+    v.min = 1; v.max = v.min + 1;
     for( v.i=v.min ; v.i<v.max ; v.i++ ){
       console.log(`== pattern.${v.i} : ${v.pattern[v.i].title} ${'='.repeat(20)}`);
       v.rv = dev.extract(v.pattern[v.i].data,v.pattern[v.i].cond);
