@@ -199,60 +199,73 @@ export class devTools {
    * @param {ExtractCondition} cond - 抽出条件
    * @returns {Object|Error} 処理の結果新たに作成されたオブジェクト
    */
-  extract(data=null,cond=null,depth=0){
+  extract(data=null,cond=null){
     const v = {arg:{data,cond},isArray:true,rv:{}};
-    if( depth > this.opt.maxDepth ) return new Error(`too deep`);
 
-    // 引数チェック
+    // 再帰階層・引数チェック
     if( data === null ) return new Error('no data');
     if( cond === null ) return new Error('no condition');
 
-    // 元データは強制的に配列に変換
-    if( !Array.isArray(data) ){
-      v.isArray = false;  // 元は配列では無かったことを記録
-      data = [data];
-    };
+    v.debug = {original:cond};
+    // 抽出条件をオブジェクト化
+    v.m = cond.match(/^(.*)\[(.+?)\]\s*:\s*({.+)$/);
+    // 1:ラベル(通常空文字列) 2:ルートの抽出条件(フィルタ) 3:抽出項目定義
+    v.filter = v.m ? eval(v.m[2]) : null;
+    v.def = v.m ? v.m[3] : cond;
+    // 元データからの抽出
+    if( v.filter !== null ) data = data.filter(v.filter);
+    cond = this.parseStructure(v.def);
+    v.debug.cond = cond;
+    v.debug.len = data.length;
+    //v.debug.sample = Array.isArray(data) ? data[0] : data;
+    console.log(`l.223 ${JSON.stringify(v.debug,null,2)}`);
 
-    // 抽出条件の既定値設定
-    cond = Object.assign({
-      keys: () => false,    // (オブジェクト内)全メンバ不出力
-      filter: () => true,  // (配列内)全要素出力
-      children: {},
-    },cond);
+    const recursive = (data,cond,depth=0) => {
+      if( depth > this.opt.maxDepth ) return new Error(`too deep`);
 
-    // 配列から対象行のみ抽出
-    if( Object.hasOwn(cond,'filter') && typeof cond.filter === 'function' ){
-      data = data.filter(x => cond.filter(x));
-    }
+      // 子要素が無い ⇒ データそのまま使用
+      v.propList = Object.keys(cond);
+      if( v.propList.length === 0 ) return data;
+      v.propHasChild = v.propList.map(x => Object.keys(cond[x]).length > 0);
 
-    // 出力対象メンバの指定を判定式に変換
-    if( typeof cond.keys === 'string' ){
-      cond.keys = new Function('x',`return x === "${cond.keys}";`);
-    } else if( Array.isArray(cond.keys) ){
-      cond.keys = new Function('x',`return ${JSON.stringify(cond.keys)}.includes(x);`);
-    }
+      const rv = [];
 
-    // 出力対象項目のみ抽出
-    v.rv = [];
-    v.childrenList = Object.keys(cond.children);
-    for( v.i=0 ; v.i<data.length ; v.i++ ){
-      v.o = {};
-      // 出力対象項目なら戻り値に設定
-      Object.keys(data[v.i]).forEach(col => {
-        if( v.childrenList.includes(col) && Object.hasOwn(data[v.i],col) ){
-          // 子要素(children)に対する抽出
-          v.o[col] = this.extract(data[v.i][col],cond.children[col],depth+1);
-          if( v.o[col] instanceof Error ) throw v.o[col];
-        } else if( cond.keys(col) ){
-          // 出力対象項目
-          v.o[col] = data[v.i][col];
+      // 元データは強制的に配列に変換
+      let isArray = true;
+      if( !Array.isArray(data) ){
+        isArray = false;  // 元は配列では無かったことを記録
+        data = [data];
+      };
+
+      // とりあえず「ラベルに抽出条件が無い」という前提で作成中。
+      for( v.i=0 ; v.i<data.length ; v.i++ ){
+        v.o = {};
+        for( v.j=0 ; v.j<v.propList.length ; v.j++ ){
+          v.x = v.propList[v.j];
+          // 元データに抽出対象項目が無ければスキップ
+          if( !Object.hasOwn(data[v.i],v.propList[v.j]) ) continue;
+          if( v.propHasChild[v.j] ){
+            // 子要素が有る場合、再帰呼出
+            v.o[v.x] = recursive(data[v.i][v.x],cond[v.x],depth+1);
+            if( v.o[v.x] instanceof Error ) return v.o[v.x];
+          } else {
+            // 子要素が無い場合、該当dataをコピー
+            v.o[v.x] = data[v.i][v.x];
+          }
         }
-      });
-      v.rv.push(v.o);
+        rv.push(v.o);
+      }
+
+      // 元が配列で無かったなら単体に戻す
+      return isArray === false ? rv[0] : rv;
     }
 
-    // 元が配列で無かったなら戻す
-    if( v.isArray === false ) v.rv = v.rv[0];
+    v.rv = recursive(data,cond);
+    if( v.rv instanceof Error ) throw v.rv;
+    console.log(`== extract result\n${JSON.stringify({
+      len: Array.isArray(v.rv) ? v.rv.length : -1,
+      rv: v.rv,
+    },null,2)}`);
     return v.rv;
   }
 
@@ -338,6 +351,130 @@ export class devTools {
     }).join('\n');
 
     return `${indent}{\n${members}\n${indent}}`;
+  }
+
+  /** parseStructure: メンバ名・抽出条件指定文字列をオブジェクト化(extractの前処理)
+   * - "{メンバ名＋抽出条件:{子要素}}"
+   * - 子要素は上記パターンで再帰的に定義
+   * - 親子関係だけに絞る({name,filter,children}形式にしない)
+   * - 子要素が存在しない場合は空オブジェクト
+   * - 抽出条件はメンバ名の後ろに"[〜]"で付記
+   * - メンバ名・抽出条件には空白文字が存在
+   * 
+   * @memberof devTools
+   * @param {string} input 
+   * @returns {Object.<string, Object>}
+   * 
+   * @example
+   * 入力(文字列)："{longname,meta[x=>Object.hasOwn(x,'code')]:{range,type:{name}},kind}"
+   * 出力(オブジェクト)：
+   * {
+   *   "longname":{},
+   *   "meta[x=>Object.hasOwn(x,'code')]": {
+   *     "range": {},
+   *     "type": {
+   *       "name":{}
+   *     }
+   *   },
+   *   "kind":{}
+   * }
+   */
+  parseStructure(input) {
+    let index = 0; // 現在の読み取り位置を示すインデックス
+
+    // 空白文字をスキップする関数
+    function skipWhitespace() {
+      while (/\s/.test(input[index])) index++;
+    }
+
+    // メンバ名（＋抽出条件）をパースする関数
+    function parseKey() {
+      skipWhitespace();
+      let key = '';
+
+      // コロン・カンマ・波括弧が出るまで読み取る
+      while (index < input.length && ![':', ',', '{', '}'].includes(input[index])) {
+        if (input[index] === '[') {
+          // 抽出条件の開始（ネスト対応）
+          let start = index;
+          let depth = 1;
+          index++; // '[' をスキップ
+
+          while (index < input.length && depth > 0) {
+            if (input[index] === '[') depth++;
+            else if (input[index] === ']') depth--;
+            index++;
+          }
+
+          // 抽出条件全体を key に含める（例：meta[x=>x.id > 0]）
+          key += input.slice(start, index);
+        } else {
+          // 通常の文字を key に追加
+          key += input[index++];
+        }
+      }
+
+      return key.trim(); // 前後の空白を除いて返す
+    }
+
+    // 再帰的にオブジェクトをパースする関数
+    function parseObject() {
+      skipWhitespace();
+
+      // 最初の文字が '{' であることを確認
+      if (input[index] !== '{') {
+        throw new Error(`Expected '{' at position ${index}`);
+      }
+
+      index++; // '{' をスキップ
+      let result = {}; // 結果を格納するオブジェクト
+
+      while (index < input.length) {
+        skipWhitespace();
+
+        // 閉じ括弧 '}' に出会ったら終了
+        if (input[index] === '}') {
+          index++; // '}' をスキップ
+          break;
+        }
+
+        const key = parseKey(); // メンバ名＋抽出条件を取得
+        skipWhitespace();
+
+        let value = {}; // デフォルトは空オブジェクト
+
+        // 子要素がある場合（':' の後に '{' が続く）
+        if (input[index] === ':') {
+          index++; // ':' をスキップ
+          skipWhitespace();
+
+          if (input[index] === '{') {
+            value = parseObject(); // 再帰的に子要素をパース
+          } else {
+            throw new Error(`Expected '{' after ':' at position ${index}`);
+          }
+        }
+
+        result[key] = value; // 結果に追加
+
+        skipWhitespace();
+
+        // 次の要素がある場合は ',' をスキップ
+        if (input[index] === ',') {
+          index++;
+        } else if (input[index] === '}') {
+          // 次のループで閉じ括弧を処理
+          continue;
+        } else {
+          // 想定外の文字が出た場合はエラー
+          throw new Error(`Unexpected character '${input[index]}' at position ${index}`);
+        }
+      }
+
+      return result;
+    }
+
+    return parseObject(); // パース開始
   }
 
   /** step: 関数内の進捗状況管理＋変数のダンプ

@@ -15,40 +15,30 @@ function sample(arg) {
       {
         title: 'classのlongname',
         data: v.iFile.doclet,
-        cond: {
-          keys: 'longname',
-          filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
-        }
+        cond: '{longname}',
       },
       {
         title: 'classのlongname＋meta.lineno, columnno',
         data: v.iFile.doclet,
-        cond: {
-          keys: 'longname',
-          filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
-          children: {
-            meta:{
-              keys: ['lineno','columnno'],
-            }
-          }
-        }
+        // 抽出条件は戻り値booleanの関数として記述
+        cond: `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:{`
+        + `longname,meta:{keys:{lineno,columnno}}}`,
       },
       {
         title: 'classのlongname＋properties.type.names',
         data: v.iFile.doclet,
-        cond: {
-          keys: 'longname',
-          filter: x => Object.hasOwn(x,'kind') && x.kind === 'class',
-          children: {properties:{children:{type:{keys:'names'}}}}
-        }
+        cond: `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:{`
+        + `longname,properties:{type:{names}}}`,
       },
     ];
 
     dev.step(3);  // テスト実行
-    for( v.i=2 ; v.i<v.pattern.length ; v.i++ ){
+    v.min = 0; v.max = v.pattern.length;
+    v.min = 0; v.max = v.min + 1;
+    for( v.i=v.min ; v.i<v.max ; v.i++ ){
       console.log(`== pattern.${v.i} : ${v.pattern[v.i].title} ${'='.repeat(20)}`);
       v.rv = dev.extract(v.pattern[v.i].data,v.pattern[v.i].cond);
-      console.log(JSON.stringify(v.rv,null,2));
+      //console.log(JSON.stringify(v.rv,null,2));
     }
 
     dev.end(); // 終了処理
