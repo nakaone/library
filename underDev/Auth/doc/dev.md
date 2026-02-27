@@ -35,12 +35,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-[bug] 説明文内の'|'以降が表示されない
-  ```
-  * allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可
-  *   - 'string' | 'number' | 'boolean' | (後略)
-  ```
-  ⇒ 備考欄が「- 'string'」のみ
 [bug] classdescが存在するとdescriptionの内容が無視される
   ```
   /** Schema: DB・データ型構造定義オブジェクト
@@ -48,11 +42,13 @@
    * - 各種アプリでは本クラスを拡張し、configとすることを想定
   ```
   ⇒ 箇条書き、descriptionだと出ない(classdesc以下に移動すると出る)
+[bug] Markdownからexampleが抜けている
+[bug] データ型にリンクが付けられていない
+  Schema.types {Object.<string, TypeDef>} ⇒ TypeDefにリンクが未設定
 [bug] DocletTree.mapにおかしなキーがある
   "/common/config.mjs::config
   - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
   - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
-[bug] データ型CryptoKeyにリンクが付けられていない
 [bug] _withStore引数の説明が意味不明
 [bug] exec引数anyの要否/既定値欄が'['のみで意味不明
 [bug] getIndexedDB引数の項目名が空欄

@@ -35,7 +35,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | opt | Object | 必須 | DocletExインスタンス作成時のオプション | 現状未使用 |
 | uuid | string | 必須 | DocletExを一意に識別するためのUUID |  |
 | docletType | string | 必須 | Docletの種類。下記「docletTypeの判定ロジック」参照 |  |
-| parsed | Object.<string, string> | 必須 | Doclet内で定義され��タグの値 | 例： parsed: {
+| parsed | Object.<string, string> | 必須 | Doclet内で定義されたタグの値 | 例： parsed: {
     label:"method01: メソッドテスト", // string
     ＠description:"method01: メソッドテスト", // string
     ＠memberof:"class01", // string
@@ -112,8 +112,12 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 メンバ各値の設定箇所は以下の通り。
 - opt ~ returns:       DocletEx.constructor()
 - parent, children:    DocletTree.linkage()
-- unique ~ longnameId: DocletTree.registration()
+- unique ~ longnameId: DocletTree.registration()<br>
 ## <span id="/common/createSpec.1_0_0.mjs::DocletEx#constructor_top">🧩 constructor()</span>
+
+### <a href="#/common/createSpec.1_0_0.mjs::DocletEx#constructor_top"><span id="/common/createSpec.1_0_0.mjs::DocletEx#constructor_desc">🧾 constructor 概説</span></a>
+
+<br>
 
 ### <a href="#/common/createSpec.1_0_0.mjs::DocletEx#constructor_top"><span id="/common/createSpec.1_0_0.mjs::DocletEx#constructor_param">▶️ constructor 引数</span></a>
 
@@ -129,7 +133,7 @@ addRowToColumn: データ項目情報から一覧作成用情報を作成
 
 addRowToColumn: データ項目情報から一覧作成用情報を作成
 
-データ項目情報：Doclet.properties/params/returnsの各要素。配列では無くオブジェクト
+データ項目情報：Doclet.properties/params/returnsの各要素。配列では無くオブジェクト<br>
 
 ### <a href="#/common/createSpec.1_0_0.mjs::DocletEx#addRowToColumn_top"><span id="/common/createSpec.1_0_0.mjs::DocletEx#addRowToColumn_param">▶️ addRowToColumn 引数</span></a>
 
@@ -148,7 +152,7 @@ determineType: Docletの型を判定
 
 ### <a href="#/common/createSpec.1_0_0.mjs::DocletEx#determineType_top"><span id="/common/createSpec.1_0_0.mjs::DocletEx#determineType_desc">🧾 determineType 概説</span></a>
 
-determineType: Docletの型を判定
+determineType: Docletの型を判定<br>
 
 ### <a href="#/common/createSpec.1_0_0.mjs::DocletEx#determineType_top"><span id="/common/createSpec.1_0_0.mjs::DocletEx#determineType_param">▶️ determineType 引数</span></a>
 

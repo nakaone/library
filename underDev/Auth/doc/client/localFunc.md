@@ -28,7 +28,7 @@ localFunc: テスト用：処理要求発行
 
 ## <a href="#/client/localFunc.mjs::localFunc_top"><span id="/client/localFunc.mjs::localFunc_desc">🧾 localFunc 概説</span></a>
 
-localFunc: テスト用：処理要求発行
+localFunc: テスト用：処理要求発行<br>
 
 ## <a href="#/client/localFunc.mjs::localFunc_top"><span id="/client/localFunc.mjs::localFunc_param">▶️ localFunc 引数</span></a>
 

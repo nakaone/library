@@ -37,7 +37,7 @@ Schema: DB・データ型構造定義オブジェクト
 | note | string | '' | Schema全体に関する備考 |  |
 | types | Object.<string, TypeDef> | 必須 | 論理テーブル名をキーとするテーブル定義 |  |
 | original | string | 必須 | Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可 |  |
-| allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可 | - 'string' \| 'number' \| 'boolean' \| 'object' \| 'array' \| 'datetime' \| 'function' |
+| allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可<br> | - 'string' \| 'number' \| 'boolean' \| 'object' \| 'array' \| 'datetime' \| 'function' |
 
 ## <a href="#/common/Schema.2_1_0.mjs::Schema_top"><span id="/common/Schema.2_1_0.mjs::Schema_func">🧱 Schema メソッド・内部関数一覧</span></a>
 
@@ -52,10 +52,14 @@ Schema: DB・データ型構造定義オブジェクト
 
 ## <a href="#/common/Schema.2_1_0.mjs::Schema_top"><span id="/common/Schema.2_1_0.mjs::Schema_desc">🧾 Schema 概説</span></a>
 
-DB構造定義オブジェクト
+Schema: DB・データ型構造定義オブジェクト
 - 各種アプリで使用するテーブル・データ型を宣言
-- 各種アプリでは本クラスを拡張し、configとすることを想定
+- 各種アプリでは本クラスを拡張し、configとすることを想定<br>
 ## <span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top">🧩 constructor()</span>
+
+### <a href="#/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_desc">🧾 constructor 概説</span></a>
+
+<br>
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_param">▶️ constructor 引数</span></a>
 
@@ -74,7 +78,7 @@ isObject: 引数がオブジェクトであるか判定
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#isObject_top"><span id="/common/Schema.2_1_0.mjs::Schema#isObject_desc">🧾 isObject 概説</span></a>
 
-isObject: 引数がオブジェクトであるか判定
+isObject: 引数がオブジェクトであるか判定<br>
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#isObject_top"><span id="/common/Schema.2_1_0.mjs::Schema#isObject_param">▶️ isObject 引数</span></a>
 
@@ -93,7 +97,7 @@ typedef: TypeDef型オブジェクトを生成
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#typedef_top"><span id="/common/Schema.2_1_0.mjs::Schema#typedef_desc">🧾 typedef 概説</span></a>
 
-typedef: TypeDef型オブジェクトを生成
+typedef: TypeDef型オブジェクトを生成<br>
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#typedef_top"><span id="/common/Schema.2_1_0.mjs::Schema#typedef_param">▶️ typedef 引数</span></a>
 
@@ -113,7 +117,7 @@ columndef: ColumnDef型オブジェクトを生成
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#columndef_top"><span id="/common/Schema.2_1_0.mjs::Schema#columndef_desc">🧾 columndef 概説</span></a>
 
-columndef: ColumnDef型オブジェクトを生成
+columndef: ColumnDef型オブジェクトを生成<br>
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#columndef_top"><span id="/common/Schema.2_1_0.mjs::Schema#columndef_param">▶️ columndef 引数</span></a>
 
@@ -132,7 +136,7 @@ factory: 指定TypeDef型のオブジェクトを生成
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#factory_top"><span id="/common/Schema.2_1_0.mjs::Schema#factory_desc">🧾 factory 概説</span></a>
 
-factory: 指定TypeDef型のオブジェクトを生成
+factory: 指定TypeDef型のオブジェクトを生成<br>
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#factory_top"><span id="/common/Schema.2_1_0.mjs::Schema#factory_param">▶️ factory 引数</span></a>
 
@@ -152,7 +156,7 @@ sanitizeArg: プリミティブ型のみで構成されるよう無毒化
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2_1_0.mjs::Schema#sanitizeArg_desc">🧾 sanitizeArg 概説</span></a>
 
-sanitizeArg: プリミティブ型のみで構成されるよう無毒化
+sanitizeArg: プリミティブ型のみで構成されるよう無毒化<br>
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2_1_0.mjs::Schema#sanitizeArg_param">▶️ sanitizeArg 引数</span></a>
 

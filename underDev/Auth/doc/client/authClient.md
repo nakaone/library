@@ -51,16 +51,17 @@ authClient: クライアント側中核クラス
 
 ## <a href="#/client/authClient.mjs::authClient_top"><span id="/client/authClient.mjs::authClient_desc">🧾 authClient 概説</span></a>
 
+authClient: クライアント側中核クラス<br>
 クライアント側中核クラス
 - 初期化の際に非同期処理が必要なため、インスタンス作成は
-  `new authClient()`ではなく`authClient.initialize()`で行う
+  `new authClient()`ではなく`authClient.initialize()`で行う<br>
 ## <span id="/client/authClient.mjs::authClient.exports.authClient#constructor_top">🧩 constructor()</span>
 
 constructor
 
 ### <a href="#/client/authClient.mjs::authClient.exports.authClient#constructor_top"><span id="/client/authClient.mjs::authClient.exports.authClient#constructor_desc">🧾 constructor 概説</span></a>
 
-constructor
+constructor<br>
 
 ### <a href="#/client/authClient.mjs::authClient.exports.authClient#constructor_top"><span id="/client/authClient.mjs::authClient.exports.authClient#constructor_param">▶️ constructor 引数</span></a>
 
@@ -73,7 +74,7 @@ _exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列
 
 ### <a href="#/client/authClient.mjs::authClient#_exportIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_exportIfCryptoKey_desc">🧾 _exportIfCryptoKey 概説</span></a>
 
-_exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
+_exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換<br>
 
 ### <a href="#/client/authClient.mjs::authClient#_exportIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_exportIfCryptoKey_param">▶️ _exportIfCryptoKey 引数</span></a>
 
@@ -93,7 +94,7 @@ _importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換
 
 ### <a href="#/client/authClient.mjs::authClient#_importIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_importIfCryptoKey_desc">🧾 _importIfCryptoKey 概説</span></a>
 
-_importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換
+_importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換<br>
 
 ### <a href="#/client/authClient.mjs::authClient#_importIfCryptoKey_top"><span id="/client/authClient.mjs::authClient#_importIfCryptoKey_param">▶️ _importIfCryptoKey 引数</span></a>
 
@@ -113,7 +114,7 @@ _withStore: IndexedDB操作共通ラッパ
 
 ### <a href="#/client/authClient.mjs::authClient#_withStore_top"><span id="/client/authClient.mjs::authClient#_withStore_desc">🧾 _withStore 概説</span></a>
 
-_withStore: IndexedDB操作共通ラッパ
+_withStore: IndexedDB操作共通ラッパ<br>
 
 ### <a href="#/client/authClient.mjs::authClient#_withStore_top"><span id="/client/authClient.mjs::authClient#_withStore_param">▶️ _withStore 引数</span></a>
 
@@ -126,7 +127,7 @@ exec: ローカル関数の処理要求を処理
 
 ### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_desc">🧾 exec 概説</span></a>
 
-exec: ローカル関数の処理要求を処理
+exec: ローカル関数の処理要求を処理<br>
 
 ### <a href="#/client/authClient.mjs::authClient#exec_top"><span id="/client/authClient.mjs::authClient#exec_param">▶️ exec 引数</span></a>
 
@@ -147,7 +148,7 @@ fetch: サーバ側APIの呼び出し
 
 ### <a href="#/client/authClient.mjs::authClient#fetch_top"><span id="/client/authClient.mjs::authClient#fetch_desc">🧾 fetch 概説</span></a>
 
-fetch: サーバ側APIの呼び出し
+fetch: サーバ側APIの呼び出し<br>
 
 ### <a href="#/client/authClient.mjs::authClient#fetch_top"><span id="/client/authClient.mjs::authClient#fetch_param">▶️ fetch 引数</span></a>
 
@@ -166,7 +167,7 @@ getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取
 
 ### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_desc">🧾 getIndexedDB 概説</span></a>
 
-getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
+getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得<br>
 
 ### <a href="#/client/authClient.mjs::authClient#getIndexedDB_top"><span id="/client/authClient.mjs::authClient#getIndexedDB_param">▶️ getIndexedDB 引数</span></a>
 
@@ -187,7 +188,7 @@ initialize: authClientインスタンス作成
 
 initialize: authClientインスタンス作成
 - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
-- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br>
 
 ### <a href="#/client/authClient.mjs::authClient.initialize_top"><span id="/client/authClient.mjs::authClient.initialize_param">▶️ initialize 引数</span></a>
 
@@ -206,7 +207,7 @@ setIndexedDB: IndexedDBの更新(upsert)
 
 ### <a href="#/client/authClient.mjs::authClient#setIndexedDB_top"><span id="/client/authClient.mjs::authClient#setIndexedDB_desc">🧾 setIndexedDB 概説</span></a>
 
-setIndexedDB: IndexedDBの更新(upsert)
+setIndexedDB: IndexedDBの更新(upsert)<br>
 
 ### <a href="#/client/authClient.mjs::authClient#setIndexedDB_top"><span id="/client/authClient.mjs::authClient#setIndexedDB_param">▶️ setIndexedDB 引数</span></a>
 

@@ -44,14 +44,15 @@ cryptoClient: クライアント側の暗号化・署名検証
 
 ## <a href="#/client/cryptoClient.mjs::cryptoClient_top"><span id="/client/cryptoClient.mjs::cryptoClient_desc">🧾 cryptoClient 概説</span></a>
 
-クライアント側の暗号化・署名検証
+cryptoClient: クライアント側の暗号化・署名検証<br>
+クライアント側の暗号化・署名検証<br>
 ## <span id="/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_top">🧩 constructor()</span>
 
 constructor
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_top"><span id="/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_desc">🧾 constructor 概説</span></a>
 
-constructor
+constructor<br>
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_top"><span id="/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_param">▶️ constructor 引数</span></a>
 
@@ -65,7 +66,7 @@ encrypt: 処理要求を暗号化＋署名
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_desc">🧾 encrypt 概説</span></a>
 
-encrypt: 処理要求を暗号化＋署名
+encrypt: 処理要求を暗号化＋署名<br>
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_param">▶️ encrypt 引数</span></a>
 
@@ -84,7 +85,7 @@ decrypt: 暗号化された処理結果を復号・署名検証
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#decrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#decrypt_desc">🧾 decrypt 概説</span></a>
 
-decrypt: 暗号化された処理結果を復号・署名検証
+decrypt: 暗号化された処理結果を復号・署名検証<br>
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#decrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#decrypt_param">▶️ decrypt 引数</span></a>
 
@@ -104,7 +105,7 @@ generateKeys: RSA鍵ペアを生成
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#generateKeys_top"><span id="/client/cryptoClient.mjs::cryptoClient#generateKeys_desc">🧾 generateKeys 概説</span></a>
 
 generateKeys: RSA鍵ペアを生成
-- 生成のみ、IndexedDBやメンバ変数への格納は行わない
+- 生成のみ、IndexedDBやメンバ変数への格納は行わない<br>
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#generateKeys_top"><span id="/client/cryptoClient.mjs::cryptoClient#generateKeys_param">▶️ generateKeys 引数</span></a>
 

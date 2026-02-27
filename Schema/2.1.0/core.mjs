@@ -1,9 +1,8 @@
 /** Schema: DB・データ型構造定義オブジェクト
- * @class
- * @classdesc DB構造定義オブジェクト
  * - 各種アプリで使用するテーブル・データ型を宣言
  * - 各種アプリでは本クラスを拡張し、configとすることを想定
  * 
+ * @class
  * @property {string} name - Schemaの論理名
  * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')
  * @property {string} [dbName] - 物理DB名。省略時はnameを流用
@@ -11,7 +10,7 @@
  * @property {string} [note=''] - Schema全体に関する備考
  * @property {Object.<string, TypeDef>} types - 論理テーブル名をキーとするテーブル定義
  * @property {string} original - Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可
- * @property {string[]} allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可
+ * @property {string[]} allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可<br>
  *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'
  * 
  * @example

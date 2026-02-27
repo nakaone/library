@@ -48,14 +48,15 @@ cryptoServer: サーバ側の暗号化・署名検証
 
 ## <a href="#/server/cryptoServer.mjs::cryptoServer_top"><span id="/server/cryptoServer.mjs::cryptoServer_desc">🧾 cryptoServer 概説</span></a>
 
-サーバ側の暗号化・署名検証
+cryptoServer: サーバ側の暗号化・署名検証<br>
+サーバ側の暗号化・署名検証<br>
 ## <span id="/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_top">🧩 constructor()</span>
 
 constructor
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_top"><span id="/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_desc">🧾 constructor 概説</span></a>
 
-constructor
+constructor<br>
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_top"><span id="/server/cryptoServer.mjs::cryptoServer#cryptoServer#constructor_param">▶️ constructor 引数</span></a>
 
@@ -68,7 +69,7 @@ encrypt: 処理結果を暗号化＋署名
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#encrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#encrypt_desc">🧾 encrypt 概説</span></a>
 
-encrypt: 処理結果を暗号化＋署名
+encrypt: 処理結果を暗号化＋署名<br>
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#encrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#encrypt_param">▶️ encrypt 引数</span></a>
 
@@ -88,7 +89,7 @@ decrypt: 暗号化された処理要求を復号・署名検証
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#decrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#decrypt_desc">🧾 decrypt 概説</span></a>
 
-decrypt: 暗号化された処理要求を復号・署名検証
+decrypt: 暗号化された処理要求を復号・署名検証<br>
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#decrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#decrypt_param">▶️ decrypt 引数</span></a>
 
@@ -109,7 +110,7 @@ generateKeys: PEM形式のRSA鍵ペアを生成
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_desc">🧾 generateKeys 概説</span></a>
 
 generateKeys: PEM形式のRSA鍵ペアを生成
-- 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない
+- 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない<br>
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#generateKeys_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_param">▶️ generateKeys 引数</span></a>
 
@@ -128,7 +129,7 @@ generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#generateAndSave_top"><span id="/server/cryptoServer.mjs::cryptoServer#generateAndSave_desc">🧾 generateAndSave 概説</span></a>
 
-generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
+generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する<br>
 ## <span id="/server/cryptoServer.mjs::cryptoServer.initialize_top">🧩 initialize()</span>
 
 initialize: cryptoServerインスタンス作成
@@ -137,7 +138,7 @@ initialize: cryptoServerインスタンス作成
 
 initialize: cryptoServerインスタンス作成
 - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
-- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br>
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer.initialize_top"><span id="/server/cryptoServer.mjs::cryptoServer.initialize_param">▶️ initialize 引数</span></a>
 

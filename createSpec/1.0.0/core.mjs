@@ -1050,7 +1050,6 @@ async function createSpec(opt={}){
 
         dev.step(1);  // 事前準備
         v.d = this.map[uuid];
-        console.log(`l.1053 ${JSON.stringify(this.map[uuid]).replaceAll(/\|/g,'\\|')}`);
         v.anchor = v.d.longnameId;
 
         dev.step(2);  // ヘッダ部
@@ -1142,14 +1141,13 @@ async function createSpec(opt={}){
         }
 
         dev.step(5); // 説明文
+        // 元データであるdoclet.descriptionは@descが複数箇所に分かれていた場合、最後の@descのみ有効
+        // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
         v.r = '';
-        ['description','classdesc'].forEach(x => {
-          // 元データであるdoclet.descriptionは@descが複数有った場合、最後のみ有効
-          // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
-          if( Object.hasOwn(v.d,x) && Object.hasOwn(v.d,'parsed')
-            && Object.hasOwn(v.d.parsed,'@'+x) && v.d.parsed[`@${x}`].length > 0 )
-            v.r += `\n${v.d.parsed[`@${x}`]}`;
-        });
+        if( typeof v.d.parsed['@description'] !== 'undefined' )
+          v.r += `\n${v.d.parsed['@description']}<br>`;
+        if( typeof v.d.parsed['@classdesc'] !== 'undefined' )
+          v.r += `\n${v.d.parsed['@classdesc']}<br>`;
         if( v.r.length > 0 ){
           // 記事の作成
           v.r = this.article({
@@ -1638,6 +1636,7 @@ async function createSpec(opt={}){
       writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree,null,2));
       writeFileSync("../tmp/DocletTree.doclet.json",JSON.stringify(pv.tree.doclet,null,2));
     }
+    console.log(`l.1640 ${JSON.stringify(pv.tree.doclet.filter(x => x.name === 'Schema' && x.docletType === 'class'))}`);
 
     dev.end();
     return pv.rv;
