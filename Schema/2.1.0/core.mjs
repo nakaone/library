@@ -1,9 +1,8 @@
 /** Schema: DB・データ型構造定義オブジェクト
- * - 各種アプリで使用するテーブル・データ型を宣言
- * - 各種アプリでは本クラスを拡張し、configとすることを想定
- * 
  * @class
  * @classdesc DB構造定義オブジェクト
+ * - 各種アプリで使用するテーブル・データ型を宣言
+ * - 各種アプリでは本クラスを拡張し、configとすることを想定
  * 
  * @property {string} name - Schemaの論理名
  * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')

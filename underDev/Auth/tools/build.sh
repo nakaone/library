@@ -78,9 +78,10 @@ function detailedDesign {  # JavaScriptソースからMarkdown作成
   echo "== detailedDesign start."
   # index.md及びクラス・グローバル関数個別MDをtmpに作成
   # ※ 最終的にsrc/doc/header.mdを先頭に付けるため、出力先はtmp/
+  # ※ jsdoc実行時エラーを表示するため、標準エラー出力はリダイレクトしない
   node $createSpec $src/(client|common|server)/**/*.(js|mjs) \
   -o $tmp/createSpec -r $tmp/DocletTree.json \
-  1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
+  1> $tmp/createSpec.log # 2> $tmp/createSpec.error.log
 
   # index.md及びクラス・グローバル関数個別MDにヘッダを付けてdoc以下にコピー
   find $tmp/createSpec -type f -name '*.md' | while read -r filepath; do

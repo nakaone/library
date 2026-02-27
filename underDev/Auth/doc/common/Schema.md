@@ -37,10 +37,7 @@ Schema: DB・データ型構造定義オブジェクト
 | note | string | '' | Schema全体に関する備考 |  |
 | types | Object.<string, TypeDef> | 必須 | 論理テーブル名をキーとするテーブル定義 |  |
 | original | string | 必須 | Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可 |  |
-| allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可 | - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'
-
-- 各種アプリで使用するテーブル・データ型を宣言
-- 各種アプリでは本クラスを拡張し、configとすることを想定 |
+| allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可 | - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function' |
 
 ## <a href="#/common/Schema.2.1.0.mjs::Schema_top"><span id="/common/Schema.2.1.0.mjs::Schema_func">🧱 Schema メソッド・内部関数一覧</span></a>
 
