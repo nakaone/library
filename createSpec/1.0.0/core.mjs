@@ -548,7 +548,8 @@ async function createSpec(opt={}){
 
         dev.step(6);  // 備考
         // descriptionの2行目以降。先頭・末尾の空行は削除
-        v.rv.note = v.desc.slice(1).join('\n').trim();
+        //v.rv.note = v.desc.slice(1).join('\n').trim();
+        v.rv.note = v.desc.slice(1).join('\n').replaceAll(/\|/g,'\\|').trim();
 
         dev.end(); // 終了処理
         return v.rv;
@@ -1049,6 +1050,7 @@ async function createSpec(opt={}){
 
         dev.step(1);  // 事前準備
         v.d = this.map[uuid];
+        console.log(`l.1053 ${JSON.stringify(this.map[uuid]).replaceAll(/\|/g,'\\|')}`);
         v.anchor = v.d.longnameId;
 
         dev.step(2);  // ヘッダ部

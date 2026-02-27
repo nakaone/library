@@ -101,7 +101,7 @@ ColumnDef: 項目定義
 | label | string | 任意 | 表示用ラベル（省略時は name) |  |
 | desc | string | '' | 項目に関する概要説明 |  |
 | note | string | '' | 項目に関する備考・意味説明 |  |
-| type | string | 'string' | 論理データ型 | - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function' |
+| type | string | 'string' | 論理データ型 | - 'string' \| 'number' \| 'boolean' \| 'object' \| 'array' \| 'datetime' \| 'function' |
 | nullable | boolean | true | null を許可するか |  |
 | default | any |  | 既定値 | - データ型が関数の場合、引数はfactoryメソッドに渡されるargと看做す
 
@@ -156,11 +156,11 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 | tags.text | string | 必須 | タグ行の生テキスト（タグ名を除いた部分） |  |
 | tags.value | string | 必須 | タグ内容をJSDocが解釈・分解した結果の文字列表現 | 単純タグではtextと同じになることが多い |
 | type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報 | プリミティブ・Union・配列・オブジェクトなど |
-| type.names | string[] | 必須 | データ型名の配列 | `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
-  {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
+| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる
+  {typeDef[]\|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
 | undocumented | boolean | 必須 | JSDoc コメントが存在しない要素かどうか | true の場合、自動抽出されたがコメント未記述 |
 | type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報 | プリミティブ・Union・配列・オブジェクトなど |
-| type.names | string[] | 必須 | データ型名の配列 | `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
+| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる
 
 
 # "meta.code.type"の内容
@@ -204,12 +204,12 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 
 ## 主な区切り記号と意味
 
-| 記号 | 意味 | 用途 |
-| :-- | :-- | :-- |
-| . | 名前空間 / 静的・構造的所属 | オブジェクト・typedef |
-| # | インスタンスメンバ | クラスの instance |
-| ~ | 内部（inner）要素 | クロージャ・内部関数 |
-| : | モジュール修飾子 | module 指定 | |
+\| 記号 \| 意味 \| 用途 \|
+\| :-- \| :-- \| :-- \|
+\| . \| 名前空間 / 静的・構造的所属 \| オブジェクト・typedef \|
+\| # \| インスタンスメンバ \| クラスの instance \|
+\| ~ \| 内部（inner）要素 \| クロージャ・内部関数 \|
+\| : \| モジュール修飾子 \| module 指定 \| |
 
 
 ## <a href="#typedefList"><span id="DocletColDef">"DocletColDef" データ型定義</span></a>
@@ -219,8 +219,8 @@ DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | type | Object | 必須 | データ型情報オブジェクト |  |
-| type.names | string[] | 必須 | データ型名の配列 | `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
-  {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
+| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる
+  {typeDef[]\|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
 | longname | string | 必須 | 対象要素の完全修飾名（所属関係・スコープを含む一意な識別子） |  |
 | scope | string | 必須 | 対象要素のスコープ種別 | - global : グローバル
   - static : クラス静的メンバ

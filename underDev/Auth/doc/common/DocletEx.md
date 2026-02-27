@@ -72,11 +72,11 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
   kind === 'interface'
 - class
   kind === 'class'
-  && (meta.code.type === "ClassDeclaration" || "ClassExpression")
+  && (meta.code.type === "ClassDeclaration" \|\| "ClassExpression")
 - constructor
   kind === 'class'
   && meta?.code?.type === "MethodDefinition"
-  && /＠constructor\b/.test(doclet.comment || "")
+  && /＠constructor\b/.test(doclet.comment \|\| "")
 - method
   kind === "function"
   && meta?.code?.type === "MethodDefinition"
