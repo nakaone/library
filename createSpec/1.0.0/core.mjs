@@ -102,7 +102,8 @@ async function createSpec(opt={}){
         ／** ＠type {User}*／
         const user = {...}
         \`\`\`
-      
+      - データ型定義で継承したい場合、＠typedefではなく＠interfaceを使用
+
       # 入出力イメージ
       
       \`\`\`入力側サンプル
@@ -642,7 +643,12 @@ async function createSpec(opt={}){
    * @class DocletTree
    * @prop {DocletTreeSource} source - 処理対象となるソースファイル
    * @prop {DocletEx[]} doclet - 独自情報を付加したDocletExの配列
-   * @prop {Object.<string, DocletEx>} map - rangeId/linenoId/commentIdをキーにしたDocletExのマップ
+   * @prop {Object.<string, DocletEx>} map - 各種IdをキーにしたDocletExのマップ(命名はregistration()内)
+   *   - SHA256: 固有パス＋ファイル名＋commentのハッシュ
+   *   - 〜:N〜 : 固有パス＋ファイル名＋linenoId
+   *   - 〜:R〜 : 固有パス＋ファイル名＋range[0]
+   *   - 〜::〜 : 固有パス＋ファイル名＋longname
+   *   - その他 : クラス・グローバル関数名、データ型名
    * @prop {Object.<string, DocletTreeFolder>} folder - パス毎の所属Doclet管理。キーはフォルダ名
    * @prop {DocletTreeOpt} [opt={}] - オプション設定値
    */
@@ -1024,7 +1030,7 @@ async function createSpec(opt={}){
        * | :--        | :--: | :--: | :--: | :-- | :-- |
        * | ヘッダ部    |    |    |   | _top |  |
        * | — タイトル  | ⭕ | ⭕ | ⭕ |         | ○○クラス(データ型)仕様書、等 |
-       * | — ラベル    | ⭕ | ⭕ | ❌ |         | 一行にまとめた説明 |
+       * | — ラベル    | ⭕ | ⭕ | ❌ |         | 一行にまとめた説明。継承が有る場合はここに記載 |
        * | メンバ一覧  | ⭕ | ⭕ | ❌ | _prop    |  |
        * | メソッド一覧 | ⭕ | ❌ | ❌ | _func   |  |
        * | 詳細説明    | ⭕ | ❌ | ❌ | _desc   |  |
@@ -1046,12 +1052,40 @@ async function createSpec(opt={}){
         v.anchor = v.d.longnameId;
 
         dev.step(2);  // ヘッダ部
+        v.label = '';
+        if( Object.hasOwn(v.d,'augments') ){
+          dev.step(2.1);  // 継承が有った場合、継承元情報を付記
+          v.augments = [];
+          v.d.augments.forEach(augment => {
+            // 継承元へのURLを取得
+            v.extended = Object.hasOwn(this.map,augment) && this.map[augment] !== null
+            ? this.map[augment] : null;
+            if( v.extended === null ){
+              // URL取得不能の場合はリンクを設定しない
+              v.augments.push(augment);
+            } else {
+              // リンク先URLの作成
+              // function or class -> 固有パス＋name.md
+              // typedef or interface -> 固有パス＋index.md＋#name
+              v.depth = v.extended.unique === '/' ? 1
+                : v.extended.unique.replace(/\/$/,'').split('/').length;
+              v.url = '../'.repeat(v.depth) + v.extended.unique + (
+                ['function','class'].includes(v.extended.docletType)
+                ? v.extended.name + '.md'
+                : this.opt.indexMd + '#' + v.extended.name
+              );
+              v.augments.push(`<a href="${v.url}">${augment}</a>`);
+            }
+          });
+          v.label = `継承元：${v.augments.join(', ')}<br>`
+        }
+        v.label += v.d.label;
         v.r = this.article({
           title: `🧩 ${this.opt.title[v.d.docletType].replace('_',v.d.name)}`,
           level: level,
           url: '',
           anchor: `${v.anchor}_top`,
-          content: v.d.label,
+          content: v.label,
         });
         if( v.r instanceof Error ) throw v.r;
         v.rv.push(v.r);
@@ -1462,11 +1496,15 @@ async function createSpec(opt={}){
               v.folder = v.folder.children[folderName];
             });
           }
-          // グローバル関数・クラスまたはデータ型定義の場合、登録
-          if( ['function','class'].includes(doclet.docletType) )
-            v.folder.funclass[doclet.uuid] = doclet;
-          else if( ['typedef','interface'].includes(doclet.docletType) )
-            v.folder.typedef[doclet.uuid] = doclet;
+
+          dev.step(4.4);  // グローバル関数・クラスまたはデータ型定義の場合、登録
+          if( ['typedef','interface','class','function'].includes(doclet.docletType) ){
+            // 所属フォルダのfunclass/typedefに登録
+            v.f = ['function','class'].includes(doclet.docletType) ? 'funclass' : 'typedef';
+            v.folder[v.f][doclet.uuid] = doclet;
+            // シンボル名(クラス・グローバル関数名、データ型名)でDocletTree.mapに登録
+            this.map[doclet.name] = Object.hasOwn(this.map,doclet.name) ? null : doclet;
+          }
         }
 
         dev.end(); // 終了処理

@@ -11,8 +11,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-[bug] extendsが表現されていない
-  - `class authConfig extends Schema`
 [bug] 説明文内の'|'以降が表示されない
   ```
   * allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可

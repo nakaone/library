@@ -4,6 +4,7 @@ import { mergeDeeply } from "../../../../mergeDeeply/2.0.0/core.mjs"
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
  * @classdesc クライアント・サーバ共通設定情報
+ * @extends Schema
  * @prop {string} [systemName="auth"] - システム名
  * @prop {string} adminMail - 管理者のメールアドレス
  * @prop {string} adminName - 管理者氏名
