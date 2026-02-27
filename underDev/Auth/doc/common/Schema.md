@@ -55,6 +55,21 @@ Schema: DB・データ型構造定義オブジェクト
 Schema: DB・データ型構造定義オブジェクト
 - 各種アプリで使用するテーブル・データ型を宣言
 - 各種アプリでは本クラスを拡張し、configとすることを想定<br>
+
+```
+{
+  name: 'camp2025',
+  types: {
+    master: {
+      cols:[
+        {name:'タイムスタンプ',type:'string'},
+        {name:'メールアドレス',type:'string'},
+        // (中略)
+      ],
+    },
+  },
+},
+```
 ## <span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top">🧩 constructor()</span>
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_desc">🧾 constructor 概説</span></a>

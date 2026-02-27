@@ -1144,10 +1144,17 @@ async function createSpec(opt={}){
         // 元データであるdoclet.descriptionは@descが複数箇所に分かれていた場合、最後の@descのみ有効
         // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
         v.r = '';
-        if( typeof v.d.parsed['@description'] !== 'undefined' )
-          v.r += `\n${v.d.parsed['@description']}<br>`;
-        if( typeof v.d.parsed['@classdesc'] !== 'undefined' )
-          v.r += `\n${v.d.parsed['@classdesc']}<br>`;
+        if( typeof v.d.parsed['@description'] !== 'undefined' ){
+          v.r += `\n${v.d.parsed['@description']}<br>\n`;
+        }
+        if( typeof v.d.parsed['@classdesc'] !== 'undefined' ){
+          v.r += `\n${v.d.parsed['@classdesc']}<br>\n`;
+        }
+        if( typeof v.d.parsed['@example'] !== 'undefined' ){
+          v.r += `\n${v.d.parsed['@example']}\n\n`;
+          dev.step(99.1155,v.d.parsed['@example']);
+        }
+
         if( v.r.length > 0 ){
           // 記事の作成
           v.r = this.article({

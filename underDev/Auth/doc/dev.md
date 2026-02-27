@@ -35,13 +35,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-[bug] classdescが存在するとdescriptionの内容が無視される
-  ```
-  /** Schema: DB・データ型構造定義オブジェクト
-   * - 各種アプリで使用するテーブル・データ型を宣言
-   * - 各種アプリでは本クラスを拡張し、configとすることを想定
-  ```
-  ⇒ 箇条書き、descriptionだと出ない(classdesc以下に移動すると出る)
 [bug] Markdownからexampleが抜けている
 [bug] データ型にリンクが付けられていない
   Schema.types {Object.<string, TypeDef>} ⇒ TypeDefにリンクが未設定
@@ -52,6 +45,7 @@
 [bug] _withStore引数の説明が意味不明
 [bug] exec引数anyの要否/既定値欄が'['のみで意味不明
 [bug] getIndexedDB引数の項目名が空欄
+
 [warn] exec()のラベル・概説の内容が全く同じ。概説は削除した方がベター
 [warn] ラベル冒頭のクラス・関数名は削除した方がベター
 [warn] authClient.constructorのラベルが"constructor"だけなら削除した方がベター

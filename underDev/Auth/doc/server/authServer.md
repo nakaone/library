@@ -49,6 +49,7 @@ authServer: サーバ側中核クラス
 ## <a href="#/server/authServer.mjs::authServer_top"><span id="/server/authServer.mjs::authServer_desc">🧾 authServer 概説</span></a>
 
 authServer: サーバ側中核クラス<br>
+
 サーバ側中核クラス<br>
 ## <span id="/server/authServer.mjs::authServer#authServer#constructor_top">🧩 constructor()</span>
 

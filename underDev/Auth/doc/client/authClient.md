@@ -52,9 +52,21 @@ authClient: クライアント側中核クラス
 ## <a href="#/client/authClient.mjs::authClient_top"><span id="/client/authClient.mjs::authClient_desc">🧾 authClient 概説</span></a>
 
 authClient: クライアント側中核クラス<br>
+
 クライアント側中核クラス
 - 初期化の際に非同期処理が必要なため、インスタンス作成は
   `new authClient()`ではなく`authClient.initialize()`で行う<br>
+
+インスタンス作成のサンプル
+```js
+async function onLoad(){
+  const v = {whois:`onLoad`, rv:null};
+  dev.start(v);
+  try {
+
+    dev.step(1);  // authClientインスタンス作成
+    const auth = await authClient.initialize({
+      adminMail: 'ena.kaon
 ## <span id="/client/authClient.mjs::authClient.exports.authClient#constructor_top">🧩 constructor()</span>
 
 constructor

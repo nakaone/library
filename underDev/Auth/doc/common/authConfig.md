@@ -48,6 +48,7 @@
 ## <a href="#/common/authConfig.mjs::authConfig_top"><span id="/common/authConfig.mjs::authConfig_desc">🧾 authConfig 概説</span></a>
 
 authConfig: クライアント・サーバ共通設定情報<br>
+
 クライアント・サーバ共通設定情報<br>
 ## <span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top">🧩 constructor()</span>
 
