@@ -630,8 +630,10 @@ async function createSpec(opt={}){
    * @prop {Object.<string, string>} title - Markdown文書のタイトル行
    * @prop {string} [lang='ja-JP'] - 使用言語
    * @prop {string} [indexMd='index.md'] - フォルダ直下の管理ファイル名
-   * @prop {Object.<string, {key,label,align}[]>} [propHeader] - 項目一覧テーブルのヘッダ定義
-   * @prop {Object.<string, {key,label,align}[]>} [returnHeader] - 戻り値テーブルのヘッダ定義
+   * @prop {Object.<string, Object[]>} [propHeader] - 項目一覧テーブルのヘッダ定義
+   *   Object = {key,label,align}
+   * @prop {Object.<string, Object[]>} [returnHeader] - 戻り値テーブルのヘッダ定義
+   *   Object = {key,label,align}
    * @prop {string} [jsdocJson="jsdoc.json"] - jsdoc設定ファイル名
    * @prop {string} [dummyDir="./dummy"] - ダミーディレクトリ名
    * @prop {string} [jsdocTarget=".+\\.(js|mjs|gs|txt)$"] - jsdoc処理対象ファイル名の正規表現
@@ -1108,7 +1110,8 @@ async function createSpec(opt={}){
         ['description','classdesc'].forEach(x => {
           // 元データであるdoclet.descriptionは@descが複数有った場合、最後のみ有効
           // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
-          if( v.d[x] && v.d.parsed[`@${x}`].length > 0 )
+          if( Object.hasOwn(v.d,x) && Object.hasOwn(v.d,'parsed')
+            && Object.hasOwn(v.d.parsed,'@'+x) && v.d.parsed[`@${x}`].length > 0 )
             v.r += `\n${v.d.parsed[`@${x}`]}`;
         });
         if( v.r.length > 0 ){
@@ -1287,7 +1290,7 @@ async function createSpec(opt={}){
     }
 
     /** makeTable: Markdownのテーブル作成
-     * @param {Object.<string, any>[]} data - テーブル作成用データ
+     * @param {Object.<string, any[]>} data - テーブル作成用データ
      * @param {Object} [opt={}]
      * @param {Object[]} [opt.header=[]] - {key,label,align}形式のオブジェクト
      *   keyは必須。labelの既定値はkey(=dataのメンバ名)
@@ -1591,8 +1594,10 @@ async function createSpec(opt={}){
     if( pv.r instanceof Error ) throw pv.r;
 
     dev.step(4);  // 調査結果ファイルの出力
-    if( pv.tree.source.research )
+    if( pv.tree.source.research ){
       writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree,null,2));
+      writeFileSync("../tmp/DocletTree.doclet.json",JSON.stringify(pv.tree.doclet,null,2));
+    }
 
     dev.end();
     return pv.rv;

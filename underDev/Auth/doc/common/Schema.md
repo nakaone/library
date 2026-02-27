@@ -22,11 +22,11 @@
 
 </div>
 
-# <span id="/common/Schema.2.1.0.mjs::Schema_top">🧩 Schemaクラス仕様書</span>
+# <span id="/common/Schema.2_1_0.mjs::Schema_top">🧩 Schemaクラス仕様書</span>
 
 Schema: DB・データ型構造定義オブジェクト
 
-## <a href="#/common/Schema.2.1.0.mjs::Schema_top"><span id="/common/Schema.2.1.0.mjs::Schema_prop">🔢 Schema メンバ一覧</span></a>
+## <a href="#/common/Schema.2_1_0.mjs::Schema_top"><span id="/common/Schema.2_1_0.mjs::Schema_prop">🔢 Schema メンバ一覧</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
@@ -39,127 +39,129 @@ Schema: DB・データ型構造定義オブジェクト
 | original | string | 必須 | Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可 |  |
 | allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可 | - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function' |
 
-## <a href="#/common/Schema.2.1.0.mjs::Schema_top"><span id="/common/Schema.2.1.0.mjs::Schema_func">🧱 Schema メソッド・内部関数一覧</span></a>
+## <a href="#/common/Schema.2_1_0.mjs::Schema_top"><span id="/common/Schema.2_1_0.mjs::Schema_func">🧱 Schema メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/common/Schema.2.1.0.mjs::Schema.exports.Schema#constructor_top">constructor</a> |  |
-| 2 | <a href="#/common/Schema.2.1.0.mjs::Schema#isObject_top">isObject</a> | isObject: 引数がオブジェクトであるか判定 |
-| 3 | <a href="#/common/Schema.2.1.0.mjs::Schema#typedef_top">typedef</a> | typedef: TypeDef型オブジェクトを生成 |
-| 4 | <a href="#/common/Schema.2.1.0.mjs::Schema#columndef_top">columndef</a> | columndef: ColumnDef型オブジェクトを生成 |
-| 5 | <a href="#/common/Schema.2.1.0.mjs::Schema#factory_top">factory</a> | factory: 指定TypeDef型のオブジェクトを生成 |
-| 6 | <a href="#/common/Schema.2.1.0.mjs::Schema#sanitizeArg_top">sanitizeArg</a> | sanitizeArg: プリミティブ型のみで構成されるよう無毒化 |
+| 1 | <a href="#/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top">constructor</a> |  |
+| 2 | <a href="#/common/Schema.2_1_0.mjs::Schema#isObject_top">isObject</a> | isObject: 引数がオブジェクトであるか判定 |
+| 3 | <a href="#/common/Schema.2_1_0.mjs::Schema#typedef_top">typedef</a> | typedef: TypeDef型オブジェクトを生成 |
+| 4 | <a href="#/common/Schema.2_1_0.mjs::Schema#columndef_top">columndef</a> | columndef: ColumnDef型オブジェクトを生成 |
+| 5 | <a href="#/common/Schema.2_1_0.mjs::Schema#factory_top">factory</a> | factory: 指定TypeDef型のオブジェクトを生成 |
+| 6 | <a href="#/common/Schema.2_1_0.mjs::Schema#sanitizeArg_top">sanitizeArg</a> | sanitizeArg: プリミティブ型のみで構成されるよう無毒化 |
 
-## <a href="#/common/Schema.2.1.0.mjs::Schema_top"><span id="/common/Schema.2.1.0.mjs::Schema_desc">🧾 Schema 概説</span></a>
+## <a href="#/common/Schema.2_1_0.mjs::Schema_top"><span id="/common/Schema.2_1_0.mjs::Schema_desc">🧾 Schema 概説</span></a>
 
 DB構造定義オブジェクト
-## <span id="/common/Schema.2.1.0.mjs::Schema.exports.Schema#constructor_top">🧩 constructor()</span>
+- 各種アプリで使用するテーブル・データ型を宣言
+- 各種アプリでは本クラスを拡張し、configとすることを想定
+## <span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top">🧩 constructor()</span>
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2.1.0.mjs::Schema.exports.Schema#constructor_param">▶️ constructor 引数</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | arg | Schema[] | [{} | 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定 |  |
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2.1.0.mjs::Schema.exports.Schema#constructor_return">◀️ constructor 戻り値</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_return">◀️ constructor 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | Schema \| Error |  |  |
-## <span id="/common/Schema.2.1.0.mjs::Schema#isObject_top">🧩 isObject()</span>
+## <span id="/common/Schema.2_1_0.mjs::Schema#isObject_top">🧩 isObject()</span>
 
 isObject: 引数がオブジェクトであるか判定
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#isObject_top"><span id="/common/Schema.2.1.0.mjs::Schema#isObject_desc">🧾 isObject 概説</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#isObject_top"><span id="/common/Schema.2_1_0.mjs::Schema#isObject_desc">🧾 isObject 概説</span></a>
 
 isObject: 引数がオブジェクトであるか判定
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#isObject_top"><span id="/common/Schema.2.1.0.mjs::Schema#isObject_param">▶️ isObject 引数</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#isObject_top"><span id="/common/Schema.2_1_0.mjs::Schema#isObject_param">▶️ isObject 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | arg | any | 必須 | 判定対象 |  |
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#isObject_top"><span id="/common/Schema.2.1.0.mjs::Schema#isObject_return">◀️ isObject 戻り値</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#isObject_top"><span id="/common/Schema.2_1_0.mjs::Schema#isObject_return">◀️ isObject 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | boolean | オブジェクトならtrue |  |
-## <span id="/common/Schema.2.1.0.mjs::Schema#typedef_top">🧩 typedef()</span>
+## <span id="/common/Schema.2_1_0.mjs::Schema#typedef_top">🧩 typedef()</span>
 
 typedef: TypeDef型オブジェクトを生成
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#typedef_top"><span id="/common/Schema.2.1.0.mjs::Schema#typedef_desc">🧾 typedef 概説</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#typedef_top"><span id="/common/Schema.2_1_0.mjs::Schema#typedef_desc">🧾 typedef 概説</span></a>
 
 typedef: TypeDef型オブジェクトを生成
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#typedef_top"><span id="/common/Schema.2.1.0.mjs::Schema#typedef_param">▶️ typedef 引数</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#typedef_top"><span id="/common/Schema.2_1_0.mjs::Schema#typedef_param">▶️ typedef 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | name | string | 必須 | オブジェクト名(TypeDef.name設定値) |  |
 | obj | Object | 必須 | 生成するオブジェクトに設定される値(値指定) |  |
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#typedef_top"><span id="/common/Schema.2.1.0.mjs::Schema#typedef_return">◀️ typedef 戻り値</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#typedef_top"><span id="/common/Schema.2_1_0.mjs::Schema#typedef_return">◀️ typedef 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | TypeDef \| Error |  |  |
-## <span id="/common/Schema.2.1.0.mjs::Schema#columndef_top">🧩 columndef()</span>
+## <span id="/common/Schema.2_1_0.mjs::Schema#columndef_top">🧩 columndef()</span>
 
 columndef: ColumnDef型オブジェクトを生成
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#columndef_top"><span id="/common/Schema.2.1.0.mjs::Schema#columndef_desc">🧾 columndef 概説</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#columndef_top"><span id="/common/Schema.2_1_0.mjs::Schema#columndef_desc">🧾 columndef 概説</span></a>
 
 columndef: ColumnDef型オブジェクトを生成
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#columndef_top"><span id="/common/Schema.2.1.0.mjs::Schema#columndef_param">▶️ columndef 引数</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#columndef_top"><span id="/common/Schema.2_1_0.mjs::Schema#columndef_param">▶️ columndef 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | obj | Object | 必須 | 生成するオブジェクトに設定される値(値指定) |  |
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#columndef_top"><span id="/common/Schema.2.1.0.mjs::Schema#columndef_return">◀️ columndef 戻り値</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#columndef_top"><span id="/common/Schema.2_1_0.mjs::Schema#columndef_return">◀️ columndef 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | ColumnDef \| Error |  |  |
-## <span id="/common/Schema.2.1.0.mjs::Schema#factory_top">🧩 factory()</span>
+## <span id="/common/Schema.2_1_0.mjs::Schema#factory_top">🧩 factory()</span>
 
 factory: 指定TypeDef型のオブジェクトを生成
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#factory_top"><span id="/common/Schema.2.1.0.mjs::Schema#factory_desc">🧾 factory 概説</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#factory_top"><span id="/common/Schema.2_1_0.mjs::Schema#factory_desc">🧾 factory 概説</span></a>
 
 factory: 指定TypeDef型のオブジェクトを生成
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#factory_top"><span id="/common/Schema.2.1.0.mjs::Schema#factory_param">▶️ factory 引数</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#factory_top"><span id="/common/Schema.2_1_0.mjs::Schema#factory_param">▶️ factory 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | name | string | 必須 | データ型名。TypeDef.name |  |
 | arg | Object.<string, any> | {} | 各メンバの設定値 |  |
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#factory_top"><span id="/common/Schema.2.1.0.mjs::Schema#factory_return">◀️ factory 戻り値</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#factory_top"><span id="/common/Schema.2_1_0.mjs::Schema#factory_return">◀️ factory 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | Object | TypeDefで指定したデータ型のオブジェクト |  |
-## <span id="/common/Schema.2.1.0.mjs::Schema#sanitizeArg_top">🧩 sanitizeArg()</span>
+## <span id="/common/Schema.2_1_0.mjs::Schema#sanitizeArg_top">🧩 sanitizeArg()</span>
 
 sanitizeArg: プリミティブ型のみで構成されるよう無毒化
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2.1.0.mjs::Schema#sanitizeArg_desc">🧾 sanitizeArg 概説</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2_1_0.mjs::Schema#sanitizeArg_desc">🧾 sanitizeArg 概説</span></a>
 
 sanitizeArg: プリミティブ型のみで構成されるよう無毒化
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2.1.0.mjs::Schema#sanitizeArg_param">▶️ sanitizeArg 引数</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2_1_0.mjs::Schema#sanitizeArg_param">▶️ sanitizeArg 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | value | * | 必須 | チェック対象の変数 |  |
 | path | string | '$' | エラーメッセージ用にオブジェクト内の階層を保持 |  |
 
-### <a href="#/common/Schema.2.1.0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2.1.0.mjs::Schema#sanitizeArg_return">◀️ sanitizeArg 戻り値</span></a>
+### <a href="#/common/Schema.2_1_0.mjs::Schema#sanitizeArg_top"><span id="/common/Schema.2_1_0.mjs::Schema#sanitizeArg_return">◀️ sanitizeArg 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |

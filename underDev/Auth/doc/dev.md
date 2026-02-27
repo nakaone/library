@@ -43,6 +43,13 @@
   *   - 'string' | 'number' | 'boolean' | (後略)
   ```
   ⇒ 備考欄が「- 'string'」のみ
+[bug] classdescが存在するとdescriptionの内容が無視される
+  ```
+  /** Schema: DB・データ型構造定義オブジェクト
+   * - 各種アプリで使用するテーブル・データ型を宣言
+   * - 各種アプリでは本クラスを拡張し、configとすることを想定
+  ```
+  ⇒ 箇条書き、descriptionだと出ない(classdesc以下に移動すると出る)
 [bug] DocletTree.mapにおかしなキーがある
   "/common/config.mjs::config
   - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする

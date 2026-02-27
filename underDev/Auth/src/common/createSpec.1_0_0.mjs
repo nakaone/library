@@ -1,0 +1,1 @@
+/Users/ena.kaon/Desktop/GitHub/library/createSpec/1.0.0/core.mjs
