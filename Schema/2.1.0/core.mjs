@@ -1,4 +1,7 @@
 /** Schema: DB・データ型構造定義オブジェクト
+ * - 各種アプリで使用するテーブル・データ型を宣言
+ * - 各種アプリでは本クラスを拡張し、configとすることを想定
+ * 
  * @class
  * @classdesc DB構造定義オブジェクト
  * 
@@ -11,9 +14,6 @@
  * @property {string} original - Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可
  * @property {string[]} allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可
  *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'
- * 
- * - 各種アプリで使用するテーブル・データ型を宣言
- * - 各種アプリでは本クラスを拡張し、configとすることを想定
  * 
  * @example
  * ```
@@ -44,6 +44,7 @@
 export class Schema {
   /**
    * @constructor
+   * @memberof Schema
    * @param {Schema[]} arg=[{}] - 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定
    * @returns {Schema|Error}
    */
@@ -95,6 +96,7 @@ export class Schema {
   }
 
   /** isObject: 引数がオブジェクトであるか判定
+   * @memberof Schema
    * @param {any} arg - 判定対象
    * @returns {boolean} オブジェクトならtrue
    */
@@ -108,6 +110,7 @@ export class Schema {
 
   /** TypeDef: 論理テーブル構造定義
    * @typedef {Object} TypeDef - 論理テーブル構造定義
+   * @memberof Schema
    * @property {string} name - 論理的な識別名（TypeDef のキー）
    *   - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'
    *   - constructorに渡す定義オブジェクトでは省略(メンバ名を引用)
@@ -120,6 +123,12 @@ export class Schema {
    * @property {ColumnDef[]} cols - 項目定義（順序を考慮するため配列）
    * @property {string[]} header - 項目名の一覧(引数不可、自動生成)
    * @property {Object.<string, ColumnDef>} map - 項目名をキーとする項目定義集(引数不可、自動生成)
+   */
+  /** typedef: TypeDef型オブジェクトを生成
+   * @memberof Schema
+   * @param {string} name - オブジェクト名(TypeDef.name設定値)
+   * @param {Object} obj - 生成するオブジェクトに設定される値(値指定) 
+   * @returns {TypeDef|Error}
    */
   typedef(name,obj){
     const v = {whois:this.constructor.name+'.typedef',arg:{name,obj},rv:{}};
@@ -184,6 +193,11 @@ export class Schema {
    * - 【注意】引数は使用不可
    * - factoryメソッドではこれを new Function('x',`return ${default}`) として関数化し、実行結果を返す
    */
+  /** columndef: ColumnDef型オブジェクトを生成
+   * @memberof Schema
+   * @param {Object} obj - 生成するオブジェクトに設定される値(値指定) 
+   * @returns {ColumnDef|Error}
+   */
   columndef(obj){
     const v = {whois:this.constructor.name+'.columndef',arg:{obj},rv:{}};
     const dev = new devTools(v);
@@ -220,6 +234,7 @@ export class Schema {
   }
 
   /** factory: 指定TypeDef型のオブジェクトを生成
+   * @memberof Schema
    * @param {string} name - データ型名。TypeDef.name
    * @param {Object.<string, any>} [arg={}] - 各メンバの設定値
    * @returns {Object} TypeDefで指定したデータ型のオブジェクト
@@ -314,9 +329,10 @@ export class Schema {
   }
 
   /** sanitizeArg: プリミティブ型のみで構成されるよう無毒化
+   * @memberof Schema
    * @param {*} value - チェック対象の変数
    * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持
-   * @returns
+   * @returns {Object|Error}
    */
   sanitizeArg(value, path = '$') {
     const v = {whois:this.constructor.name+'.sanitizeArg',arg:{value,path},rv:null};
