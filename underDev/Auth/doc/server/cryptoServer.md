@@ -30,9 +30,9 @@ cryptoServer: サーバ側の暗号化・署名検証
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定情報 |  |
+| cf | authServerConfig | 必須 | authServer設定情報 |  |
 | prop | ScriptProperties | 必須 | PropertiesService.getScriptProperties() |  |
-| keys | <a href="../server/index.md#authScriptProperties">authScriptProperties</a> | 必須 | ScriptPropertiesに保存された鍵ペア情報 |  |
+| keys | authScriptProperties | 必須 | ScriptPropertiesに保存された鍵ペア情報 |  |
 | keyList | string[] | 必須 | ScriptPropertiesに保存された項目名の一覧 |  |
 
 ## <a href="#/server/cryptoServer.mjs::cryptoServer_top"><span id="/server/cryptoServer.mjs::cryptoServer_func">🧱 cryptoServer メソッド・内部関数一覧</span></a>
@@ -63,7 +63,7 @@ constructor<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定値 |  |
+| cf | authServerConfig | 必須 | authServer設定値 |  |
 ## <span id="/server/cryptoServer.mjs::cryptoServer#encrypt_top">🧩 encrypt()</span>
 
 encrypt: 処理結果を暗号化＋署名
@@ -76,14 +76,14 @@ encrypt: 処理結果を暗号化＋署名<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| response | <a href="../common/index.md#authResponse">authResponse</a> | 必須 | 処理結果 |  |
+| response | authResponse | 必須 | 処理結果 |  |
 | CPkeySign | string | 必須 | クライアント側署名用公開鍵 |  |
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#encrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#encrypt_return">◀️ encrypt 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../common/index.md#encryptedResponse">encryptedResponse</a> |  |  |
+| encryptedResponse |  |  |
 ## <span id="/server/cryptoServer.mjs::cryptoServer#decrypt_top">🧩 decrypt()</span>
 
 decrypt: 暗号化された処理要求を復号・署名検証
@@ -96,14 +96,14 @@ decrypt: 暗号化された処理要求を復号・署名検証<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | <a href="../common/index.md#encryptedRequest">encryptedRequest</a> | 必須 | 暗号化されたサーバ側処理結果 |  |
+| request | encryptedRequest | 必須 | 暗号化されたサーバ側処理結果 |  |
 | CPkeySign | string | 必須 | クライアント側署名用公開鍵 |  |
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer#decrypt_top"><span id="/server/cryptoServer.mjs::cryptoServer#decrypt_return">◀️ decrypt 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../common/index.md#authRequest">authRequest</a> |  |  |
+| authRequest |  |  |
 ## <span id="/server/cryptoServer.mjs::cryptoServer#generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: PEM形式のRSA鍵ペアを生成
@@ -145,10 +145,10 @@ initialize: cryptoServerインスタンス作成
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定値 |  |
+| cf | authServerConfig | 必須 | authServer設定値 |  |
 
 ### <a href="#/server/cryptoServer.mjs::cryptoServer.initialize_top"><span id="/server/cryptoServer.mjs::cryptoServer.initialize_return">◀️ initialize 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../server/cryptoServer.md">cryptoServer</a> \| Error |  |  |
+| cryptoServer \| Error |  |  |

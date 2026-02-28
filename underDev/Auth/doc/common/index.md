@@ -142,9 +142,9 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 | meta.code.paramnames | string[] | 必須 | 関数・メソッドの引数名一覧 |  |
 | meta.vars | Object.<string, string> | 必須 | スコープ内で参照される変数名とその値（簡易マップ） |  |
 | name | string | 必須 | 対象の短い名前(関数名・クラス名・プロパティ名など) |  |
-| params | <a href="../common/index.md#DocletColDef">DocletColDef</a>[] | 必須 | ＠paramタグから生成された引数情報の配列 |  |
-| properties | <a href="../common/index.md#DocletColDef">DocletColDef</a>[] | 必須 | ＠propertyタグから生成されたメンバ定義情報 |  |
-| returns | <a href="../common/index.md#DocletColDef">DocletColDef</a>[] | 必須 | ＠returns/＠returnタグから生成された戻り値情報 | returnsはparams/propertiesと以下の点で異なる。
+| params | DocletColDef[] | 必須 | ＠paramタグから生成された引数情報の配列 |  |
+| properties | DocletColDef[] | 必須 | ＠propertyタグから生成されたメンバ定義情報 |  |
+| returns | DocletColDef[] | 必須 | ＠returns/＠returnタグから生成された戻り値情報 | returnsはparams/propertiesと以下の点で異なる。
   1. 配列だが単一
   2. name/optional/defaultvalueは無い
   3. nullable,nullableTypeが付くことがある |
@@ -232,7 +232,7 @@ DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
 | meta | Object | 必須 | プロパティ定義が存在するソース位置情報 | param/returnsには出ないがpropertiesには出ることがある |
 | defaultvalue | string | 必須 | 既定値(文字列表現。ex.'[]') |  |
 | optional | boolean | 必須 | trueの場合は任意項目 |  |
-| row | <a href="../common/index.md#DocletColRow">DocletColRow</a> | 必須 | DocletEx.addRowToColumnで追加される項目情報 |  |
+| row | DocletColRow | 必須 | DocletEx.addRowToColumnで追加される項目情報 |  |
 
 
 ## <a href="#typedefList"><span id="DocletColRow">"DocletColRow" データ型定義</span></a>
@@ -258,7 +258,7 @@ DocletTreeFile: 個別入力ファイル情報
 | unique | string | 必須 | 固有パス(フルパス−共通部分) | ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
 | basename | string | 必須 | ファイル名 |  |
 | content | string | 必須 | ファイルの内容 |  |
-| jsdoc | <a href="../common/index.md#Doclet">Doclet</a>[] | 必須 | `jsdoc -X`の実行結果オブジェクト |  |
+| jsdoc | Doclet[] | 必須 | `jsdoc -X`の実行結果オブジェクト |  |
 
 
 ## <a href="#typedefList"><span id="DocletTreeOpt">"DocletTreeOpt" データ型定義</span></a>
@@ -286,7 +286,7 @@ DocletTreeSource: 統合版入力ファイル(JSソース)情報
 | common | string | '' | フルパスの共通部分 |  |
 | outDir | string | '' | 出力先フォルダ名(フルパス) |  |
 | num | number | 0 | 対象ファイルの個数 |  |
-| files | <a href="../common/index.md#DocletTreeFile">DocletTreeFile</a>[] | [] | 対象ファイルの情報 |  |
+| files | DocletTreeFile[] | [] | 対象ファイルの情報 |  |
 | research | string | 任意 | 調査結果ファイル名(=DocletTreeのJSON) |  |
 
 
@@ -337,6 +337,6 @@ TypeDef: 論理テーブル構造定義
 | note | string | '' | テーブルに関する備考 |  |
 | primaryKey | string[] | [] | 主キー項目名 |  |
 | unique | string[] | [] | 主キー以外の一意制約 |  |
-| cols | <a href="../common/index.md#ColumnDef">ColumnDef</a>[] | 必須 | 項目定義（順序を考慮するため配列） |  |
+| cols | ColumnDef[] | 必須 | 項目定義（順序を考慮するため配列） |  |
 | header | string[] | 必須 | 項目名の一覧(引数不可、自動生成) |  |
-| map | Object.<string, <a href="../common/index.md#ColumnDef">ColumnDef</a>> | 必須 | 項目名をキーとする項目定義集(引数不可、自動生成) |  |
+| map | Object.<string, ColumnDef> | 必須 | 項目名をキーとする項目定義集(引数不可、自動生成) |  |

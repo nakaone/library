@@ -30,8 +30,8 @@ authServer: サーバ側中核クラス
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定項目 |  |
-| cryptoLib | <a href="../server/cryptoServer.md">cryptoServer</a> | 必須 | 暗号化・署名検証 |  |
+| cf | authServerConfig | 必須 | authServer設定項目 |  |
+| cryptoLib | cryptoServer | 必須 | 暗号化・署名検証 |  |
 
 ## <a href="#/server/authServer.mjs::authServer_top"><span id="/server/authServer.mjs::authServer_func">🧱 authServer メソッド・内部関数一覧</span></a>
 
@@ -61,7 +61,7 @@ authServer: サーバ側中核クラス<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| config | <a href="../common/authConfig.md">authConfig</a> | 必須 | authClient/Server共通設定値オブジェクト |  |
+| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |  |
 ## <span id="/server/authServer.mjs::authServer#authLogger_top">🧩 authLogger()</span>
 
 authLogger: 監査ログ／エラーログを自動振り分けで出力
@@ -76,13 +76,13 @@ authLogger: 監査ログ／エラーログを自動振り分けで出力
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| response | <a href="../common/index.md#authResponse">authResponse</a> | 必須 |  |  |
+| response | authResponse | 必須 |  |  |
 
 ### <a href="#/server/authServer.mjs::authServer#authLogger_top"><span id="/server/authServer.mjs::authServer#authLogger_return">◀️ authLogger 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../common/index.md#authResponse">authResponse</a> |  |  |
+| authResponse |  |  |
 ## <span id="/server/authServer.mjs::authServer#authResponse_top">🧩 authResponse()</span>
 
 authResponse: authResponse型のオブジェクトを作成
@@ -95,13 +95,13 @@ authResponse: authResponse型のオブジェクトを作成<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求オブジェクト |  |
+| request | authRequest | 必須 | 処理要求オブジェクト |  |
 
 ### <a href="#/server/authServer.mjs::authServer#authResponse_top"><span id="/server/authServer.mjs::authServer#authResponse_return">◀️ authResponse 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../common/index.md#authResponse">authResponse</a> |  |  |
+| authResponse |  |  |
 ## <span id="/server/authServer.mjs::authServer.dumpProperties_top">🧩 dumpProperties()</span>
 
 dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用)
@@ -123,13 +123,13 @@ initialize: authServerインスタンス作成
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| config | <a href="../common/authConfig.md">authConfig</a> | 必須 | authClient/Server共通設定値オブジェクト |  |
+| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |  |
 
 ### <a href="#/server/authServer.mjs::authServer.initialize_top"><span id="/server/authServer.mjs::authServer.initialize_return">◀️ initialize 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../server/authServer.md">authServer</a> \| Error |  |  |
+| authServer \| Error |  |  |
 ## <span id="/server/authServer.mjs::authServer#exec_top">🧩 exec()</span>
 
 exec: 処理要求に対するサーバ側中核処理

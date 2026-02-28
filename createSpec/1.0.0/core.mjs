@@ -1345,6 +1345,7 @@ async function createSpec(opt={}){
      *   keyは必須。labelの既定値はkey(=dataのメンバ名)
      *   alingはMarkdownテーブルの配置指定文字列(':--'(既定値) or ':--:' or '--:')
      * @param {number} [opt.indent=0] - テーブルの左余白桁数
+     * @param {DocletEx} [opt.doclet=null] - 呼出元のDoclet
      * @returns {string|Error}
      */
     static makeTable(data,opt={}){
@@ -1353,8 +1354,10 @@ async function createSpec(opt={}){
       try {
 
         dev.step(1);  // オプションの既定値設定
-        opt.header = opt.header ?? [];
         opt.indent = opt.indent ?? 0;
+        opt.doclet = opt.doclet ?? null;
+        // opt.headerについて既定値作成
+        opt.header = opt.header ?? [];
         if( opt.header.length === 0 ){
           // 指定が無かった場合、dataから生成
           opt.header = [...new Set(data.flatMap(obj => Object.keys(obj)))]
@@ -1376,13 +1379,16 @@ async function createSpec(opt={}){
 
         dev.step(3);  // データ部
         data.forEach(d => v.rv.push(opt.header.map(h => {
-          if( h.key === 'type' ){
+          if( ['type'].includes(h.key) && opt.doclet !== null ){
             // データ型欄にthis.symbolsに存在するデータ型名があればリンクを設定
             v.str = String(d[h.key]);
+            // 呼出元Docletのフォルダ階層の深さ分だけ"../"を付けてルートまで遡上
+            v.depth = opt.doclet.unique === '/' ? 1
+              : opt.doclet.unique.replace(/\/$/,'').split('/').length;
             for( v.i in DocletTree.symbols ){
               v.str = v.str.replaceAll(
                 DocletTree.symbols[v.i].rex,
-                DocletTree.symbols[v.i].link
+                '../'.repeat(v.depth) + DocletTree.symbols[v.i].link
               );
             }
             return v.str;
@@ -1539,9 +1545,8 @@ async function createSpec(opt={}){
 
             dev.step(5.3);  // シンボル⇒置換用RegExp+リンク先URLを作成
             // 変換ロジックはDocletTree.makeDocletMD.2参照
-            v.depth = doclet.unique === '/' ? 1
-              : doclet.unique.replace(/\/$/,'').split('/').length;
-            v.url = '../'.repeat(v.depth) + doclet.unique + (
+            // URLはルートが起点。makeTable等本データを利用する側でルートまで遡上するURLを付加する
+            v.url = doclet.unique + (
               ['function','class'].includes(doclet.docletType)
               ? doclet.name + '.md'
               : this.opt.indexMd + '#' + doclet.name

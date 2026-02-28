@@ -30,9 +30,9 @@ authClient: クライアント側中核クラス
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| cf | <a href="../client/index.md#authClientConfig">authClientConfig</a> | 必須 | authClient設定情報 |  |
+| cf | authClientConfig | 必須 | authClient設定情報 |  |
 | idb | Object | 必須 | IndexedDBと同期、authClient内で共有 |  |
-| crypto | <a href="../client/cryptoClient.md">cryptoClient</a> | 必須 | 暗号化・署名検証 |  |
+| crypto | cryptoClient | 必須 | 暗号化・署名検証 |  |
 | _IndexedDB | IDBObjectStore | 必須 | データベース接続オブジェクトを格納する静的変数 |  |
 
 ## <a href="#/client/authClient.mjs::authClient_top"><span id="/client/authClient.mjs::authClient_func">🧱 authClient メソッド・内部関数一覧</span></a>
@@ -166,13 +166,13 @@ fetch: サーバ側APIの呼び出し<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | ��理要求 |  |
+| request | authRequest | 必須 | ��理要求 |  |
 
 ### <a href="#/client/authClient.mjs::authClient#fetch_top"><span id="/client/authClient.mjs::authClient#fetch_return">◀️ fetch 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../common/index.md#authResponse">authResponse</a> \| Error | 処理結果 |  |
+| authResponse \| Error | 処理結果 |  |
 ## <span id="/client/authClient.mjs::authClient#getIndexedDB_top">🧩 getIndexedDB()</span>
 
 getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
@@ -212,7 +212,7 @@ initialize: authClientインスタンス作成
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| <a href="../client/authClient.md">authClient</a> \| Error |  |  |
+| authClient \| Error |  |  |
 ## <span id="/client/authClient.mjs::authClient#setIndexedDB_top">🧩 setIndexedDB()</span>
 
 setIndexedDB: IndexedDBの更新(upsert)
