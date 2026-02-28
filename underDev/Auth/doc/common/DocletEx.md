@@ -35,7 +35,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | opt | Object | 必須 | DocletExインスタンス作成時のオプション | 現状未使用 |
 | uuid | string | 必須 | DocletExを一意に識別するためのUUID |  |
 | docletType | string | 必須 | Docletの種類。下記「docletTypeの判定ロジック」参照 |  |
-| parsed | Object.<string, string> | 必須 | Doclet内で定義されたタグの値 | 例： parsed: {
+| parsed | Object.<string, string> | 必須 | Doclet内で定義され��タグの値 | 例： parsed: {
     label:"method01: メソッドテスト", // string
     ＠description:"method01: メソッドテスト", // string
     ＠memberof:"class01", // string
@@ -48,9 +48,9 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
   ④ description, classdescの先頭行
   ⑤ doclet.longname
   ※ 上記に該当が無い場合、「(ラベル未設定)」 |
-| properties | DocletColDef[] | 任意 | メンバ一覧 |  |
-| params | DocletColDef[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |  |
-| returns | DocletColDef[] | [] | 戻り値(※同上) |  |
+| properties | <a href="../common/index.md#DocletColDef">DocletColDef</a>[] | 任意 | メンバ一覧 |  |
+| params | <a href="../common/index.md#DocletColDef">DocletColDef</a>[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |  |
+| returns | <a href="../common/index.md#DocletColDef">DocletColDef</a>[] | [] | 戻り値(※同上) |  |
 | parent | string |  | 親要素のDocletEx.uuid |  |
 | children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.uuid |  |
 | unique | string | 任意 | 固有パス | ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
@@ -123,7 +123,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| doclet | Doclet | 必須 |  |  |
+| doclet | <a href="../common/index.md#Doclet">Doclet</a> | 必須 |  |  |
 | opt | Object | {} | オプション設定値 |  |
 ## <span id="/common/createSpec.1_0_0.mjs::DocletEx#addRowToColumn_top">🧩 addRowToColumn()</span>
 
@@ -139,13 +139,13 @@ addRowToColumn: データ項目情報から一覧作成用情報を作成
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| prop | DocletColDef | 必須 | データ項目情報 |  |
+| prop | <a href="../common/index.md#DocletColDef">DocletColDef</a> | 必須 | データ項目情報 |  |
 
 ### <a href="#/common/createSpec.1_0_0.mjs::DocletEx#addRowToColumn_top"><span id="/common/createSpec.1_0_0.mjs::DocletEx#addRowToColumn_return">◀️ addRowToColumn 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| DocletColRow \| Error |  |  |
+| <a href="../common/index.md#DocletColRow">DocletColRow</a> \| Error |  |  |
 ## <span id="/common/createSpec.1_0_0.mjs::DocletEx#determineType_top">🧩 determineType()</span>
 
 determineType: Docletの型を判定

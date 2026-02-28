@@ -627,6 +627,12 @@ async function createSpec(opt={}){
    * @prop {Object.<string, DocletEx>} typedef - データ型定義(key=DocletEx.uuid)
    * @prop {Object.<string, DocletTreeFolder>} children - 子フォルダ。キーはフォルダ名
    */
+  /** DocletTreeSymbol: クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
+   * - 作成はDocletTree.registration内で行う
+   * @prop {string} name - クラス・グローバル関数名・データ型定義名
+   * @prop {RegExp} rex - 名称を含むかを判定する正規表現
+   * @prop {string} link - 参照先URL(aタグ)を付けた名称
+   */
   /** DocletTreeOpt: オプション設定値
    * @typedef {Object} DocletTreeOpt
    * @prop {Object.<string, string>} title - Markdown文書のタイトル行
@@ -651,9 +657,11 @@ async function createSpec(opt={}){
    *   - 〜::〜 : 固有パス＋ファイル名＋longname
    *   - その他 : クラス・グローバル関数名、データ型名
    * @prop {Object.<string, DocletTreeFolder>} folder - パス毎の所属Doclet管理。キーはフォルダ名
+   * @prop {Object.<string, DocletTreeSymbol>} symbols - クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
    * @prop {DocletTreeOpt} [opt={}] - オプション設定値
    */
   class DocletTree {
+    static symbols = {};
     /**
      * @constructor
      * @param {DocletTreeSource} arg - 入力ファイル(JSソース)情報
@@ -675,6 +683,7 @@ async function createSpec(opt={}){
         this.doclet = [];
         this.map = {};
         this.folder = this.makeFolder('/');
+        this.symbols = {};
         this.opt = Object.assign({title:{}},opt);
         // Markdown文書のタイトル行の既定値(deepcopyなので個別)
         this.opt.title = Object.assign({
@@ -1152,7 +1161,6 @@ async function createSpec(opt={}){
         }
         if( typeof v.d.parsed['@example'] !== 'undefined' ){
           v.r += `\n${v.d.parsed['@example']}\n\n`;
-          dev.step(99.1155,v.d.parsed['@example']);
         }
 
         if( v.r.length > 0 ){
@@ -1348,9 +1356,11 @@ async function createSpec(opt={}){
         opt.header = opt.header ?? [];
         opt.indent = opt.indent ?? 0;
         if( opt.header.length === 0 ){
+          // 指定が無かった場合、dataから生成
           opt.header = [...new Set(data.flatMap(obj => Object.keys(obj)))]
           .map(o => {return {key:o,label:o,align:':--'}});
         } else {
+          // 指定が有った場合は既定値設定
           opt.header = opt.header.map(o => Object.assign({
             key: o.key,
             label: o.label ?? o.key,
@@ -1365,7 +1375,21 @@ async function createSpec(opt={}){
         });
 
         dev.step(3);  // データ部
-        data.forEach(l => v.rv.push(opt.header.map(x => l[x.key])));
+        data.forEach(d => v.rv.push(opt.header.map(h => {
+          if( h.key === 'type' ){
+            // データ型欄にthis.symbolsに存在するデータ型名があればリンクを設定
+            v.str = String(d[h.key]);
+            for( v.i in DocletTree.symbols ){
+              v.str = v.str.replaceAll(
+                DocletTree.symbols[v.i].rex,
+                DocletTree.symbols[v.i].link
+              );
+            }
+            return v.str;
+          } else {
+            return d[h.key];
+          }
+        })));
 
         dev.step(4);  // テキストに変換
         v.rv = v.rv.map(l => `${' '.repeat(opt.indent)}| ${l.join(' | ')} |`).join('\n');
@@ -1504,13 +1528,31 @@ async function createSpec(opt={}){
             });
           }
 
-          dev.step(4.4);  // グローバル関数・クラスまたはデータ型定義の場合、登録
+          dev.step(5);  // グローバル関数・クラスまたはデータ型定義の場合、登録
           if( ['typedef','interface','class','function'].includes(doclet.docletType) ){
-            // 所属フォルダのfunclass/typedefに登録
+            dev.step(5.1);  // 所属フォルダのfunclass/typedefに登録
             v.f = ['function','class'].includes(doclet.docletType) ? 'funclass' : 'typedef';
             v.folder[v.f][doclet.uuid] = doclet;
-            // シンボル名(クラス・グローバル関数名、データ型名)でDocletTree.mapに登録
+
+            dev.step(5.2);  // シンボル名(クラス・グローバル関数名、データ型名)でDocletTree.mapに登録
             this.map[doclet.name] = Object.hasOwn(this.map,doclet.name) ? null : doclet;
+
+            dev.step(5.3);  // シンボル⇒置換用RegExp+リンク先URLを作成
+            // 変換ロジックはDocletTree.makeDocletMD.2参照
+            v.depth = doclet.unique === '/' ? 1
+              : doclet.unique.replace(/\/$/,'').split('/').length;
+            v.url = '../'.repeat(v.depth) + doclet.unique + (
+              ['function','class'].includes(doclet.docletType)
+              ? doclet.name + '.md'
+              : this.opt.indexMd + '#' + doclet.name
+            );
+            v.o = {
+              name: doclet.name,
+              rex: new RegExp(`${doclet.name}\\b`,'g'),
+              link: `<a href="${v.url}">${doclet.name}</a>`,
+            }
+            DocletTree.symbols[doclet.name]
+            = Object.hasOwn(DocletTree.symbols,doclet.name) ? null : v.o;
           }
         }
 
@@ -1643,7 +1685,6 @@ async function createSpec(opt={}){
       writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree,null,2));
       writeFileSync("../tmp/DocletTree.doclet.json",JSON.stringify(pv.tree.doclet,null,2));
     }
-    console.log(`l.1640 ${JSON.stringify(pv.tree.doclet.filter(x => x.name === 'Schema' && x.docletType === 'class'))}`);
 
     dev.end();
     return pv.rv;

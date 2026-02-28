@@ -30,7 +30,7 @@ cryptoClient: クライアント側の暗号化・署名検証
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| idb | authIndexedDB | 必須 | authClient.idb(IndexedDB)のコピー |  |
+| idb | <a href="../client/index.md#authIndexedDB">authIndexedDB</a> | 必須 | authClient.idb(IndexedDB)のコピー |  |
 | RSAbits | string | 必須 | RSA鍵長(=authConfig.RSAbits) |  |
 
 ## <a href="#/client/cryptoClient.mjs::cryptoClient_top"><span id="/client/cryptoClient.mjs::cryptoClient_func">🧱 cryptoClient メソッド・内部関数一覧</span></a>
@@ -59,7 +59,7 @@ constructor<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数 | CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
+| idb | <a href="../client/index.md#authIndexedDB">authIndexedDB</a> | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数 | CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
 | RSAbits | number | 必須 | RSA鍵長 |  |
 ## <span id="/client/cryptoClient.mjs::cryptoClient#encrypt_top">🧩 encrypt()</span>
 
@@ -73,13 +73,13 @@ encrypt: 処理要求を暗号化＋署名<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求 |  |
+| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求 |  |
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_return">◀️ encrypt 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| encryptedRequest |  |  |
+| <a href="../common/index.md#encryptedRequest">encryptedRequest</a> |  |  |
 ## <span id="/client/cryptoClient.mjs::cryptoClient#decrypt_top">🧩 decrypt()</span>
 
 decrypt: 暗号化された処理結果を復号・署名検証
@@ -92,13 +92,13 @@ decrypt: 暗号化された処理結果を復号・署名検証<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| response | encryptedResponse | 必須 | 暗号化されたサーバ側処理結果 |  |
+| response | <a href="../common/index.md#encryptedResponse">encryptedResponse</a> | 必須 | 暗号化されたサーバ側処理結果 |  |
 
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#decrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#decrypt_return">◀️ decrypt 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| authResponse |  |  |
+| <a href="../common/index.md#authResponse">authResponse</a> |  |  |
 ## <span id="/client/cryptoClient.mjs::cryptoClient#generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: RSA鍵ペアを生成

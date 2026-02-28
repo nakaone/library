@@ -35,7 +35,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-[bug] Markdownからexampleが抜けている
 [bug] データ型にリンクが付けられていない
   Schema.types {Object.<string, TypeDef>} ⇒ TypeDefにリンクが未設定
 [bug] DocletTree.mapにおかしなキーがある

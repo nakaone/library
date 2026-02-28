@@ -35,7 +35,7 @@ Schema: DB・データ型構造定義オブジェクト
 | dbName | string | 任意 | 物理DB名。省略時はnameを流用 |  |
 | desc | string | '' | Schema全体に関する概要説明 |  |
 | note | string | '' | Schema全体に関する備考 |  |
-| types | Object.<string, TypeDef> | 必須 | 論理テーブル名をキーとするテーブル定義 |  |
+| types | Object.<string, <a href="../common/index.md#TypeDef">TypeDef</a>> | 必須 | 論理テーブル名をキーとするテーブル定義 |  |
 | original | string | 必須 | Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可 |  |
 | allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可<br> | - 'string' \| 'number' \| 'boolean' \| 'object' \| 'array' \| 'datetime' \| 'function' |
 
@@ -80,13 +80,13 @@ Schema: DB・データ型構造定義オブジェクト
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | Schema[] | [{} | 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定 |  |
+| arg | <a href="../common/Schema.md">Schema</a>[] | [{} | 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定 |  |
 
 ### <a href="#/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_top"><span id="/common/Schema.2_1_0.mjs::Schema.exports.Schema#constructor_return">◀️ constructor 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| Schema \| Error |  |  |
+| <a href="../common/Schema.md">Schema</a> \| Error |  |  |
 ## <span id="/common/Schema.2_1_0.mjs::Schema#isObject_top">🧩 isObject()</span>
 
 isObject: 引数がオブジェクトであるか判定
@@ -125,7 +125,7 @@ typedef: TypeDef型オブジェクトを生成<br>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| TypeDef \| Error |  |  |
+| <a href="../common/index.md#TypeDef">TypeDef</a> \| Error |  |  |
 ## <span id="/common/Schema.2_1_0.mjs::Schema#columndef_top">🧩 columndef()</span>
 
 columndef: ColumnDef型オブジェクトを生成
@@ -144,7 +144,7 @@ columndef: ColumnDef型オブジェクトを生成<br>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
-| ColumnDef \| Error |  |  |
+| <a href="../common/index.md#ColumnDef">ColumnDef</a> \| Error |  |  |
 ## <span id="/common/Schema.2_1_0.mjs::Schema#factory_top">🧩 factory()</span>
 
 factory: 指定TypeDef型のオブジェクトを生成
