@@ -29,6 +29,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | returns | <a href="index.md#<a href="index.md#Doclet">Doclet</a>ColDef"><a href="index.md#Doclet">Doclet</a>ColDef</a>[] | [] | 戻り値(※同上) |  |
 | parent | string |  | 親要素のDocletEx.uuid |  |
 | children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.uuid |  |
+| familyTree | string | 必須 | DocletEx.nameを連結した系図(親子関係) |  |
 | unique | string | 任意 | 固有パス | ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
 | basename | string | 任意 | ファイル名 |  |
 | prefix | string | 任意 | 固有パス＋ファイル名 | 以下の各種IDの共通部分(固有パスの先頭・末尾の'/'有無処理済) |
@@ -36,7 +37,6 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | linenoId | string | 任意 | 固有パス＋ファイル名＋':N'＋meta.lineno ※同上 |  |
 | commentId | string | 任意 | 「固有パス＋ファイル名＋comment」のSHA256 | 同一commentが同一ファイル内に複数有った場合は設定しない |
 | longnameId | string | 任意 | 固有パス＋ファイル名＋'::'＋longname | なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない |
-| familyTree | string | 必須 | DocletEx.nameを連結した系図(親子関係) |  |
 
 ## <a href="#/core.mjs::createSpec.DocletEx_top"><span id="/core.mjs::createSpec.DocletEx_func">🧱 DocletEx メソッド・内部関数一覧</span></a>
 
@@ -51,7 +51,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 DocletEx: jsdocから出力されるDocletに情報を付加したもの
 メンバ各値の設定箇所は以下の通り。
 - opt ~ returns:       DocletEx.constructor()
-- parent, children:    DocletTree.linkage()
+- parent ~ familyTree: DocletTree.linkage()
 - unique ~ longnameId: DocletTree.registration()<br>
 ## <span id="/core.mjs::createSpec~DocletEx#constructor_top">🧩 constructor()</span>
 

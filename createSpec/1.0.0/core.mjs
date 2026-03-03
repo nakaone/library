@@ -373,7 +373,7 @@ async function createSpec(opt={}){
    * @memberof createSpec
    * @desc メンバ各値の設定箇所は以下の通り。
    * - opt ~ returns:       DocletEx.constructor()
-   * - parent, children:    DocletTree.linkage()
+   * - parent ~ familyTree: DocletTree.linkage()
    * - unique ~ longnameId: DocletTree.registration()
    * 
    * @prop {string} name - 【書換】constructorの場合のみ固定値"constructor"に変更
@@ -403,6 +403,7 @@ async function createSpec(opt={}){
    * 
    * @prop {string} [parent=null] - 親要素のDocletEx.uuid
    * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.uuid
+   * @prop {string} familyTree - DocletEx.nameを連結した系図(親子関係)
    * 
    * @prop {string} [unique] - 固有パス
    *   ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/")
@@ -416,7 +417,6 @@ async function createSpec(opt={}){
    *   同一commentが同一ファイル内に複数有った場合は設定しない
    * @prop {string} [longnameId] - 固有パス＋ファイル名＋'::'＋longname
    *   なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない
-   * @prop {string} familyTree - DocletEx.nameを連結した系図(親子関係)
    */
   class DocletEx {
     /**
@@ -988,11 +988,7 @@ async function createSpec(opt={}){
       const dev = new devTools(v,{mode:'pipe'});
       try {
 
-        // 事前準備(ループ外での処理なので先頭で実行)
-        dev.step(1.1);  // longnameIdの一覧を作成委
-        v.longnameId = Object.keys(this.map).filter(x => /::/.test(x));
-
-        dev.step(1.2);  // データ型名->個別データ型定義のURLマップ作成
+        dev.step(1);  // データ型名->個別データ型定義のURLマップ作成
         v.searchTypedef = (folder,rv={}) => {
           Object.keys(folder.typedef).forEach(uuid => {
             // ①URLを作成
