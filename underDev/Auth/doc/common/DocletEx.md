@@ -35,7 +35,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | opt | Object | 必須 | DocletExインスタンス作成時のオプション | 現状未使用 |
 | uuid | string | 必須 | DocletExを一意に識別するためのUUID |  |
 | docletType | string | 必須 | Docletの種類。下記「docletTypeの判定ロジック」参照 |  |
-| parsed | Object.<string, string> | 必須 | Doclet内で定義され��タグの値 | 例： parsed: {
+| parsed | Object.<string, string> | 必須 | Doclet内で定義されたタグの値 | 例： parsed: {
     label:"method01: メソッドテスト", // string
     ＠description:"method01: メソッドテスト", // string
     ＠memberof:"class01", // string

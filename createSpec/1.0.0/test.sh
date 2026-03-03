@@ -18,9 +18,11 @@ function test {
 
 # 2. createSpec本体
 function createSpec {
+  # jsdocの出力結果(JSON)
   cp core.mjs $tmp/createSpec.js
   jsdoc -X $tmp/createSpec.js > $tmp/createSpec.json
   rm $tmp/createSpec.js
+  #jsdoc -X createSpec.mjs > $tmp/createSpec.json
   node core.mjs core.mjs -o $doc/createSpec \
   > $tmp/createSpec.result.txt 2> $tmp/createSpec.error.txt
 }
@@ -50,8 +52,8 @@ function Schema {
   > $tmp/Schema.result.txt 2> $tmp/Schema.error.txt
 }
 
-test
-#createSpec
+#test
+createSpec
 #noarg
 #auth
 #Schema

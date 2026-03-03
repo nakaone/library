@@ -27,6 +27,7 @@ export class cryptoClient {
   }
 
   /** encrypt: 処理要求を暗号化＋署名
+   * @memberof cryptoClient
    * @param {authRequest} request - 処理要求
    * @returns {encryptedRequest}
    */
@@ -34,6 +35,15 @@ export class cryptoClient {
     const v = { whois: `${this.constructor.name}.encrypt`, arg: { request }, rv: null };
     const dev = new devTools(v);
     try {
+
+      /** dummyFunc: テスト用ダミー
+       * @memberof cryptoClient#encrypt
+       * @param {number} a
+       * @param {number} b
+       * @returns {number}
+       */
+      const dummyFunc = (a,b) => a + b;
+      dummyFunc(1,2);
 
       dev.step(1.1);  // encryptedRequestオブジェクト生成関数を定義
       v.makeEncryptedRequest = o => ({

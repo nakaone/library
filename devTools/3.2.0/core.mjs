@@ -191,7 +191,7 @@ export class devTools {
    *   2. 抽出結果オブジェクト定義：'{'+抽出対象メンバ名+'}'。子孫要素指定は`{}`で記述
    *      - `{longname}`
    *      - `longname,meta:{lineno,columnno}}`
-   * @returns {Object|Error} 処理の結果新たに作成されたオブジェクト
+   * @returns {Object|Object[]|Error} 処理の結果新たに作成されたオブジェクト
    * 
    * @example
    * - `dev.extract(doclet,"{longname}")`

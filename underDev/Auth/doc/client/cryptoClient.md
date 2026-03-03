@@ -65,6 +65,12 @@ constructor<br>
 
 encrypt: 処理要求を暗号化＋署名
 
+### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_func">🧱 encrypt メソッド・内部関数一覧</span></a>
+
+| No | 名前 | 概要 |
+| --: | :-- | :-- |
+| 1 | <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー |
+
 ### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_desc">🧾 encrypt 概説</span></a>
 
 encrypt: 処理要求を暗号化＋署名<br>
@@ -80,6 +86,26 @@ encrypt: 処理要求を暗号化＋署名<br>
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | encryptedRequest |  |  |
+### <span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top">🧩 dummyFunc()</span>
+
+dummyFunc: テスト用ダミー
+
+#### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_desc">🧾 dummyFunc 概説</span></a>
+
+dummyFunc: テスト用ダミー<br>
+
+#### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_param">▶️ dummyFunc 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| a | number | 必須 |  |  |
+| b | number | 必須 |  |  |
+
+#### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_return">◀️ dummyFunc 戻り値</span></a>
+
+| データ型 | 説明 | 備考 |
+| :-- | :-- | :-- |
+| number |  |  |
 ## <span id="/client/cryptoClient.mjs::cryptoClient#decrypt_top">🧩 decrypt()</span>
 
 decrypt: 暗号化された処理結果を復号・署名検証

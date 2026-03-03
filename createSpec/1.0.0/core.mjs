@@ -279,8 +279,98 @@ async function createSpec(opt={}){
    * | ~ | 内部（inner）要素 | クロージャ・内部関数 |
    * | : | モジュール修飾子 | module 指定 |
    */
+  /** docletTypeの判定ロジック
+   * @name decision logic of docletType
+   * @desc
+   * 
+   * 以下第一レベルがdocletTypeとする文字列
+   * 
+   * - typedef
+   *   kind === 'typedef'
+   * - interface
+   *   kind === 'interface'
+   * - class
+   *   kind === 'class'
+   *   && (meta.code.type === "ClassDeclaration" || "ClassExpression")
+   * - constructor
+   *   kind === 'class'
+   *   && meta?.code?.type === "MethodDefinition"
+   *   && /＠constructor\b/.test(doclet.comment || "")
+   * - method
+   *   kind === "function"
+   *   && meta?.code?.type === "MethodDefinition"
+   *   && scope === "instance" または "static"
+   * - function(グローバル関数) ※アロー関数を含む
+   *   kind === 'function'
+   *   && scope === 'global'
+   * - innerFunc(関数内関数) ※アロー関数を含む
+   *   kind === 'function'
+   *   && scope === 'inner'
+   * - description(説明文(＠name))
+   *   meta.code が空
+   *   && meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
+   *   && kindがtypedef/interface 以外
+   *   && nameが存在
+   * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
+   *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
+   *   kind === 'function'
+   *   && scope === 'instance'
+   * - unknown(上記で判定不能)
+   */
+  /** docletType毎のlongname命名規則
+   * @name "longname" naming rules
+   * @desc
+   * 
+   * - class: longnameそのまま使用
+   *   "class: authClient"
+   * - constructor: 
+   *   - [モジュール名].exports.[エクスポート名]#[メンバー名]
+   *     "constructor: authClient.exports.authClient#constructor"
+   *     "constructor: Schema.exports.Schema#constructor"
+   *   - [モジュール名]#[エクスポート名]#[メンバー名]
+   *     "constructor: cryptoClient#cryptoClient#constructor"
+   *   - [エクスポート名]#[メンバー名]
+   *     "constructor: DocletEx#constructor"
+   * - description: @nameの文字列。英文表記が望ましい。longnameは空白ありだがanchorは'%20'に要変更
+   *   "description: config information"
+   *   "description: 開発工程・残課題"
+   * - function: longnameそのまま使用
+   *   "function: localFunc"
+   * - innerFunc: 親関数~関数名
+   *   "innerFunc: createSpec~listSource"
+   * - method: クラス名[#\.]メソッド名(通常'#',staticは'.')
+   *   "method: authClient#_withStore"
+   *   "method: authClient#exec"
+   * - objectFunc: 後掲「メソッド・内部関数内関数」参照
+   *   ＠memberof 無し -> "innerFunc: <anonymous>~dummyFunc"
+   *   ＠memberof encrypt -> "objectFunc: encrypt.dummyFunc"
+   *   ＠memberof cryptoClient#encrypt -> "objectFunc: cryptoClient#encrypt.dummyFunc"
+   * - typedef: [所属クラス名.]データ型名
+   *   "typedef: authClientConfig"
+   *   "typedef: Schema.TypeDef"
+   * 
+   * # メソッド・内部関数内関数
+   * 
+   * - ＠memberof指定が無いと"<anonymous>"となる
+   * - 適切に＠memberofを指定する
+   * 
+   * ```
+   * class cryptoClient {
+   *   /** ＠memberof cryptoClient *／
+   *   encrypt(request) {
+   *     /** ＠memberof cryptoClient#encrypt *／  <- クラス名#メソッド名
+   *     const dummyFunc = (a,b) => a + b;
+   * (中略)
+   * function createSpec(){
+   *   /** ＠memberof createSpec *／
+   *   function determineType(){
+   *     /** ＠memberof createSpec~determineType *／ <- クロージャ関数名~内部関数名
+   *     const dummyFunc = (a,b) => a + b;
+   * ```
+   */
   /** DocletEx: jsdocから出力されるDocletに情報を付加したもの
    * @class
+   * @memberof createSpec
    * @desc メンバ各値の設定箇所は以下の通り。
    * - opt ~ returns:       DocletEx.constructor()
    * - parent, children:    DocletTree.linkage()
@@ -326,43 +416,7 @@ async function createSpec(opt={}){
    *   同一commentが同一ファイル内に複数有った場合は設定しない
    * @prop {string} [longnameId] - 固有パス＋ファイル名＋'::'＋longname
    *   なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない
-   *   
-   * 
-   * # docletTypeの判定ロジック
-   * 
-   * 以下第一レベルがdocletTypeとする文字列
-   * 
-   * - typedef
-   *   kind === 'typedef'
-   * - interface
-   *   kind === 'interface'
-   * - class
-   *   kind === 'class'
-   *   && (meta.code.type === "ClassDeclaration" || "ClassExpression")
-   * - constructor
-   *   kind === 'class'
-   *   && meta?.code?.type === "MethodDefinition"
-   *   && /＠constructor\b/.test(doclet.comment || "")
-   * - method
-   *   kind === "function"
-   *   && meta?.code?.type === "MethodDefinition"
-   *   && scope === "instance" または "static"
-   * - function(グローバル関数) ※アロー関数を含む
-   *   kind === 'function'
-   *   && scope === 'global'
-   * - innerFunc(関数内関数) ※アロー関数を含む
-   *   kind === 'function'
-   *   && scope === 'inner'
-   * - description(説明文(＠name))
-   *   meta.code が空
-   *   && meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
-   *   && kindがtypedef/interface 以外
-   *   && nameが存在
-   * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
-   *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
-   *   kind === 'function'
-   *   && scope === 'instance'
-   * - unknown(上記で判定不能)
+   * @prop {string} familyTree - DocletEx.nameを連結した系図(親子関係)
    */
   class DocletEx {
     /**
@@ -557,6 +611,7 @@ async function createSpec(opt={}){
     }
 
     /** determineType: Docletの型を判定
+     * @memberof DocletEx
      * @param {Object} doclet
      * @returns {string|Error} 「docletTypeの判定ロジック」参照
      */
@@ -564,6 +619,15 @@ async function createSpec(opt={}){
       const v = {whois:`${this.constructor.name}.determineType`, arg:{doclet}, rv:'unknown'};
       const dev = new devTools(v,{mode:'pipe'});
       try {
+
+        /** dummyFunc: テスト用ダミー関数
+         * @memberof determineType
+         * @param {number} a 
+         * @param {number} b 
+         * @returns {number}
+         */
+        function dummyFunc(a,b){return a+b};
+        v.dummyFunc = `l.621 DocletEx.determineType.dummyFunc=${dummyFunc(10,20)}`;
 
         dev.step(1);  // 原文が無い場合は判定不能
         if( typeof doclet.comment === 'undefined' || doclet.comment.length === 0 )
@@ -1015,6 +1079,38 @@ async function createSpec(opt={}){
               });
             }
           });
+        }
+
+        // --------------------------------
+        // 系図(familyTree)作成
+        // ※実行には全ての親子関係確定が前提
+        // --------------------------------
+        v.searchParent = doclet => {
+          dev.step(7.1);  // 親子関係調査(再帰)関数の定義
+          if( !Object.hasOwn(doclet,'name') ){
+            return new Error(`no "name" property: ${JSON.stringify(doclet)}`);
+          }
+          dev.step(7.2);
+          const rv = [doclet.name];
+          if( Object.hasOwn(doclet,'parent') && Object.hasOwn(this.map,doclet.parent) ){
+            const r = v.searchParent(this.map[doclet.parent]);
+            if( r instanceof Error ) return r;
+            if( Array.isArray(r) )  rv.unshift(...r);
+          }
+          return rv;
+        }
+
+        dev.step(7.3);  // 親子関係をfamilyTree属性にセット
+        for( v.i=0 ; v.i<this.doclet.length ; v.i++ ){
+
+          v.d = this.doclet[v.i];
+          if( v.d.docletType === 'unknown' ) continue;
+
+          v.d.familyTree = v.searchParent(v.d);
+          if( v.d.familyTree instanceof Error ) throw v.d.familyTree;
+          if( Array.isArray(v.d.familyTree) ){
+            v.d.familyTree = v.d.familyTree.join('-');
+          }
         }
 
         dev.end(); // 終了処理
@@ -1691,6 +1787,13 @@ async function createSpec(opt={}){
       writeFileSync("../tmp/DocletTree.doclet.json",JSON.stringify(pv.tree.doclet,null,2));
     }
 
+    dev.step(5);
+    console.log(`l.1694 ${JSON.stringify(
+      pv.tree.doclet
+      .filter(x => typeof x.familyTree !== 'undefined')
+      //.sort((a,b) => a.docletType < b.docletType ? -1 : 1)
+      .map(x => {return {docletType:x.docletType,longname:x.longname,familyTree:x.familyTree}})
+    ,null,2)}`)
     dev.end();
     return pv.rv;
 

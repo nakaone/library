@@ -35,12 +35,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-[bug] データ型にリンクが付けられていない
-  Schema.types {Object.<string, TypeDef>} ⇒ TypeDefにリンクが未設定
-[bug] DocletTree.mapにおかしなキーがある
-  "/common/config.mjs::config
-  - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
-  - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
 [bug] _withStore引数の説明が意味不明
 [bug] exec引数anyの要否/既定値欄が'['のみで意味不明
 [bug] getIndexedDB引数の項目名が空欄
@@ -51,6 +45,10 @@
 [warn] 「constructor 概説」の内容が"constructor"だけなら削除した方がベター
 
 
+[bug] DocletTree.mapにおかしなキーがある ⇒ jsdocで作成されるlongname自体こういう形なので無視
+  "/common/config.mjs::config
+  - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
+  - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
 -->
 
 === いまここ =========================================
