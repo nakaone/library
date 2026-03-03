@@ -22,125 +22,125 @@
 
 </div>
 
-# <span id="/client/cryptoClient.mjs::cryptoClient_top">🧩 cryptoClientクラス仕様書</span>
+# <span id="cryptoClient_top">🧩 cryptoClientクラス仕様書</span>
 
 cryptoClient: クライアント側の暗号化・署名検証
 
-## <a href="#/client/cryptoClient.mjs::cryptoClient_top"><span id="/client/cryptoClient.mjs::cryptoClient_prop">🔢 cryptoClient メンバ一覧</span></a>
+## <a href="#cryptoClient_top"><span id="cryptoClient_prop">🔢 cryptoClient メンバ一覧</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | idb | authIndexedDB | 必須 | authClient.idb(IndexedDB)のコピー |  |
 | RSAbits | string | 必須 | RSA鍵長(=authConfig.RSAbits) |  |
 
-## <a href="#/client/cryptoClient.mjs::cryptoClient_top"><span id="/client/cryptoClient.mjs::cryptoClient_func">🧱 cryptoClient メソッド・内部関数一覧</span></a>
+## <a href="#cryptoClient_top"><span id="cryptoClient_func">🧱 cryptoClient メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_top">constructor</a> | constructor |
-| 2 | <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top">encrypt</a> | encrypt: 処理要求を暗号化＋署名 |
-| 3 | <a href="#/client/cryptoClient.mjs::cryptoClient#decrypt_top">decrypt</a> | decrypt: 暗号化された処理結果を復号・署名検証 |
-| 4 | <a href="#/client/cryptoClient.mjs::cryptoClient#generateKeys_top">generateKeys</a> | generateKeys: RSA鍵ペアを生成 |
+| 1 | <a href="#cryptoClient-constructor_top">constructor</a> | constructor |
+| 2 | <a href="#cryptoClient-encrypt_top">encrypt</a> | encrypt: 処理要求を暗号化＋署名 |
+| 3 | <a href="#cryptoClient-decrypt_top">decrypt</a> | decrypt: 暗号化された処理結果を復号・署名検証 |
+| 4 | <a href="#cryptoClient-generateKeys_top">generateKeys</a> | generateKeys: RSA鍵ペアを生成 |
 
-## <a href="#/client/cryptoClient.mjs::cryptoClient_top"><span id="/client/cryptoClient.mjs::cryptoClient_desc">🧾 cryptoClient 概説</span></a>
+## <a href="#cryptoClient_top"><span id="cryptoClient_desc">🧾 cryptoClient 概説</span></a>
 
 cryptoClient: クライアント側の暗号化・署名検証<br>
 
 クライアント側の暗号化・署名検証<br>
-## <span id="/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_top">🧩 constructor()</span>
+## <span id="cryptoClient-constructor_top">🧩 constructor()</span>
 
 constructor
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_top"><span id="/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_desc">🧾 constructor 概説</span></a>
+### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_desc">🧾 constructor 概説</span></a>
 
 constructor<br>
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_top"><span id="/client/cryptoClient.mjs::cryptoClient#cryptoClient#constructor_param">▶️ constructor 引数</span></a>
+### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数 | CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
 | RSAbits | number | 必須 | RSA鍵長 |  |
-## <span id="/client/cryptoClient.mjs::cryptoClient#encrypt_top">🧩 encrypt()</span>
+## <span id="cryptoClient-encrypt_top">🧩 encrypt()</span>
 
 encrypt: 処理要求を暗号化＋署名
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_func">🧱 encrypt メソッド・内部関数一覧</span></a>
+### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_func">🧱 encrypt メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー |
+| 1 | <a href="#cryptoClient-encrypt-dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー |
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_desc">🧾 encrypt 概説</span></a>
+### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_desc">🧾 encrypt 概説</span></a>
 
 encrypt: 処理要求を暗号化＋署名<br>
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_param">▶️ encrypt 引数</span></a>
+### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_param">▶️ encrypt 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | request | authRequest | 必須 | 処理要求 |  |
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt_return">◀️ encrypt 戻り値</span></a>
+### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_return">◀️ encrypt 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | encryptedRequest |  |  |
-### <span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top">🧩 dummyFunc()</span>
+### <span id="cryptoClient-encrypt-dummyFunc_top">🧩 dummyFunc()</span>
 
 dummyFunc: テスト用ダミー
 
-#### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_desc">🧾 dummyFunc 概説</span></a>
+#### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_desc">🧾 dummyFunc 概説</span></a>
 
 dummyFunc: テスト用ダミー<br>
 
-#### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_param">▶️ dummyFunc 引数</span></a>
+#### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_param">▶️ dummyFunc 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | a | number | 必須 |  |  |
 | b | number | 必須 |  |  |
 
-#### <a href="#/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_top"><span id="/client/cryptoClient.mjs::cryptoClient#encrypt.dummyFunc_return">◀️ dummyFunc 戻り値</span></a>
+#### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_return">◀️ dummyFunc 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | number |  |  |
-## <span id="/client/cryptoClient.mjs::cryptoClient#decrypt_top">🧩 decrypt()</span>
+## <span id="cryptoClient-decrypt_top">🧩 decrypt()</span>
 
 decrypt: 暗号化された処理結果を復号・署名検証
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#decrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#decrypt_desc">🧾 decrypt 概説</span></a>
+### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_desc">🧾 decrypt 概説</span></a>
 
 decrypt: 暗号化された処理結果を復号・署名検証<br>
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#decrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#decrypt_param">▶️ decrypt 引数</span></a>
+### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_param">▶️ decrypt 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | response | encryptedResponse | 必須 | 暗号化されたサーバ側処理結果 |  |
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#decrypt_top"><span id="/client/cryptoClient.mjs::cryptoClient#decrypt_return">◀️ decrypt 戻り値</span></a>
+### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_return">◀️ decrypt 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | authResponse |  |  |
-## <span id="/client/cryptoClient.mjs::cryptoClient#generateKeys_top">🧩 generateKeys()</span>
+## <span id="cryptoClient-generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: RSA鍵ペアを生成
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#generateKeys_top"><span id="/client/cryptoClient.mjs::cryptoClient#generateKeys_desc">🧾 generateKeys 概説</span></a>
+### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_desc">🧾 generateKeys 概説</span></a>
 
 generateKeys: RSA鍵ペアを生成
 - 生成のみ、IndexedDBやメンバ変数への格納は行わない<br>
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#generateKeys_top"><span id="/client/cryptoClient.mjs::cryptoClient#generateKeys_param">▶️ generateKeys 引数</span></a>
+### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_param">▶️ generateKeys 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 |  | void | 必須 |  |  |
 
-### <a href="#/client/cryptoClient.mjs::cryptoClient#generateKeys_top"><span id="/client/cryptoClient.mjs::cryptoClient#generateKeys_return">◀️ generateKeys 戻り値</span></a>
+### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_return">◀️ generateKeys 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |

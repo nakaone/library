@@ -136,7 +136,7 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 | meta.path | string | 必須 | ソースファイルが存在するディレクトリパス |  |
 | meta.code | Object | 必須 | Doclet対象となったコード要素の構造情報 |  |
 | meta.code.id | string | 必須 | コード要素の内部識別子(AST由来、存在しない場合あり) |  |
-| meta.code.name | string | 必須 | コー���要素の名前（関数名・クラス名・変数名など） |  |
+| meta.code.name | string | 必須 | コード要素の名前（関数名・クラス名・変数名など） |  |
 | meta.code.type | string | 必須 | コード要素の種別 |  |
 | meta.code.value | string | 必須 | コード要素のソース表現（代入値や関数本体の文字列表現） |  |
 | meta.code.paramnames | string[] | 必須 | 関数・メソッドの引数名一覧 |  |

@@ -372,9 +372,9 @@ async function createSpec(opt={}){
    * @class
    * @memberof createSpec
    * @desc メンバ各値の設定箇所は以下の通り。
-   * - opt ~ returns:       DocletEx.constructor()
+   * - opt    ~ returns   : DocletEx.constructor()
    * - parent ~ familyTree: DocletTree.linkage()
-   * - unique ~ longnameId: DocletTree.registration()
+   * - unique ~ commentId : DocletTree.registration()
    * 
    * @prop {string} name - 【書換】constructorの場合のみ固定値"constructor"に変更
    * @prop {string} longname - 【書換】constructorの場合のみ"#constructor"を追加
@@ -415,8 +415,6 @@ async function createSpec(opt={}){
    * @prop {string} [linenoId] - 固有パス＋ファイル名＋':N'＋meta.lineno ※同上
    * @prop {string} [commentId] - 「固有パス＋ファイル名＋comment」のSHA256
    *   同一commentが同一ファイル内に複数有った場合は設定しない
-   * @prop {string} [longnameId] - 固有パス＋ファイル名＋'::'＋longname
-   *   なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない
    */
   class DocletEx {
     /**
@@ -1153,7 +1151,7 @@ async function createSpec(opt={}){
 
         dev.step(1);  // 事前準備
         v.d = this.map[uuid];
-        v.anchor = v.d.longnameId;
+        v.anchor = v.d.familyTree;
 
         dev.step(2);  // ヘッダ部
         v.label = '';
@@ -1220,7 +1218,7 @@ async function createSpec(opt={}){
             if( v.c.docletType === 'unknown' ) continue;
             v.list.push({
               no:    v.i+1,
-              name:  `<a href="#${v.c.longnameId}_top">${v.c.name}</a>`,
+              name:  `<a href="#${v.c.familyTree}_top">${v.c.name}</a>`,
               label: v.c.label
             });
           }
@@ -1593,15 +1591,6 @@ async function createSpec(opt={}){
           if( typeof this.map[doclet.rangeId] !== 'undefined' )
             v.dupkey = doclet.rangeId;
         }
-        dev.step(2.4);  // 固有パス＋ファイル名＋longname
-        if( typeof doclet.longname !== 'undefined' ){
-          doclet.longnameId = doclet.prefix + `::${doclet.longname}`;
-          // longnameは重複判定に使用しないので作成のみ
-          // this.mapへの登録は他のIDと異なり
-          // 「未登録なら追加、登録済(longname重複)ならnull」
-          // とするため、後続ステップではなくここで行う
-          this.map[doclet.longnameId] = Object.hasOwn(this.map,doclet.longnameId) ? null : doclet;
-        }
 
         if( v.dupkey.length > 0 ){
           dev.step(3);  // DocletEx.mapに登録済なら既存DocletExに情報追加
@@ -1786,6 +1775,7 @@ async function createSpec(opt={}){
     }
 
     dev.step(5);
+    /* 【開発用】結果出力
     console.log(`l.1694 ${JSON.stringify(
       pv.tree.doclet
       .filter(x => typeof x.familyTree !== 'undefined')
@@ -1794,6 +1784,7 @@ async function createSpec(opt={}){
       //.filter(x => x.memberof).map(x => x.memberof)
       //.map(x => x.name)
     ,null,2)}`);
+    */
     dev.end();
     return pv.rv;
 

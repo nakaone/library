@@ -22,11 +22,11 @@
 
 </div>
 
-# <span id="/common/authConfig.mjs::authConfig_top">🧩 authConfigクラス仕様書</span>
+# <span id="authConfig_top">🧩 authConfigクラス仕様書</span>
 
 継承元：<a href="../common/Schema.md">Schema</a><br>authConfig: クライアント・サーバ共通設定情報
 
-## <a href="#/common/authConfig.mjs::authConfig_top"><span id="/common/authConfig.mjs::authConfig_prop">🔢 authConfig メンバ一覧</span></a>
+## <a href="#authConfig_top"><span id="authConfig_prop">🔢 authConfig メンバ一覧</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
@@ -39,24 +39,24 @@
 | underDev | Object | 必須 | テスト時の設定 |  |
 | underDev.isTest | boolean | false | 開発モードならtrue |  |
 
-## <a href="#/common/authConfig.mjs::authConfig_top"><span id="/common/authConfig.mjs::authConfig_func">🧱 authConfig メソッド・内部関数一覧</span></a>
+## <a href="#authConfig_top"><span id="authConfig_func">🧱 authConfig メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top">constructor</a> |  |
+| 1 | <a href="#authConfig-constructor_top">constructor</a> |  |
 
-## <a href="#/common/authConfig.mjs::authConfig_top"><span id="/common/authConfig.mjs::authConfig_desc">🧾 authConfig 概説</span></a>
+## <a href="#authConfig_top"><span id="authConfig_desc">🧾 authConfig 概説</span></a>
 
 authConfig: クライアント・サーバ共通設定情報<br>
 
 クライアント・サーバ共通設定情報<br>
-## <span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top">🧩 constructor()</span>
+## <span id="authConfig-constructor_top">🧩 constructor()</span>
 
-### <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top"><span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_desc">🧾 constructor 概説</span></a>
+### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_desc">🧾 constructor 概説</span></a>
 
 <br>
 
-### <a href="#/common/authConfig.mjs::authConfig.exports.authConfig#constructor_top"><span id="/common/authConfig.mjs::authConfig.exports.authConfig#constructor_param">▶️ constructor 引数</span></a>
+### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |

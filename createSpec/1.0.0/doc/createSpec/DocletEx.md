@@ -1,8 +1,8 @@
-# <span id="/core.mjs::createSpec.DocletEx_top">🧩 DocletExクラス仕様書</span>
+# <span id="createSpec-DocletEx_top">🧩 DocletExクラス仕様書</span>
 
 DocletEx: jsdocから出力されるDocletに情報を付加したもの
 
-## <a href="#/core.mjs::createSpec.DocletEx_top"><span id="/core.mjs::createSpec.DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
+## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
@@ -38,7 +38,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | commentId | string | 任意 | 「固有パス＋ファイル名＋comment」のSHA256 | 同一commentが同一ファイル内に複数有った場合は設定しない |
 | longnameId | string | 任意 | 固有パス＋ファイル名＋'::'＋longname | なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない |
 
-## <a href="#/core.mjs::createSpec.DocletEx_top"><span id="/core.mjs::createSpec.DocletEx_func">🧱 DocletEx メソッド・内部関数一覧</span></a>
+## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_func">🧱 DocletEx メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
@@ -46,87 +46,87 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | 2 | <a href="#/core.mjs::createSpec.DocletEx#addRowToColumn_top">addRowToColumn</a> | addRowToColumn: データ項目情報から一覧作成用情報を作成 |
 | 3 | <a href="#/core.mjs::DocletEx#determineType_top">determineType</a> | determineType: Docletの型を判定 |
 
-## <a href="#/core.mjs::createSpec.DocletEx_top"><span id="/core.mjs::createSpec.DocletEx_desc">🧾 DocletEx 概説</span></a>
+## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_desc">🧾 DocletEx 概説</span></a>
 
 DocletEx: jsdocから出力されるDocletに情報を付加したもの
 メンバ各値の設定箇所は以下の通り。
 - opt ~ returns:       DocletEx.constructor()
 - parent ~ familyTree: DocletTree.linkage()
 - unique ~ longnameId: DocletTree.registration()<br>
-## <span id="/core.mjs::createSpec~DocletEx#constructor_top">🧩 constructor()</span>
+## <span id="createSpec-DocletEx-constructor_top">🧩 constructor()</span>
 
-### <a href="#/core.mjs::createSpec~DocletEx#constructor_top"><span id="/core.mjs::createSpec~DocletEx#constructor_desc">🧾 constructor 概説</span></a>
+### <a href="#createSpec-DocletEx-constructor_top"><span id="createSpec-DocletEx-constructor_desc">🧾 constructor 概説</span></a>
 
 <br>
 
-### <a href="#/core.mjs::createSpec~DocletEx#constructor_top"><span id="/core.mjs::createSpec~DocletEx#constructor_param">▶️ constructor 引数</span></a>
+### <a href="#createSpec-DocletEx-constructor_top"><span id="createSpec-DocletEx-constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | doclet | <a href="index.md#Doclet">Doclet</a> | 必須 |  |  |
 | opt | Object | {} | オプション設定値 |  |
-## <span id="/core.mjs::createSpec.DocletEx#addRowToColumn_top">🧩 addRowToColumn()</span>
+## <span id="createSpec-DocletEx-addRowToColumn_top">🧩 addRowToColumn()</span>
 
 addRowToColumn: データ項目情報から一覧作成用情報を作成
 
-### <a href="#/core.mjs::createSpec.DocletEx#addRowToColumn_top"><span id="/core.mjs::createSpec.DocletEx#addRowToColumn_desc">🧾 addRowToColumn 概説</span></a>
+### <a href="#createSpec-DocletEx-addRowToColumn_top"><span id="createSpec-DocletEx-addRowToColumn_desc">🧾 addRowToColumn 概説</span></a>
 
 addRowToColumn: データ項目情報から一覧作成用情報を作成
 
 データ項目情報：Doclet.properties/params/returnsの各要素。配列では無くオブジェクト<br>
 
-### <a href="#/core.mjs::createSpec.DocletEx#addRowToColumn_top"><span id="/core.mjs::createSpec.DocletEx#addRowToColumn_param">▶️ addRowToColumn 引数</span></a>
+### <a href="#createSpec-DocletEx-addRowToColumn_top"><span id="createSpec-DocletEx-addRowToColumn_param">▶️ addRowToColumn 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | prop | <a href="index.md#<a href="index.md#Doclet">Doclet</a>ColDef"><a href="index.md#Doclet">Doclet</a>ColDef</a> | 必須 | データ項目情報 |  |
 
-### <a href="#/core.mjs::createSpec.DocletEx#addRowToColumn_top"><span id="/core.mjs::createSpec.DocletEx#addRowToColumn_return">◀️ addRowToColumn 戻り値</span></a>
+### <a href="#createSpec-DocletEx-addRowToColumn_top"><span id="createSpec-DocletEx-addRowToColumn_return">◀️ addRowToColumn 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | <a href="index.md#<a href="index.md#Doclet">Doclet</a>ColRow"><a href="index.md#Doclet">Doclet</a>ColRow</a> \| Error |  |  |
-## <span id="/core.mjs::DocletEx#determineType_top">🧩 determineType()</span>
+## <span id="createSpec-DocletEx-determineType_top">🧩 determineType()</span>
 
 determineType: Docletの型を判定
 
-### <a href="#/core.mjs::DocletEx#determineType_top"><span id="/core.mjs::DocletEx#determineType_func">🧱 determineType メソッド・内部関数一覧</span></a>
+### <a href="#createSpec-DocletEx-determineType_top"><span id="createSpec-DocletEx-determineType_func">🧱 determineType メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
 | 1 | <a href="#/core.mjs::determineType.dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー関数 |
 
-### <a href="#/core.mjs::DocletEx#determineType_top"><span id="/core.mjs::DocletEx#determineType_desc">🧾 determineType 概説</span></a>
+### <a href="#createSpec-DocletEx-determineType_top"><span id="createSpec-DocletEx-determineType_desc">🧾 determineType 概説</span></a>
 
 determineType: Docletの型を判定<br>
 
-### <a href="#/core.mjs::DocletEx#determineType_top"><span id="/core.mjs::DocletEx#determineType_param">▶️ determineType 引数</span></a>
+### <a href="#createSpec-DocletEx-determineType_top"><span id="createSpec-DocletEx-determineType_param">▶️ determineType 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | doclet | Object | 必須 |  |  |
 
-### <a href="#/core.mjs::DocletEx#determineType_top"><span id="/core.mjs::DocletEx#determineType_return">◀️ determineType 戻り値</span></a>
+### <a href="#createSpec-DocletEx-determineType_top"><span id="createSpec-DocletEx-determineType_return">◀️ determineType 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
 | string \| Error | 「docletTypeの判定ロジック」参照 |  |
-### <span id="/core.mjs::determineType.dummyFunc_top">🧩 dummyFunc()</span>
+### <span id="createSpec-DocletEx-determineType-dummyFunc_top">🧩 dummyFunc()</span>
 
 dummyFunc: テスト用ダミー関数
 
-#### <a href="#/core.mjs::determineType.dummyFunc_top"><span id="/core.mjs::determineType.dummyFunc_desc">🧾 dummyFunc 概説</span></a>
+#### <a href="#createSpec-DocletEx-determineType-dummyFunc_top"><span id="createSpec-DocletEx-determineType-dummyFunc_desc">🧾 dummyFunc 概説</span></a>
 
 dummyFunc: テスト用ダミー関数<br>
 
-#### <a href="#/core.mjs::determineType.dummyFunc_top"><span id="/core.mjs::determineType.dummyFunc_param">▶️ dummyFunc 引数</span></a>
+#### <a href="#createSpec-DocletEx-determineType-dummyFunc_top"><span id="createSpec-DocletEx-determineType-dummyFunc_param">▶️ dummyFunc 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | a | number | 必須 |  |  |
 | b | number | 必須 |  |  |
 
-#### <a href="#/core.mjs::determineType.dummyFunc_top"><span id="/core.mjs::determineType.dummyFunc_return">◀️ dummyFunc 戻り値</span></a>
+#### <a href="#createSpec-DocletEx-determineType-dummyFunc_top"><span id="createSpec-DocletEx-determineType-dummyFunc_return">◀️ dummyFunc 戻り値</span></a>
 
 | データ型 | 説明 | 備考 |
 | :-- | :-- | :-- |
