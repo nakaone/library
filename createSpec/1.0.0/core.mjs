@@ -1029,24 +1029,15 @@ async function createSpec(opt={}){
           if( !Object.hasOwn(v.d,'parent') ) v.d.parent = null;
           if( !Object.hasOwn(v.d,'children') ) v.d.children = [];
 
-          dev.step(3);  // ①：child.memberof === parent.longnameで判定
-          if( Object.hasOwn(v.d,'memberof') ){
-            v.key = v.d.prefix + `::${v.d.memberof}`;
-            if( v.longnameId.includes(v.key) && this.map[v.key] !== null ){
-              // memberof:longnameが一意に親が決定されたらOK
-              v.d.parent = this.map[v.key].uuid;
-            }
-          }
-
-          dev.step(4);  // ②：①で決まらない場合、子要素を包摂する直近の要素
-          if( v.d.parent === null && typeof v.d.meta?.range !== 'undefined' ){
+          dev.step(3);  // ①子要素を包摂する直近の要素
+          if( typeof v.d.meta?.range !== 'undefined' ){
             v.minSize = Infinity;
             for( v.t of this.doclet ){
-              dev.step(4.1);  // 比較元=比較先またはrangeが無ければスキップ
+              dev.step(3.1);  // 比較元=比較先またはrangeが無ければスキップ
               if( v.d === v.t || !v.t.meta?.range || v.d.prefix !== v.t.prefix ) continue;
-              dev.step(4.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
+              dev.step(3.2);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
               if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
-                dev.step(4.3);  // 比較先の終了位置−開始位置が最小のものが直近
+                dev.step(3.3);  // 比較先の終了位置−開始位置が最小のものが直近
                 v.size = v.t.meta.range[1] - v.t.meta.range[0];
                 if( v.size < v.minSize ){
                   v.minSize = v.size;
@@ -1054,6 +1045,17 @@ async function createSpec(opt={}){
                 }
               }
             }
+          }
+
+          dev.step(4);  // ②：①で決まらない場合「child.memberof === parent.nameかつ固有パス一致」で判定
+          if( v.d.parent === null && Object.hasOwn(v.d,'memberof') ){
+            // memberofは親子のnameが連結されている場合がある
+            // ex. "createSpec.DocletEx"
+            // ⇒ memberofの最後の部分とparent.nameで比較
+            v.m = v.d.memberof.match(/[.#~]([^.#~]+?)$/);
+            v.m = v.m === null ? v.d.memberof : v.m[1];
+            v.t = this.doclet.find(x => x.name === v.m && x.unique === v.d.unique);
+            if( v.t !== undefined ) v.d.parent = v.t.uuid;
           }
 
           dev.step(5);  // 親要素のchildrenに比較元を登録
@@ -1792,8 +1794,10 @@ async function createSpec(opt={}){
       pv.tree.doclet
       .filter(x => typeof x.familyTree !== 'undefined')
       //.sort((a,b) => a.docletType < b.docletType ? -1 : 1)
-      .map(x => {return {docletType:x.docletType,longname:x.longname,familyTree:x.familyTree}})
-    ,null,2)}`)
+      .map(x => {return {docletType:x.docletType,longname:x.longname,name:x.name,familyTree:x.familyTree}})
+      //.filter(x => x.memberof).map(x => x.memberof)
+      //.map(x => x.name)
+    ,null,2)}`);
     dev.end();
     return pv.rv;
 

@@ -27,7 +27,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | properties | <a href="index.md#<a href="index.md#Doclet">Doclet</a>ColDef"><a href="index.md#Doclet">Doclet</a>ColDef</a>[] | 任意 | メンバ一覧 |  |
 | params | <a href="index.md#<a href="index.md#Doclet">Doclet</a>ColDef"><a href="index.md#Doclet">Doclet</a>ColDef</a>[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |  |
 | returns | <a href="index.md#<a href="index.md#Doclet">Doclet</a>ColDef"><a href="index.md#Doclet">Doclet</a>ColDef</a>[] | [] | 戻り値(※同上) |  |
-| parent | string |  | ���要素のDocletEx.uuid |  |
+| parent | string |  | 親要素のDocletEx.uuid |  |
 | children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.uuid |  |
 | unique | string | 任意 | 固有パス | ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
 | basename | string | 任意 | ファイル名 |  |
@@ -36,13 +36,15 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | linenoId | string | 任意 | 固有パス＋ファイル名＋':N'＋meta.lineno ※同上 |  |
 | commentId | string | 任意 | 「固有パス＋ファイル名＋comment」のSHA256 | 同一commentが同一ファイル内に複数有った場合は設定しない |
 | longnameId | string | 任意 | 固有パス＋ファイル名＋'::'＋longname | なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない |
+| familyTree | string | 必須 | DocletEx.nameを連結した系図(親子関係) |  |
 
 ## <a href="#/core.mjs::createSpec.DocletEx_top"><span id="/core.mjs::createSpec.DocletEx_func">🧱 DocletEx メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/core.mjs::createSpec.DocletEx#addRowToColumn_top">addRowToColumn</a> | addRowToColumn: データ項目情報から一覧作成用情報を作成 |
-| 2 | <a href="#/core.mjs::DocletEx#determineType_top">determineType</a> | determineType: Docletの型を判定 |
+| 1 | <a href="#/core.mjs::createSpec~DocletEx#constructor_top">constructor</a> |  |
+| 2 | <a href="#/core.mjs::createSpec.DocletEx#addRowToColumn_top">addRowToColumn</a> | addRowToColumn: データ項目情報から一覧作成用情報を作成 |
+| 3 | <a href="#/core.mjs::DocletEx#determineType_top">determineType</a> | determineType: Docletの型を判定 |
 
 ## <a href="#/core.mjs::createSpec.DocletEx_top"><span id="/core.mjs::createSpec.DocletEx_desc">🧾 DocletEx 概説</span></a>
 
@@ -51,6 +53,18 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 - opt ~ returns:       DocletEx.constructor()
 - parent, children:    DocletTree.linkage()
 - unique ~ longnameId: DocletTree.registration()<br>
+## <span id="/core.mjs::createSpec~DocletEx#constructor_top">🧩 constructor()</span>
+
+### <a href="#/core.mjs::createSpec~DocletEx#constructor_top"><span id="/core.mjs::createSpec~DocletEx#constructor_desc">🧾 constructor 概説</span></a>
+
+<br>
+
+### <a href="#/core.mjs::createSpec~DocletEx#constructor_top"><span id="/core.mjs::createSpec~DocletEx#constructor_param">▶️ constructor 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| doclet | <a href="index.md#Doclet">Doclet</a> | 必須 |  |  |
+| opt | Object | {} | オプション設定値 |  |
 ## <span id="/core.mjs::createSpec.DocletEx#addRowToColumn_top">🧩 addRowToColumn()</span>
 
 addRowToColumn: データ項目情報から一覧作成用情報を作成
