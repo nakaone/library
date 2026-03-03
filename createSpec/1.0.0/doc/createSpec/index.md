@@ -91,7 +91,7 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
   - ExportDefaultDeclaration : `export default function () {}`,`export default class {}`
 - その他　※出現頻度低め
   - AssignmentExpression : `a = 10`。グローバル代入や static メンバ検出に使用
-  - Literal : 数値・���字列・真偽値などの即値
+  - Literal : 数値・文字列・真偽値などの即値
   - Identifier : 変数名・関数名そのもの。単体で Doclet になることはない
 
 

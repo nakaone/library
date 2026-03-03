@@ -35,7 +35,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-anchorの改善
 JSDocプロトタイプ(useageにも使用)
 
 [bug] _withStore引数の説明が意味不明

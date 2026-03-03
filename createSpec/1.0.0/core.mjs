@@ -55,54 +55,7 @@ async function createSpec(opt={}){
         - [a-z].js # 文字クラス
         - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
       - 動作時devTools(3.0.0~), mergeDeeply(2.0.0~)が必要
-      
-      # JSDoc記述上の注意
-      
-      - グローバル関数・クラス・データ型定義の名称は重複不可
-        ∵ リンクを張る場合、リンク先を特定できない
-      - 以下はエラーとなる
-        - ＠class未定義で＠constructorやメソッドにJSDoc記述
-        - グローバル関数未定義で内部関数にJSDoc記述
-      - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
-      - コンストラクタには「＠constructor」必須
-      - 「＠history」を独自タグとして定義
-      - 先頭のラベルとそれに続く文字列、および他で出現する＠descは
-        まとめて一つの@descとして扱われる
-      - 説明文(=Markdownとして出力する説明)
-        - 「＠name (説明文のタイトル)」＋「＠desc」で開始
-        - 「＠name」がない説明文は出力されない(廃棄)
-        - クラス・関数内部に記述する場合、「＠memberof」を指定
-        - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
-        - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
-      - クラス・関数への自動リンクは設定されない(手動で\`[]()\`を記述)
-      - リンク先のアンカーは以下の命名規則
-        - "top" : ページ内先頭
-        - "desc" : 説明文
-        - 後略
-      - ＠typedefでfunctionの定義は不可
-      - ＠interfaceではfunction型メンバの定義は可能だが、分離する
-        \`\`\`
-        ／**
-          * ＠interface User
-          * ＠property {string} name
-          * ＠property {number} age
-          * ＠property {boolean} isAdmin
-          *／
-        ／**
-          * ＠function ※ここには記述不可
-          * ＠name User#test ※ここには記述不可
-          * ＠desc オブジェクト内関数の説明
-          * ＠param {string} arg
-          * ＠returns {boolean|Error}
-          * ＠example オブジェクト内関数の使用例
-          *／
-        \`\`\`
-        なお変数がinterfaceで定義されたデータ型であることは以下のように示す
-        \`\`\`
-        ／** ＠type {User}*／
-        const user = {...}
-        \`\`\`
-      - データ型定義で継承したい場合、＠typedefではなく＠interfaceを使用
+      - JSDoc記述上の注意については proto.source.mjs 参照
 
       # 入出力イメージ
       
@@ -1774,8 +1727,9 @@ async function createSpec(opt={}){
       writeFileSync("../tmp/DocletTree.doclet.json",JSON.stringify(pv.tree.doclet,null,2));
     }
 
-    dev.step(5);
-    /* 【開発用】結果出力
+    dev.step(5);  // 【開発用】結果出力
+    writeFileSync('tmp/DocletTree.doclet.json',JSON.stringify(pv.tree.doclet,null,2));
+    /* 
     console.log(`l.1694 ${JSON.stringify(
       pv.tree.doclet
       .filter(x => typeof x.familyTree !== 'undefined')

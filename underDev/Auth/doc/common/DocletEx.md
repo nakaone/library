@@ -50,7 +50,7 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
   ※ 上記に該当が無い場合、「(ラベル未設定)」 |
 | properties | DocletColDef[] | 任意 | メンバ一覧 |  |
 | params | DocletColDef[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |  |
-| returns | DocletColDef[] | [] | 戻り値(���同上) |  |
+| returns | DocletColDef[] | [] | 戻り値(※同上) |  |
 | parent | string |  | 親要素のDocletEx.uuid |  |
 | children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.uuid |  |
 | familyTree | string | 必須 | DocletEx.nameを連結した系図(親子関係) |  |

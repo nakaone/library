@@ -36,23 +36,22 @@ DocletEx: jsdocから出力されるDocletに情報を付加したもの
 | rangeId | string | 任意 | 固有パス＋ファイル名＋':R'＋meta.range[0] | ※ Doclet以外のファイル情報が必要なため、DocletTree側で追加される項目 |
 | linenoId | string | 任意 | 固有パス＋ファイル名＋':N'＋meta.lineno ※同上 |  |
 | commentId | string | 任意 | 「固有パス＋ファイル名＋comment」のSHA256 | 同一commentが同一ファイル内に複数有った場合は設定しない |
-| longnameId | string | 任意 | 固有パス＋ファイル名＋'::'＋longname | なおlongnameIdはアンカーとしても使用するので、'::'後の英文字は付けない |
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_func">🧱 DocletEx メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/core.mjs::createSpec~DocletEx#constructor_top">constructor</a> |  |
-| 2 | <a href="#/core.mjs::createSpec.DocletEx#addRowToColumn_top">addRowToColumn</a> | addRowToColumn: データ項目情報から一覧作成用情報を作成 |
-| 3 | <a href="#/core.mjs::DocletEx#determineType_top">determineType</a> | determineType: Docletの型を判定 |
+| 1 | <a href="#createSpec-DocletEx-constructor_top">constructor</a> |  |
+| 2 | <a href="#createSpec-DocletEx-addRowToColumn_top">addRowToColumn</a> | addRowToColumn: データ項目情報から一覧作成用情報を作成 |
+| 3 | <a href="#createSpec-DocletEx-determineType_top">determineType</a> | determineType: Docletの型を判定 |
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_desc">🧾 DocletEx 概説</span></a>
 
 DocletEx: jsdocから出力されるDocletに情報を付加したもの
 メンバ各値の設定箇所は以下の通り。
-- opt ~ returns:       DocletEx.constructor()
+- opt    ~ returns   : DocletEx.constructor()
 - parent ~ familyTree: DocletTree.linkage()
-- unique ~ longnameId: DocletTree.registration()<br>
+- unique ~ commentId : DocletTree.registration()<br>
 ## <span id="createSpec-DocletEx-constructor_top">🧩 constructor()</span>
 
 ### <a href="#createSpec-DocletEx-constructor_top"><span id="createSpec-DocletEx-constructor_desc">🧾 constructor 概説</span></a>
@@ -94,7 +93,7 @@ determineType: Docletの型を判定
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#/core.mjs::determineType.dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー関数 |
+| 1 | <a href="#createSpec-DocletEx-determineType-dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー関数 |
 
 ### <a href="#createSpec-DocletEx-determineType_top"><span id="createSpec-DocletEx-determineType_desc">🧾 determineType 概説</span></a>
 

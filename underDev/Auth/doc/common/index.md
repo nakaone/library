@@ -136,7 +136,7 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 | meta.path | string | 必須 | ソースファイルが存在するディレクトリパス |  |
 | meta.code | Object | 必須 | Doclet対象となったコード要素の構造情報 |  |
 | meta.code.id | string | 必須 | コード要素の内部識別子(AST由来、存在しない場合あり) |  |
-| meta.code.name | string | 必須 | コード要素の名前（関数名・クラス名・変数名など） |  |
+| meta.code.name | string | 必須 | コード要素���名前（関数名・クラス名・変数名など） |  |
 | meta.code.type | string | 必須 | コード要素の種別 |  |
 | meta.code.value | string | 必須 | コード要素のソース表現（代入値や関数本体の文字列表現） |  |
 | meta.code.paramnames | string[] | 必須 | 関数・メソッドの引数名一覧 |  |
@@ -182,7 +182,7 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
   - ObjectExpression : `{a:10,b:20}`。＠typedef の元になることがある
   - ArrayExpression : `[1,2,3]`。型推論や ＠type 補助に使用される
 - モジュール・エクスポート系（ESM）
-  - ImportDeclaration : `import x from 'y'`。Doclet 化されることは稀
+  - ImportDeclaration : `import x from 'y'`。Doclet 化さ���ることは稀
   - ExportNamedDeclaration : `export { foo }`,`export const a = 1`
   - ExportDefaultDeclaration : `export default function () {}`,`export default class {}`
 - その他　※出現頻度低め
