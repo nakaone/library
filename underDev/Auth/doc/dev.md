@@ -35,8 +35,6 @@
   - authClientで受信、内容確認、格納
 
 <!--
-JSDocプロトタイプ(useageにも使用)
-
 [bug] _withStore引数の説明が意味不明
 [bug] exec引数anyの要否/既定値欄が'['のみで意味不明
 [bug] getIndexedDB引数の項目名が空欄

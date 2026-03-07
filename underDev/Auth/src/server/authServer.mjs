@@ -22,27 +22,6 @@ export class authServer {
     // Schemaクラスの指定項目＋authClient専用データ型定義
     v.schema = {
       types: {
-        /** authAuditLog: authServerの監査ログをシートに出力
-         * @typedef {Object} authAuditLog - authServerの監査ログをシートに出力
-         * @prop {number} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
-         * @prop {number} duration - 処理時間ミリ秒単位
-         * @prop {string} memberId - メンバの識別子メールアドレス
-         * @prop {string} [deviceId] - デバイスの識別子
-         * @prop {string} func - サーバ側関数名
-         * @prop {string} result=success - サーバ側処理結果
-         * @prop {string} note - 備考
-         */
-        authAuditLog: {desc: 'authServerの監査ログ',
-          cols: [
-            {name:'timestamp',type:'datetime',desc:'要求日時',default:'Date.now()',note:'ISO8601拡張形式'},
-            {name:'duration',type:'number',desc:'処理時間(ms)'},
-            {name:'memberId',type:'string',desc:'メンバ識別子(メール)'},
-            {name:'deviceId',type:'string',desc:'デバイス識別子(UUIDv4)',nullable:true },
-            {name:'func',type:'string',desc:'サーバ関数名'},
-            {name:'result',type:'string',desc:'処理結果',default:'success'},
-            {name:'note',type:'string',desc:'備考',nullable:true },
-          ],
-        },
         /** authErrorLog: authServerのエラーログをシートに出力
          * @typedef {Object} authErrorLog - authServerのエラーログをシートに出力
          * @prop {string} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
