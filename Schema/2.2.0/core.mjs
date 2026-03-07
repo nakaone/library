@@ -1,4 +1,4 @@
-import { utils } from "./utils.mjs";
+import { utils } from '../../utils/1.0.0/core.mjs';
 
 /** Schema: DB・データ型構造定義オブジェクト
  * - 各種アプリで使用するテーブル・データ型を宣言
