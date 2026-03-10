@@ -10,24 +10,24 @@
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    participant L as device
-    participant C as authClient
-    participant S as authServer
-    participant F as server
+  autonumber
+  participant dv as device
+  participant cl as authClient
+  participant sv as authServer
+  participant ap as server
 
-    L->>+C: 処理要求
-    C->>+S: 認証要求
-    S->>-L: パスコード通知メール
-    L->>C: パスコード入力
-    C->>+S: パスコード
-    S->>C: 認証OK
-    C->>S: 処理要求
-    S->>S: ユーザの権限確認
-    S->>+F: 処理要求
-    F->>-S: 処理結果
-    S->>-C: 処理結果
-    C->>-L: 処理結果
+  dv->>+cl: 処理要求
+  cl->>+sv: 認証要求
+  sv->>-dv: パスコード通知メール
+  dv->>cl: パスコード入力
+  cl->>+sv: パスコード
+  sv->>cl: 認証OK
+  cl->>sv: 処理要求
+  sv->>sv: ユーザの権限確認
+  sv->>+ap: 処理要求
+  ap->>-sv: 処理結果
+  sv->>-cl: 処理結果
+  cl->>-dv: 処理結果
 ```
 
 なおメンバがserverのどの機能を使用可能か(権限)は、管理者が事前にメンバ一覧(Google Spread)上で設定を行う。
