@@ -18,15 +18,15 @@
 </style>
 <div style="text-align: right;">
 
-[総説](readme.md) | [共通仕様](common/index.md) | [クライアント側仕様](client/index.md) | [サーバ側仕様](server/index.md) | [開発仕様](dev.md)
+[総説](readme.md) | [CL/SV共通](common/index.md) | [CL側](client/index.md) | [SV側](server/index.md) | [暗号化](crypto.md) | [メンバ](Member.md) | [開発](dev.md)
 
 </div>
 
-<p class="l1">"auth"開発・システム関係仕様書</p>
+<p class="l1" id="top">"auth"開発・システム関係仕様書</p>
 
-| [変更履歴](#log) | [フォルダ構成](#folder) | [build.sh](#build) | [GCP Prj作成](#GCP) | [GASデプロイ](#GASdeploy) |
+| [変更履歴](#log) | [実装方針](#policy) | [フォルダ構成](#folder) | [build.sh](#build) | [GCP Prj作成](#GCP) | [GASデプロイ](#GASdeploy) |
 
-# <span id="log">変更履歴</span>
+# <span id="log"><a href="#top">変更履歴</a></span>
 
 - build0010: SPkey取得
   - authClientでauthRequest(SPkey要求)作成
@@ -55,6 +55,9 @@
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>
   ⇒ createSpec.mjsでソースはJSDocに一本化する。
+  - 暗号化・署名方式をcrypto.mdとして独立
+  - 状態及び通信手順をMember.mdとして独立
+  <!--
   - src/client
     - □ authClient.mjs: 出力内容確認
     - □ cryptoClient.mjs: 出力内容確認
@@ -72,6 +75,7 @@
   - tools.mjs: 出力内容確認
     - □ config.mjs: いる？
   - □ src/common/specDef.js: 不足分を反映
+  -->
 - build0008: 初回HTMLロード時処理
   - authClient動作確認
   - config構成見直し(20260118_configブランチ)
@@ -161,7 +165,13 @@
 - build0001: 仕様書作成(α版)
   - 2025.12.09 とりあえず版完成、ChatGPTレビュー済
 
-# <span id="folder">フォルダ構成</span>
+# <span id="policy"><a href="#top">実装方針</a></span>
+
+- サーバ・クライアント共に進捗・エラー管理に[devTools](JSLib.md#devtools)を使用
+- 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。
+- 呼出側は原則Errorオブジェクトが返されたら処理を中断(`if( v.rv instanceof Error ) throw v.rv;`)
+
+# <span id="folder"><a href="#top">フォルダ構成</a></span>
 
 - 🔁 : buildの都度クリア・再作成されるフォルダ
 
@@ -187,7 +197,7 @@
     └── mdTable.sh  // クリップボードのTSVからMarkdownの表を作成
 ```
 
-# <span id="build">build.sh</span>
+# <span id="build"><a href="#top">build.sh</a></span>
 
 ## ソース関係生成手順
 
@@ -197,7 +207,7 @@
 
 ![](img/dev.build.doc.svg)
 
-# <span id="GCP">GCP プロジェクト作成手順（Apps Script / Cloud Logging 用）</span>
+# <span id="GCP"><a href="#top">GCP プロジェクト作成手順（Apps Script / Cloud Logging 用）</a></span>
 
 Apps Script（GAS）で WebApp を開発し、`console.log()` 等のログを **Cloud Logging** で確認することを目的としています。
 
@@ -340,7 +350,7 @@ function doPost(e) {
 - 一度設定すれば以後は意識不要
 - README にこの手順を入れておくと利用者が詰まらない
 
-# <span id="GASdeploy">GASデプロイ</span>
+# <span id="GASdeploy"><a href="#top">GASデプロイ</a></span>
 
 1. 「デプロイ > 新しいデプロイ」
 2. 開発中：「デプロイ > デプロイをテスト」

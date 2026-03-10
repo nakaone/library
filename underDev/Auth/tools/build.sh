@@ -110,6 +110,11 @@ function overviewDesign {  # readme/index.md他の全体的な仕様書
   cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md
   # 総説
   cat $tmp/header.md $src/doc/readme.md > $doc/readme.md
+  # 暗号化・署名方式
+  cat $tmp/header.md $src/doc/crypto.md > $doc/crypto.md
+  # メンバ・デバイス管理
+  cat $tmp/header.md $src/doc/Member.md > $doc/Member.md
+
   # クライアント側
   cat $src/doc/header.md $src/doc/client.md > $doc/client/index.md
   # サーバ側
