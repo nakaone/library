@@ -31,6 +31,9 @@
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>
   ⇒ createSpec.mjsでソースはJSDocに一本化する。
+  - 暗号化・署名方式をcrypto.mdとして独立
+  - 状態及び通信手順をMember.mdとして独立
+  <!--
   - src/client
     - □ authClient.mjs: 出力内容確認
     - □ cryptoClient.mjs: 出力内容確認
@@ -48,6 +51,7 @@
   - tools.mjs: 出力内容確認
     - □ config.mjs: いる？
   - □ src/common/specDef.js: 不足分を反映
+  -->
 - build0008: 初回HTMLロード時処理
   - authClient動作確認
   - config構成見直し(20260118_configブランチ)
