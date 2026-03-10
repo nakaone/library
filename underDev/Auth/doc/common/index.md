@@ -27,8 +27,10 @@
 | クラス/関数名 | 概要 |
 | :-- | :-- |
 | [authConfig](authConfig.md) | authConfig: クライアント・サーバ共通設定情報 |
+| [ColumnDef](ColumnDef.md) | ColumnDef: 論理テーブルに於ける項目定義 |
 | [DocletEx](DocletEx.md) | DocletEx: jsdocから出力されるDocletに情報を付加したもの |
 | [Schema](Schema.md) | Schema: DB・データ型構造定義オブジェクト |
+| [TableDef](TableDef.md) | TableDef: 論理テーブル構造定義 |
 
 # <span id="typedefList">データ型定義一覧</span>
 
@@ -36,16 +38,14 @@
 | --: | :-- | :-- |
 | 1 | [authRequest](#authRequest) | authRequest: authClientからauthServerへの処理要求(平文) |
 | 2 | [authResponse](#authResponse) | authResponse: authServerからauthClientへの処理結果(平文) |
-| 3 | [ColumnDef](#ColumnDef) | ColumnDef: 項目定義 |
-| 4 | [Doclet](#Doclet) | Doclet: `jsdoc -X`で配列で返されるオブジェクト |
-| 5 | [DocletColDef](#DocletColDef) | DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報 |
-| 6 | [DocletColRow](#DocletColRow) | DocletColRow: データ項目一覧作成用追加情報 |
-| 7 | [DocletTreeFile](#DocletTreeFile) | DocletTreeFile: 個別入力ファイル情報 |
-| 8 | [DocletTreeOpt](#DocletTreeOpt) | DocletTreeOpt: オプション設定値 |
-| 9 | [DocletTreeSource](#DocletTreeSource) | DocletTreeSource: 統合版入力ファイル(JSソース)情報 |
-| 10 | [encryptedRequest](#encryptedRequest) | encryptedRequest: 暗号化された処理要求 |
-| 11 | [encryptedResponse](#encryptedResponse) | encryptedResponse: 暗号化された処理結果 |
-| 12 | [TypeDef](#TypeDef) | TypeDef: 論理テーブル構造定義 |
+| 3 | [Doclet](#Doclet) | Doclet: `jsdoc -X`で配列で返されるオブジェクト |
+| 4 | [DocletColDef](#DocletColDef) | DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報 |
+| 5 | [DocletColRow](#DocletColRow) | DocletColRow: データ項目一覧作成用追加情報 |
+| 6 | [DocletTreeFile](#DocletTreeFile) | DocletTreeFile: 個別入力ファイル情報 |
+| 7 | [DocletTreeOpt](#DocletTreeOpt) | DocletTreeOpt: オプション設定値 |
+| 8 | [DocletTreeSource](#DocletTreeSource) | DocletTreeSource: 統合版入力ファイル(JSソース)情報 |
+| 9 | [encryptedRequest](#encryptedRequest) | encryptedRequest: 暗号化された処理要求 |
+| 10 | [encryptedResponse](#encryptedResponse) | encryptedResponse: 暗号化された処理結果 |
 
 # 個別データ型定義
 
@@ -89,29 +89,6 @@ authResponse: authServerからauthClientへの処理結果(平文)
   致命的エラーの場合はErrorオブジェクト |
 | message | string | "" | メッセージ(statusの補足) | == authClient設定項目(authServerからの返信を受け、authClient内で追加) |
 | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ |
-
-
-## <a href="#typedefList"><span id="ColumnDef">"ColumnDef" データ型定義</span></a>
-
-ColumnDef: 項目定義
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| name | string | 必須 | 項目名（英数字・システム用） |  |
-| label | string | 任意 | 表示用ラベル（省略時は name) |  |
-| desc | string | '' | 項目に関する概要説明 |  |
-| note | string | '' | 項目に関する備考・意味説明 |  |
-| type | string | 'string' | 論理データ型 | - 'string' \| 'number' \| 'boolean' \| 'object' \| 'array' \| 'datetime' \| 'function' |
-| nullable | boolean | true | null を許可するか |  |
-| default | any |  | 既定値 | - データ型が関数の場合、引数はfactoryメソッドに渡されるargと看做す
-
-【datetimeが固定値ではない場合の記述方法】
-ex. factoryメソッドで生成するオブジェクトに生成日時を設定したい
-  ColumnDef.default = "Date.now()"
-ex. 有効期間として1日(24時間)後を設定したい
-  ColumnDef.default = "new Date(Date.now()+24*3600*1000)"
-- 【注意】引数は使用不可
-- factoryメソッドではこれを new Function('x',`return ${default}`) として関数化し、実行結果を返す |
 
 
 ## <a href="#typedefList"><span id="Doclet">"Doclet" データ型定義</span></a>
@@ -322,21 +299,3 @@ encryptedResponse: 暗号化された処理結果
 | tag | string | 必須 | AES-GCM 認証タグ |  |
 | meta | Object | 必須 | メタ情報 |  |
 | meta.rsabits | number | 必須 | 暗号化に使用したRSA鍵長 |  |
-
-
-## <a href="#typedefList"><span id="TypeDef">"TypeDef" データ型定義</span></a>
-
-TypeDef: 論理テーブル構造定義
-
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| name | string | 必須 | 論理的な識別名（TypeDef のキー） | - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'
-  - constructorに渡す定義オブジェクトでは省略(メンバ名を引用) |
-| typeName | string | 'TypeDef' | データ型名 | - 同一データ型のテーブル・インスタンスを複数使用する場合、instanceofの代わりに使用 |
-| desc | string | '' | テーブルに関する概要説明 |  |
-| note | string | '' | テーブルに関する備考 |  |
-| primaryKey | string[] | [] | 主キー項目名 |  |
-| unique | string[] | [] | 主キー以外の一意制約 |  |
-| cols | ColumnDef[] | 必須 | 項目定義（順序を考慮するため配列） |  |
-| header | string[] | 必須 | 項目名の一覧(引数不可、自動生成) |  |
-| map | Object.<string, ColumnDef> | 必須 | 項目名をキーとする項目定義集(引数不可、自動生成) |  |

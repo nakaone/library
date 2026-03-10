@@ -55,13 +55,13 @@ authAuditLog: authServerの監査ログをシートに出力
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| timestamp | number | Date.now() | 要求日時ISO8601拡張形式の文字列 |  |
-| duration | number | 必須 | 処理時間ミリ秒単位 |  |
-| memberId | string | 必須 | メンバの識別子メールアドレス |  |
-| deviceId | string | 任意 | デバイスの識別子 |  |
+| timestamp | string | Date.now() | 要求日時(ISO8601拡張形式) |  |
+| duration | number | 必須 | 処理時間(ms) |  |
+| memberId | string | 必須 | メンバの識別子(メールアドレス) |  |
+| deviceId | string | 任意 | デバイスの識別子(UUIDv4) |  |
 | func | string | 必須 | サーバ側関数名 |  |
-| result | string | success | サーバ側処理結果 |  |
-| note | string | 必須 | 備考 |  |
+| result | string | 'success' | サーバ側処理結果 |  |
+| note | string | 任意 | 備考 |  |
 
 
 ## <a href="#typedefList"><span id="authErrorLog">"authErrorLog" データ型定義</span></a>
@@ -115,7 +115,7 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | memberList | string | "memberList" | memberListシート名 |  |
 | defaultAuthority | number | 1 | 新規加入メンバの権限の既定値 |  |
 | memberLifeTime | number | 31536000000 | 加入有効期間 | メンバ加入承認後の有効期間。既定値は1年 |
-| prohibitedToJoin | number | 259200000 | 加入禁止期間 | 管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日 |
+| prohibitedToJoin | number | 259200000 | 加入禁止期間 | 管理者による加入否認後、再加入申請���自動的に却下される期間。既定値は3日 |
 | loginLifeTime | number | 86400000 | 認証有効時間 | ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日 |
 | loginFreeze | number | 600000 | 認証凍結時間 | 認証失敗後、再認証要求が禁止される期間。既定値は10分 |
 | requestIdRetention | number | 300000 | 重複リクエスト拒否となる時間。既定値は5分 |  |
