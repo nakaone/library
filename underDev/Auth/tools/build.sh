@@ -109,7 +109,8 @@ function overviewDesign {  # readme/index.md他の全体的な仕様書
   # docルート直下文書用に相対パスを修正したheader.mdを用意
   cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md
   # 総説
-  cat $tmp/header.md $src/doc/readme.md > $doc/readme.md
+  cat $src/doc/readme.md | awk 1 | node $embed -src:$src > $tmp/readme.md
+  cat $tmp/header.md $tmp/readme.md > $doc/readme.md
   # 暗号化・署名方式
   cat $tmp/header.md $src/doc/crypto.md > $doc/crypto.md
   # メンバ・デバイス管理
