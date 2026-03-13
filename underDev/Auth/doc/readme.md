@@ -26,7 +26,7 @@
 
 <div class="submenu">
 
-[要求仕様](#require) | [用語](#dictionary) | [処理手順概要](#protocol)
+[要求仕様](#require) | [用語](#dictionary) | [処理手順概要](#protocol) | [通信用データ型](#dataType)
 
 </div>
 
@@ -476,3 +476,245 @@ sequenceDiagram
   | 未登録 | 登録済 | CPkey重複 | 通常あり得ない。攻撃？ |
   | 登録済 | 未登録 | SPkey配布 | 手違いで二重要求？許容 |
   | 登録済 | 登録済 | CPkey重複 | 通常あり得ない。攻撃？ |
+
+# <span id="dataType"><a href="#top">通信用データ型</a></span>
+
+ローカル関数〜サーバ関数間でのやりとりは、以下のデータ型で行う。
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant lf as LocalFunc
+  participant cc as cryptoClient
+  participant cl as authClient
+  participant sv as authServer
+  participant cs as cryptoServer
+  participant sf as serverFunc
+
+  lf->>+cl: LocalRequest
+  cl->>+cc: authRequest
+  Note right of cc: 暗号化・署名
+  cc->>-cl: encryptedRequest
+  cl->>+sv: encryptedRequest
+  sv->>+cs: encryptedRequest
+  Note right of cs: 復号・署名検証
+  cs->>-sv: authRequest
+  sv->>+sf: authRequest
+  Note left of sf: サーバ側関数での処理
+  sf->>-sv: authResponse
+  sv->>+cs: aurhResponse
+  Note right of cs: 暗号化・署名
+  cs->>-sv: encryptedResponse
+  sv->>-cl: encryptedResponse
+  cl->>+cc: encryptedResponse
+  Note right of cc: 復号・署名検証
+  cc->>-cl: authResponse
+  cl->>-lf: LocalResponse
+```
+
+| No | データ型名 | 概要 |
+| --: | :-- | :-- |
+| 1 | [LocalRequest](common/index.md#LocalRequest) | ローカル関数からの処理要求 |
+| 2 | [authRequest](common/index.md#authRequest) | 平文(暗号化前)の処理要求 |
+| 3 | [encryptedRequest](common/index.md#encryptedRequest) | 暗号化された処理要求 |
+| 4 | [encryptedResponse](common/index.md#encryptedResponse) | 暗号化された処理結果 |
+| 5 | [authResponse](common/index.md#authResponse) | 平文(復号後)の処理結果 |
+| 6 | [LocalResponse](common/index.md#LocalResponse) | ローカル関数への処理結果 |
+
+## 主要属性
+
+<style>
+div.table > div:nth-child(even){background-color:#dfd;}
+.tr{
+  display:grid;
+  /*grid-auto-flow:column;*/
+  grid-template-columns: 2rem 8rem 9rem 1fr repeat(6, 1.5rem);
+  align-items:end; /* 行内セル下揃え */
+}
+.tr div {display:flex;}
+div.num {text-align: right;}
+.rotate{  /* 回転セル */
+  display:inline-block;
+  transform: rotate(270deg) translateY(1.2rem);
+  transform-origin: left bottom;
+}
+</style>
+<div class="table"><div class="tr">
+  <div>No</div>
+  <div>メンバ名</div>
+  <div>データ型</div>
+  <div>説明</div>
+  <div class="rotate">LocalRequest</div>
+  <div class="rotate">authRequest</div>
+  <div class="rotate">encryptedRequest</div>
+  <div class="rotate">encryptedResponse</div>
+  <div class="rotate">authResponse</div>
+  <div class="rotate">LocalResponse</div>
+</div><div class="tr">
+  <div class="num">1</div>
+  <div>memberId</div>
+  <div>number</div>
+  <div>メンバ識別子(メールアドレス)</div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">2</div>
+  <div>deviceId</div>
+  <div>string</div>
+  <div>デバイス識別子(UUID)</div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">3</div>
+  <div>memberName</div>
+  <div>string</div>
+  <div>メンバの氏名</div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">4</div>
+  <div>CPkey</div>
+  <div>string</div>
+  <div>クライアント側公開鍵</div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">5</div>
+  <div>requestTime</div>
+  <div>number</div>
+  <div>クライアント側の処理要求受付日時</div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">6</div>
+  <div>func</div>
+  <div>string</div>
+  <div>サーバ側関数名</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">7</div>
+  <div>arguments</div>
+  <div>any[]</div>
+  <div>サーバ側関数に渡す引数の配列</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">8</div>
+  <div>nonce</div>
+  <div>string</div>
+  <div>処理要求のUUID</div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">9</div>
+  <div>SPkey</div>
+  <div>string</div>
+  <div>サーバ側公開鍵</div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">10</div>
+  <div>response</div>
+  <div>any</div>
+  <div>サーバ側関数の処理結果(戻り値)</div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+</div><div class="tr">
+  <div class="num">11</div>
+  <div>receptTime</div>
+  <div>number</div>
+  <div>サーバ側の処理要求受付日時</div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">12</div>
+  <div>responseTime</div>
+  <div>number</div>
+  <div>処理終了日時</div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">13</div>
+  <div>status</div>
+  <div>string|authError</div>
+  <div>authServer他、サーバ側Auth処理結果</div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div>⭕</div>
+</div><div class="tr">
+  <div class="num">14</div>
+  <div>message</div>
+  <div>string</div>
+  <div>メッセージ(statusの補足)</div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div><div class="tr">
+  <div class="num">15</div>
+  <div>decrypt</div>
+  <div>string</div>
+  <div>クライアント側での復号結果</div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>⭕</div>
+  <div>⭕</div>
+  <div></div>
+</div></div>
+
+- `status`は「アプリケーションステータス」であり HTTP レスポンスとは無関係
