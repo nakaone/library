@@ -27,7 +27,7 @@ stateDiagram-v2
 | 3 | 加入中 | 管理者により加入が承認された状態。権限不要な関数に加え、ログイン後は付与された範囲内の要権限サーバ側関数も実行可。<br>加入有効期間経過により、自動的に「未審査」状態に移行する |
 | 4 | 加入禁止 | 管理者により加入が否認された状態。権限不要な関数のみ実行可能<br>加入禁止期間経過により、自動的に「未審査」状態に移行する |
 
-<details><summary>状態決定ロジック</summary>
+### 状態決定ロジック
 
 | ①シート | ②memberId | ③加入禁止 | ④未審査 | **メンバ状態** |
 | :-- | :-- | :-- | :-- | :-- |
@@ -45,8 +45,6 @@ stateDiagram-v2
   `0 < denial && Date.now() <= unfreezeDenial`
 - ④未審査：管理者の認否が未決定<br>
   `approval === 0 && denial === 0`
-
-</details>
 
 ## <span id="deviceStatus">デバイスの状態遷移</span>
 
@@ -77,7 +75,7 @@ stateDiagram-v2
 | 3 | 認証中 | 認証が通り(ログイン)、権限の範囲内で要権限サーバ側関数も使用できる状態 |
 | 4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態 |
 
-<details><summary>状態決定ロジック</summary>
+### 状態決定ロジック
 
 | ⑤認証中 | ⑥凍結中 | ⑦未認証 | デバイス状態 |
 | :-- | :-- | :-- | :-- |
@@ -94,6 +92,3 @@ stateDiagram-v2
   `0 < approval && 0 < loginFailure && loginFailure < Date.now() && Date.now() <= unfreezeLogin`
 - ⑦未認証：加入承認後認証要求されたことが無い<br>
   `0 < approval && loginRequest === 0`
-
-</details>
-
