@@ -2,8 +2,8 @@
 function main { # メイン処理
   setup
   concatSource
-  overviewDesign  # detailedDesignでtmp/header.mdを使用するので先行
   detailedDesign
+  overviewDesign
   deploy
   ending
 }
@@ -83,6 +83,9 @@ function detailedDesign {  # JavaScriptソースからMarkdown作成
   -o $tmp/createSpec -r $tmp/DocletTree.json \
   1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
 
+  # docルート直下文書用に相対パスを修正したheader.mdを用意
+  cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md
+
   # index.md及びクラス・グローバル関数個別MDにヘッダを付けてdoc以下にコピー
   find $tmp/createSpec -type f -name '*.md' | while read -r filepath; do
     # 相対パスを取得（例: client/authClient.md）
@@ -106,20 +109,19 @@ function overviewDesign {  # readme/index.md他の全体的な仕様書
   echo "== overviewDesign start."
   # 図表
   cp $src/doc/*.svg $doc/img/
-  # docルート直下文書用に相対パスを修正したheader.mdを用意
-  cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md
   # 総説
-  cat $src/doc/readme.md | awk 1 | node $embed -src:$src > $tmp/readme.md
-  cat $tmp/header.md $tmp/readme.md > $doc/readme.md
+  cat $tmp/header.md $src/doc/readme.md | awk 1 | node $embed -src:$src -tmp:$tmp > $doc/readme.md
   # 暗号化・署名方式
   cat $tmp/header.md $src/doc/crypto.md > $doc/crypto.md
   # メンバ・デバイス管理
   cat $tmp/header.md $src/doc/Member.md > $doc/Member.md
 
   # クライアント側
-  cat $src/doc/header.md $src/doc/client.md > $doc/client/index.md
+  cat $src/doc/header.md $src/doc/client.md $tmp/createSpec/client/index.md | awk 1 | \
+  node $embed -src:$src -tmp:$tmp > $doc/client/index.md
   # サーバ側
-  cat $src/doc/header.md $src/doc/server.md > $doc/server/index.md
+  cat $src/doc/header.md $src/doc/server.md $tmp/createSpec/server/index.md | awk 1 | \
+  node $embed -src:$src -tmp:$tmp > $doc/server/index.md
   # 開発仕様
   cat $tmp/header.md  $src/doc/dev.md > $doc/dev.md
 }

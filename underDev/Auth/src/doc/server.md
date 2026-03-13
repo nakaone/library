@@ -1,4 +1,4 @@
-<p class="l1">"auth"サーバ側仕様書</p>
+<p id="top" class="l1">"auth"サーバ側仕様書</p>
 
 # 実装イメージ
 
@@ -41,3 +41,7 @@ const menu10 = () => asv.listNotYetDecided();
 const menu21 = () => asv.setupEnvironment();
 const menu22 = () => asv.resetSPkey();
 ```
+
+# サーバ側処理分岐先決定手順
+
+<!--::$src/doc/decisionTable.server.md::-->
