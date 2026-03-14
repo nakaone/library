@@ -36,7 +36,7 @@ export class authConfig extends Schema {
          * @prop {string} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
          * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
          * @prop {string} func - サーバ側関数名
-         * @prop {any[]} [arg=[]] - サーバ側関数に渡す引数の配列
+         * @prop {any[]} [arguments=[]] - サーバ側関数に渡す引数の配列
          * @prop {string} [nonce=UUIDv4] - 要求の識別子UUIDv4
          */
         authRequest: {desc: 'クライアント→サーバ要求',
