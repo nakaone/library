@@ -192,10 +192,11 @@ export class authClient {
   }
 
   /** exec: ローカル関数の処理要求を処理
+   * - エラー時はErrorオブジェクト化して戻り値とする
    * @memberof authClient
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg=[] - サーバ側関数に渡す引数
-   * @param {number} depth=0 - 再帰呼出時の階層
+   * @param {number} [depth=0] - 再帰呼出時の階層
    * @returns {any|Error} 処理結果
    */
   async exec(func,arg=[],depth=0) {

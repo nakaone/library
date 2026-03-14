@@ -139,7 +139,8 @@ exec: ローカル関数の処理要求を処理
 
 ### <a href="#authClient-exec_top"><span id="authClient-exec_desc">🧾 exec 概説</span></a>
 
-exec: ローカル関数の処理要求を処理<br>
+exec: ローカル関数の処理要求を処理
+- エラー時はErrorオブジェクト化して戻り値とする<br>
 
 ### <a href="#authClient-exec_top"><span id="authClient-exec_param">▶️ exec 引数</span></a>
 
@@ -166,7 +167,7 @@ fetch: サーバ側APIの呼び出し<br>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | ��理要求 |  |
+| request | authRequest | 必須 | 処理要求 |  |
 
 ### <a href="#authClient-fetch_top"><span id="authClient-fetch_return">◀️ fetch 戻り値</span></a>
 

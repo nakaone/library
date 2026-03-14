@@ -28,53 +28,38 @@
 
 # <span id="log"><a href="#top">変更履歴</a></span>
 
-- build0010: SPkey取得
+- build0011: SPkey取得
   - authClientでauthRequest(SPkey要求)作成
   - authServerで受信、内容確認
   - authServerでauthResponse作成
   - authClientで受信、内容確認、格納
-
-<!--
-[bug] _withStore引数の説明が意味不明
-[bug] exec引数anyの要否/既定値欄が'['のみで意味不明
-[bug] getIndexedDB引数の項目名が空欄
-
-[warn] exec()のラベル・概説の内容が全く同じ。概説は削除した方がベター
-[warn] ラベル冒頭のクラス・関数名は削除した方がベター
-[warn] authClient.constructorのラベルが"constructor"だけなら削除した方がベター
-[warn] 「constructor 概説」の内容が"constructor"だけなら削除した方がベター
-
-
-[bug] DocletTree.mapにおかしなキーがある ⇒ jsdocで作成されるlongname自体こういう形なので無視
-  "/common/config.mjs::config
-  - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
-  - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
--->
-
 === いまここ =========================================
+- build0010: createSpec関係バグ修正
+  - とりあえず一通り気づいたところを手当たり次第修正
+  - client
+    - authClient
+      - 
+    - LocalRequest, LocalResponse : 未定義
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>
   ⇒ createSpec.mjsでソースはJSDocに一本化する。
   - 暗号化・署名方式をcrypto.mdとして独立
   - 状態及び通信手順をMember.mdとして独立
   <!--
-  - src/client
-    - □ authClient.mjs: 出力内容確認
-    - □ cryptoClient.mjs: 出力内容確認
-    - □ localFunc.mjs: 出力内容確認
-    - □ onLoad.mjs: 出力内容確認
-  - src/common
-    - □ authConfig.mjs: 出力内容確認
-    - □ config.mjs: 出力内容確認
-  - src/server
-    - □ authServer.mjs: 出力内容確認
-    - □ cryptoServer.mjs: 出力内容確認
-    - □ Member.mjs: 出力内容確認
-    - □ onOpen.mjs: 出力内容確認
-    - □ serverFunc.mjs: 出力内容確認
-  - tools.mjs: 出力内容確認
-    - □ config.mjs: いる？
-  - □ src/common/specDef.js: 不足分を反映
+  [bug] _withStore引数の説明が意味不明
+  [bug] exec引数anyの要否/既定値欄が'['のみで意味不明
+  [bug] getIndexedDB引数の項目名が空欄
+
+  [warn] exec()のラベル・概説の内容が全く同じ。概説は削除した方がベター
+  [warn] ラベル冒頭のクラス・関数名は削除した方がベター
+  [warn] authClient.constructorのラベルが"constructor"だけなら削除した方がベター
+  [warn] 「constructor 概説」の内容が"constructor"だけなら削除した方がベター
+
+
+  [bug] DocletTree.mapにおかしなキーがある ⇒ jsdocで作成されるlongname自体こういう形なので無視
+    "/common/config.mjs::config
+    - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
+    - 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
   -->
 - build0008: 初回HTMLロード時処理
   - authClient動作確認

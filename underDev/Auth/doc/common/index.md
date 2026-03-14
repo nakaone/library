@@ -62,7 +62,7 @@ authRequest: authClientからauthServerへの処理要求(平文)
 | CPkeySign | string | this.idb.CPkeySign | クライアント側署名用公開鍵 |  |
 | requestTime | number | Date.now() | 要求日時UNIX時刻 |  |
 | func | string | 必須 | サーバ側関数名 |  |
-| arg | any[] | [] | サーバ側関数に渡す引数の配列 |  |
+| arguments | any[] | [] | サーバ側関数に渡す引数の配列 |  |
 | nonce | string | UUIDv4 | 要求の識別子UUIDv4 |  |
 
 

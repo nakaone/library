@@ -145,12 +145,12 @@ sequenceDiagram
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [LocalRequest](common/index.md#LocalRequest) | ローカル関数からの処理要求 |
+| 1 | [LocalRequest](common/index.md#LocalRequest) | ローカル関数からの処理要求<br>※ 実際にはオブジェクトではなくfunc,argumentsを個別に渡す |
 | 2 | [authRequest](common/index.md#authRequest) | 平文(暗号化前)の処理要求 |
 | 3 | [encryptedRequest](common/index.md#encryptedRequest) | 暗号化された処理要求 |
 | 4 | [encryptedResponse](common/index.md#encryptedResponse) | 暗号化された処理結果 |
 | 5 | [authResponse](common/index.md#authResponse) | 平文(復号後)の処理結果 |
-| 6 | [LocalResponse](common/index.md#LocalResponse) | ローカル関数への処理結果 |
+| 6 | [LocalResponse](common/index.md#LocalResponse) | ローカル関数への処理結果<br>※ 実際にはサーバ関数処理結果またはErrorオブジェクト |
 
 ## 主要属性
 
@@ -271,7 +271,7 @@ div.num {text-align: right;}
   <div></div>
 </div><div class="tr">
   <div class="num">9</div>
-  <div>SPkey</div>
+  <div>SPkeySign</div>
   <div>string</div>
   <div>サーバ側公開鍵</div>
   <div></div>

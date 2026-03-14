@@ -12,11 +12,6 @@
 === いまここ =========================================
 - build0010: createSpec関係バグ修正
   - とりあえず一通り気づいたところを手当たり次第修正
-  - common
-    - index.md
-      - authRequest
-        - arg -> arguments
-      - authResponse
   - client
     - authClient
       - 
