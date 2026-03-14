@@ -216,7 +216,7 @@ div.num {text-align: right;}
   <div></div>
 </div><div class="tr">
   <div class="num">4</div>
-  <div>CPkey</div>
+  <div>CPkeySign</div>
   <div>string</div>
   <div>クライアント側公開鍵</div>
   <div></div>
