@@ -285,5 +285,5 @@ authIndexedDB: IndexedDBに保存する内容(=this.idb)
 | CSkeyEnc | CryptoKey | 必須 | 暗号化用秘密鍵 |  |
 | CPkeyEnc | CryptoKey | 必須 | 暗号化用公開鍵 |  |
 | keyGeneratedDateTime | string | 必須 | 鍵ペア生成日時(UNIX時刻) |  |
-| SPkeySign | string |  | サーバ側署名用公開鍵 |  |
-| SPkeyEnc | string |  | サーバ側暗号化用公開鍵 |  |
+| SPkeySign | string | null | サーバ側署名用公開鍵 |  |
+| SPkeyEnc | string | null | サーバ側暗号化用公開鍵 |  |

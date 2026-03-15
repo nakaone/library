@@ -542,8 +542,10 @@ async function createSpec(opt={}){
 
         dev.step(4);  // 要否/既定値
         v.rv.value = Object.hasOwn(prop,'defaultvalue')
-        ? prop.defaultvalue // 既定値指定有り ⇒ prop.defaultvalue
-        : ( // 既定値指定無し
+        ? ( // 既定値指定有り ⇒ prop.defaultvalue
+          prop.defaultvalue === null ? 'null' : (
+          prop.defaultvalue === false ? 'false' : prop.defaultvalue)
+        ) : ( // 既定値指定無し
           prop.optional === true  // 任意項目？
           ? opt.value[opt.lang].optional : opt.value[opt.lang].required);
 

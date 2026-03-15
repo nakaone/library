@@ -9,13 +9,22 @@
   - authServerで受信、内容確認
   - authServerでauthResponse作成
   - authClientで受信、内容確認、格納
-=== いまここ =========================================
+
 - build0010: createSpec関係バグ修正
   - とりあえず一通り気づいたところを手当たり次第修正
-  - client
-    - authClient
-      - 
-    - LocalRequest, LocalResponse : 未定義
+    - 総説
+    - 暗号化  ◀ いまここ
+    - メンバ
+    - 開発
+    - CL/SV共通
+      - index.md > authResponse: responseの要否/既定値欄が空欄
+      - index.md > authResponse: statusの備考が次の行に分割される
+      - index.md > encryptedRequest: meta.keyProvisioningの備考が次の行に分割される
+      - index.mdにサブメニュー追加
+        「グローバル関数・クラス一覧」「データ型定義一覧」「個別データ型定義」
+    - CL側
+    - SV側
+
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>
   ⇒ createSpec.mjsでソースはJSDocに一本化する。

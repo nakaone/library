@@ -24,7 +24,7 @@
 
 # <span id="authConfig_top">🧩 authConfigクラス仕様書</span>
 
-継承元：<a href="../common/Schema.md">Schema</a><br>authConfig: クライアント・サーバ共通設定情報
+継承元：Schema<br>authConfig: クライアント・サーバ共通設定情報
 
 ## <a href="#authConfig_top"><span id="authConfig_prop">🔢 authConfig メンバ一覧</span></a>
 
