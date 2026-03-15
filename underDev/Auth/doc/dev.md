@@ -36,8 +36,9 @@
 
 - build0010: createSpec関係バグ修正
   - NotebookLM、ソースを分割したら更新時のループが直る？
-  - [bug]common/index.md > authResponse.nonce: "== authServer内での追加項目"が入っている
-  - [bug]common/index.md > authResponse.message: "== authClient設定項目〜"が入っている
+  - [bug] client/authClient.md: 「インスタンス作成のサンプル」がソースではなく文字列として表示
+    - 改行が<br>になっている
+    - メアドの@gmailがタグと認識され、以降が処理されない
 
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>

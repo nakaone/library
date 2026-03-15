@@ -37,6 +37,7 @@ import { authConfig } from "../common/authConfig.mjs";
  * 
  *   } catch (e) { return dev.error(e); }
  * }
+ * ```
  */
 export class authClient {
 
