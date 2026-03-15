@@ -58,7 +58,7 @@ authRequest: authClientからauthServerへの処理要求(平文)
 
 ## <a href="#typedefList"><span id="authResponse">"authResponse" データ型定義</span></a>
 
-authResponse: authServerからauthClientへの処理結果(平文)
+authResponse: authServerからauthClientへの処理結果(平文)<br>- memberId〜nonce : authClient設定項目(authRequestからの転記項目) : <br>- SPkeySign〜message : authServer内での追加項目<br>- decrypt〜 : authClient設定項目(authServerからの返信を受け、authClient内で追加)
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
@@ -69,14 +69,14 @@ authResponse: authServerからauthClientへの処理結果(平文)
 | requestTime | number | 必須 | 要求日時UNIX時刻 |  |
 | func | string | 必須 | サーバ側関数名 |  |
 | arg | any[] | 必須 | サーバ側関数に渡す引数の配列 |  |
-| nonce | string | 必須 | 要求の識別子UUIDv4<br><br>== authServer内での追加項目 |  |
+| nonce | string | 必須 | 要求の識別子UUIDv4 |  |
 | SPkeySign | string | this.keys.SPkeySign | サーバ側署名用公開鍵 |  |
 | SPkeyEnc | string | this.keys.SPkeyEnc | サーバ側暗号化用公開鍵 |  |
 | response | any | null | サーバ側関数の戻り値 |  |
 | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  |
 | responseTime | number | 0 | サーバ側処理終了日時<br>  エラーの場合は発生日時 |  |
 | status | string | "success" | サーバ側処理結果<br>  正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、<br>  致命的エラーの場合はErrorオブジェクト |  |
-| message | string | "" | メッセージ(statusの補足)<br><br>== authClient設定項目(authServerからの返信を受け、authClient内で追加) |  |
+| message | string | "" | メッセージ(statusの補足) |  |
 | decrypt | string | "success" | クライアント側での復号処理結果<br>  "success":正常、それ以外はエラーメッセージ |  |
 
 
