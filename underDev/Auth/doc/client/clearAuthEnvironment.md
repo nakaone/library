@@ -24,8 +24,6 @@
 
 # <span id="clearAuthEnvironment_top">🧩 clearAuthEnvironment()</span>
 
-clearAuthEnvironment: IndexedDBの"Auth"データベースを削除し、環境をリセットする
-
 ## <a href="#clearAuthEnvironment_top"><span id="clearAuthEnvironment_desc">🧾 clearAuthEnvironment 概説</span></a>
 
-<br>
+clearAuthEnvironment: IndexedDBの"Auth"データベースを削除し、環境をリセットする<br><br>

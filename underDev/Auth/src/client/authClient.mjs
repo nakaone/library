@@ -4,6 +4,9 @@ import { authConfig } from "../common/authConfig.mjs";
 /** authClient: クライアント側中核クラス
  * @class
  * @classdesc クライアント側中核クラス
+ * classdesc line.2
+ * classdesc line.3
+ * 
  * - 初期化の際に非同期処理が必要なため、インスタンス作成は
  *   `new authClient()`ではなく`authClient.initialize()`で行う
  * @prop {authClientConfig} cf - authClient設定情報

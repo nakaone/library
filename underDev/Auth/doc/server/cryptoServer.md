@@ -48,16 +48,16 @@ cryptoServer: サーバ側の暗号化・署名検証
 
 ## <a href="#cryptoServer_top"><span id="cryptoServer_desc">🧾 cryptoServer 概説</span></a>
 
-cryptoServer: サーバ側の暗号化・署名検証<br>
+cryptoServer: サーバ側の暗号化・署名検証<br><br>
 
-サーバ側の暗号化・署名検証<br>
+サーバ側の暗号化・署名検証<br><br>
 ## <span id="cryptoServer-constructor_top">🧩 constructor()</span>
 
 constructor
 
 ### <a href="#cryptoServer-constructor_top"><span id="cryptoServer-constructor_desc">🧾 constructor 概説</span></a>
 
-constructor<br>
+constructor<br><br>
 
 ### <a href="#cryptoServer-constructor_top"><span id="cryptoServer-constructor_param">▶️ constructor 引数</span></a>
 
@@ -70,7 +70,7 @@ encrypt: 処理結果を暗号化＋署名
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_desc">🧾 encrypt 概説</span></a>
 
-encrypt: 処理結果を暗号化＋署名<br>
+encrypt: 処理結果を暗号化＋署名<br><br>
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_param">▶️ encrypt 引数</span></a>
 
@@ -90,7 +90,7 @@ decrypt: 暗号化された処理要求を復号・署名検証
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_desc">🧾 decrypt 概説</span></a>
 
-decrypt: 暗号化された処理要求を復号・署名検証<br>
+decrypt: 暗号化された処理要求を復号・署名検証<br><br>
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_param">▶️ decrypt 引数</span></a>
 
@@ -110,8 +110,7 @@ generateKeys: PEM形式のRSA鍵ペアを生成
 
 ### <a href="#cryptoServer-generateKeys_top"><span id="cryptoServer-generateKeys_desc">🧾 generateKeys 概説</span></a>
 
-generateKeys: PEM形式のRSA鍵ペアを生成
-- 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない<br>
+generateKeys: PEM形式のRSA鍵ペアを生成<br>- 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない<br><br>
 
 ### <a href="#cryptoServer-generateKeys_top"><span id="cryptoServer-generateKeys_param">▶️ generateKeys 引数</span></a>
 
@@ -130,16 +129,14 @@ generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
 
 ### <a href="#cryptoServer-generateAndSave_top"><span id="cryptoServer-generateAndSave_desc">🧾 generateAndSave 概説</span></a>
 
-generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する<br>
+generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する<br><br>
 ## <span id="cryptoServer-initialize_top">🧩 initialize()</span>
 
 initialize: cryptoServerインスタンス作成
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_desc">🧾 initialize 概説</span></a>
 
-initialize: cryptoServerインスタンス作成
-- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
-- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br>
+initialize: cryptoServerインスタンス作成<br>- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br><br>
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_param">▶️ initialize 引数</span></a>
 

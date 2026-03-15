@@ -28,7 +28,7 @@ localFunc: テスト用：処理要求発行
 
 ## <a href="#localFunc_top"><span id="localFunc_desc">🧾 localFunc 概説</span></a>
 
-localFunc: テスト用：処理要求発行<br>
+localFunc: テスト用：処理要求発行<br><br>
 
 ## <a href="#localFunc_top"><span id="localFunc_param">▶️ localFunc 引数</span></a>
 

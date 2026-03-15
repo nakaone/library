@@ -11,19 +11,9 @@
   - authClientで受信、内容確認、格納
 
 - build0010: createSpec関係バグ修正
-  - とりあえず一通り気づいたところを手当たり次第修正
-    - 総説
-    - 暗号化  ◀ いまここ
-    - メンバ
-    - 開発
-    - CL/SV共通
-      - index.md > authResponse: responseの要否/既定値欄が空欄
-      - index.md > authResponse: statusの備考が次の行に分割される
-      - index.md > encryptedRequest: meta.keyProvisioningの備考が次の行に分割される
-      - index.mdにサブメニュー追加
-        「グローバル関数・クラス一覧」「データ型定義一覧」「個別データ型定義」
-    - CL側
-    - SV側
+  - NotebookLM、ソースを分割したら更新時のループが直る？
+  - [bug]common/index.md > authResponse.nonce: "== authServer内での追加項目"が入っている
+  - [bug]common/index.md > authResponse.message: "== authClient設定項目〜"が入っている
 
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>

@@ -47,9 +47,9 @@
 
 ## <a href="#authConfig_top"><span id="authConfig_desc">🧾 authConfig 概説</span></a>
 
-authConfig: クライアント・サーバ共通設定情報<br>
+authConfig: クライアント・サーバ共通設定情報<br><br>
 
-クライアント・サーバ共通設定情報<br>
+クライアント・サーバ共通設定情報<br><br>
 ## <span id="authConfig-constructor_top">🧩 constructor()</span>
 
 ### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_desc">🧾 constructor 概説</span></a>

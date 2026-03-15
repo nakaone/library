@@ -44,22 +44,22 @@ cryptoClient: クライアント側の暗号化・署名検証
 
 ## <a href="#cryptoClient_top"><span id="cryptoClient_desc">🧾 cryptoClient 概説</span></a>
 
-cryptoClient: クライアント側の暗号化・署名検証<br>
+cryptoClient: クライアント側の暗号化・署名検証<br><br>
 
-クライアント側の暗号化・署名検証<br>
+クライアント側の暗号化・署名検証<br><br>
 ## <span id="cryptoClient-constructor_top">🧩 constructor()</span>
 
 constructor
 
 ### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_desc">🧾 constructor 概説</span></a>
 
-constructor<br>
+constructor<br><br>
 
 ### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_param">▶️ constructor 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数 | CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
+| idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数<br>  CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |  |
 | RSAbits | number | 必須 | RSA鍵長 |  |
 ## <span id="cryptoClient-encrypt_top">🧩 encrypt()</span>
 
@@ -73,7 +73,7 @@ encrypt: 処理要求を暗号化＋署名
 
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_desc">🧾 encrypt 概説</span></a>
 
-encrypt: 処理要求を暗号化＋署名<br>
+encrypt: 処理要求を暗号化＋署名<br><br>
 
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_param">▶️ encrypt 引数</span></a>
 
@@ -92,7 +92,7 @@ dummyFunc: テスト用ダミー
 
 #### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_desc">🧾 dummyFunc 概説</span></a>
 
-dummyFunc: テスト用ダミー<br>
+dummyFunc: テスト用ダミー<br><br>
 
 #### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_param">▶️ dummyFunc 引数</span></a>
 
@@ -112,7 +112,7 @@ decrypt: 暗号化された処理結果を復号・署名検証
 
 ### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_desc">🧾 decrypt 概説</span></a>
 
-decrypt: 暗号化された処理結果を復号・署名検証<br>
+decrypt: 暗号化された処理結果を復号・署名検証<br><br>
 
 ### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_param">▶️ decrypt 引数</span></a>
 
@@ -131,8 +131,7 @@ generateKeys: RSA鍵ペアを生成
 
 ### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_desc">🧾 generateKeys 概説</span></a>
 
-generateKeys: RSA鍵ペアを生成
-- 生成のみ、IndexedDBやメンバ変数への格納は行わない<br>
+generateKeys: RSA鍵ペアを生成<br>- 生成のみ、IndexedDBやメンバ変数への格納は行わない<br><br>
 
 ### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_param">▶️ generateKeys 引数</span></a>
 

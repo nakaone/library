@@ -381,7 +381,9 @@ async function createSpec(opt={}){
       try {
 
         dev.step(1);  // オリジナルのメンバをコピー
-        Object.keys(doclet).forEach(x => this[x] = doclet[x]);
+        // JSDocが解析済の全フィールドに対して改行を<br>に置換
+        v.doclet = JSON.parse(JSON.stringify(doclet).replaceAll(/\\n/g,'<br>').trim());
+        Object.keys(v.doclet).forEach(x => this[x] = v.doclet[x]);
 
         dev.step(2);  // オプション設定
         this.opt = opt;
@@ -402,18 +404,18 @@ async function createSpec(opt={}){
         dev.step(5);    // label
         dev.step(5.1);  // 原文(comment)からタグの内容を整理
         this.parsed = {label:null};
-        if( Object.hasOwn(doclet,'comment') ){
+        if( Object.hasOwn(v.doclet,'comment') ){
 
           // "/**"で始まる行はラベルと判断
-          v.m = doclet.comment.split('\n')[0].match(/\/\*\*\s+([^@].+)/);
+          v.m = v.doclet.comment.split(/<br>/)[0].match(/\/\*\*\s+([^@].+)/);
           if( v.m ) this.parsed.label = v.m[1];
 
           // タグ(@xxx)ごとに分解
-          v.m = doclet.comment.matchAll(/(\/\*\*|@[a-zA-Z]+)\s*([^@]+)/g);
+          v.m = v.doclet.comment.matchAll(/(\/\*\*|@[a-zA-Z]+)\s*([^@]+)/g);
           [...v.m].forEach(tag => {
 
             // タグ単位に{key,val}形式に変換
-            // ex.`@name User#test\n` ⇒ {key:"@name",val:"User#test"})
+            // ex.`@name User#test<br>` ⇒ {key:"@name",val:"User#test"})
             v.tag = {key:tag[1],val:tag[2]};
 
             // タグの表記統一
@@ -424,7 +426,7 @@ async function createSpec(opt={}){
 
             // 不要な余白・コメント指示を削除
             v.tag.val = v.tag.val.replace(/^\* /,'')  // 先頭の"* "
-            .replaceAll(/\n\s+\* /g,'\n')  // 行頭の" * "
+            .replaceAll(/<br>\s+\* /g,'<br>')  // 行頭の" * "
             .replace(/\*\/?\s*$/,'')  // 末尾の"*/"
             .trim();
 
@@ -441,7 +443,7 @@ async function createSpec(opt={}){
           // 各タグの値を結合
           Object.keys(this.parsed).forEach(key => {
             if( Array.isArray(this.parsed[key]) ){
-              this.parsed[key] = this.parsed[key].join('\n').trim();
+              this.parsed[key] = this.parsed[key].join('<br>').trim();
             }
           })
         }
@@ -451,7 +453,7 @@ async function createSpec(opt={}){
         // ② "@name"に続く文字列
         // ③ typdef, interface
         // ④ description, classdescの先頭行
-        // ⑤ doclet.longname
+        // ⑤ v.doclet.longname
         if( this.parsed.label !== null ){
           this.label = this.parsed.label;
         } else if( Object.hasOwn(this.parsed,'@name') ){
@@ -466,22 +468,23 @@ async function createSpec(opt={}){
         } else if( Object.hasOwn(this.parsed,'@interface') ){
           this.label = this.parsed['@interface'];
         } else if( Object.hasOwn(this.parsed,'@description') ){
-          v.m = this.parsed['@description'].split('\n');
+          v.m = this.parsed['@description'].split(/<br>/);
           this.label = v.m[0];
-          this.parsed['@description'] = doclet.description = v.m.slice(1).join('\n');
+          this.parsed['@description'] = v.doclet.description = v.m.slice(1).join('<br>');
         } else if( Object.hasOwn(this.parsed,'@classdesc') ){
-          v.m = this.parsed['@classdesc'].split('\n');
+          v.m = this.parsed['@classdesc'].split(/<br>/);
           this.label = v.m[0];
-          this.parsed['@classdesc'] = doclet.classdesc = v.m.slice(1).join('\n');
-        } else if( Object.hasOwn(doclet,'longname') ){
-          this.label = doclet.longname;
+          this.parsed['@classdesc'] = v.doclet.classdesc = v.m.slice(1).join('<br>');
+        } else if( Object.hasOwn(v.doclet,'longname') ){
+          this.label = v.doclet.longname;
         } else {
           this.label = '(ラベル未設定)';
         }
+        this.label = this.label.trim();
 
         dev.step(6);  // properties
-        if( Object.hasOwn(doclet,'properties') && doclet.properties.length > 0 ){
-          doclet.properties.forEach(prop => {
+        if( Object.hasOwn(v.doclet,'properties') && v.doclet.properties.length > 0 ){
+          v.doclet.properties.forEach(prop => {
             v.r = this.addRowToColumn(prop);
             if( v.r instanceof Error ) throw v.r;
             prop.row = v.r;
@@ -489,8 +492,8 @@ async function createSpec(opt={}){
         }
 
         dev.step(7);  // params
-        if( Object.hasOwn(doclet,'params') && doclet.params.length > 0 ){
-          doclet.params.forEach(prop => {
+        if( Object.hasOwn(v.doclet,'params') && v.doclet.params.length > 0 ){
+          v.doclet.params.forEach(prop => {
             v.r = this.addRowToColumn(prop);
             if( v.r instanceof Error ) throw v.r;
             prop.row = v.r;
@@ -498,8 +501,8 @@ async function createSpec(opt={}){
         }
 
         dev.step(8);  // returns
-        if( Object.hasOwn(doclet,'returns') && doclet.returns.length > 0 ){
-          doclet.returns.forEach(prop => {
+        if( Object.hasOwn(v.doclet,'returns') && v.doclet.returns.length > 0 ){
+          v.doclet.returns.forEach(prop => {
             v.r = this.addRowToColumn(prop);
             if( v.r instanceof Error ) throw v.r;
             prop.row = v.r;
@@ -1730,7 +1733,7 @@ async function createSpec(opt={}){
     }
 
     dev.step(5);  // 【開発用】結果出力
-    writeFileSync('tmp/DocletTree.doclet.json',JSON.stringify(pv.tree.doclet,null,2));
+    //writeFileSync('tmp/DocletTree.doclet.json',JSON.stringify(pv.tree.doclet,null,2));
     /* 
     console.log(`l.1694 ${JSON.stringify(
       pv.tree.doclet
