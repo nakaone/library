@@ -51,18 +51,14 @@ authClient: クライアント側中核クラス
 
 ## <a href="#authClient_top"><span id="authClient_desc">🧾 authClient 概説</span></a>
 
-authClient: クライアント側中核クラス<br><br>
-
-クライアント側中核クラス<br>classdesc line.2<br>classdesc line.3<br><br>- 初期化の際に非同期処理が必要なため、インスタンス作成は<br>  `new authClient()`ではなく`authClient.initialize()`で行う<br><br>
-
-インスタンス作成のサンプル<br>```js<br>async function onLoad(){<br>  const v = {whois:`onLoad`, rv:null};<br>  dev.start(v);<br>  try {<br><br>    dev.step(1);  // authClientインスタンス作成<br>    const auth = await authClient.initialize({<br>      adminMail: 'ena.kaon
+authClient: クライアント側中核クラス<br>@class<br>@classdesc クライアント側中核クラス<br>classdesc line.2<br>classdesc line.3<br><br>- 初期化の際に非同期処理が必要なため、インスタンス作成は<br>  `new authClient()`ではなく`authClient.initialize()`で行う<br>@prop {authClientConfig} cf - authClient設定情報<br>@prop {Object} idb - IndexedDBと同期、authClient内で共有<br>@prop {cryptoClient} crypto - 暗号化・署名検証<br>@prop {IDBObjectStore} _IndexedDB - データベース接続オブジェクトを格納する静的変数<br><br>@example インスタンス作成のサンプル<br>```js<br>async function onLoad(){<br>  const v = {whois:`onLoad`, rv:null};<br>  dev.start(v);<br>  try {<br><br>    dev.step(1);  // authClientインスタンス作成<br>    const auth = await authClient.initialize({<br>      adminMail: 'ena.kaon@gmail.com',<br>      adminName: 'あどみ',<br>      api: 'abcdefghijklmnopqrstuvwxyz',<br>    });<br><br>    dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット<br>    globalThis.auth = auth;<br>    v.rv = auth;<br><br>    dev.end(); // 終了処理<br>    return v.rv;<br><br>  } catch (e) { return dev.error(e); }<br>}<br>```<br><br>
 ## <span id="authClient-constructor_top">🧩 constructor()</span>
 
 constructor
 
 ### <a href="#authClient-constructor_top"><span id="authClient-constructor_desc">🧾 constructor 概説</span></a>
 
-constructor<br><br>
+constructor<br>@memberof authClient<br>@constructor<br>@param {Object} config - authClient/Server共通設定情報<br><br>
 
 ### <a href="#authClient-constructor_top"><span id="authClient-constructor_param">▶️ constructor 引数</span></a>
 
@@ -75,7 +71,7 @@ _exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列
 
 ### <a href="#authClient-_exportIfCryptoKey_top"><span id="authClient-_exportIfCryptoKey_desc">🧾 _exportIfCryptoKey 概説</span></a>
 
-_exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換<br><br>
+_exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換<br>@memberof authClient<br>@param {string} key - 鍵名。"CPkeySign"等<br>@param {CryptoKey} value - 鍵の内容<br>@returns {string}<br><br>
 
 ### <a href="#authClient-_exportIfCryptoKey_top"><span id="authClient-_exportIfCryptoKey_param">▶️ _exportIfCryptoKey 引数</span></a>
 
@@ -95,7 +91,7 @@ _importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換
 
 ### <a href="#authClient-_importIfCryptoKey_top"><span id="authClient-_importIfCryptoKey_desc">🧾 _importIfCryptoKey 概説</span></a>
 
-_importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換<br><br>
+_importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換<br>@memberof authClient<br>@param {string} key - 鍵名。"CPkeySign"等<br>@param {string} value - IndexedDBに保存された鍵の内容<br>@returns {CryptoKey}<br><br>
 
 ### <a href="#authClient-_importIfCryptoKey_top"><span id="authClient-_importIfCryptoKey_param">▶️ _importIfCryptoKey 引数</span></a>
 
@@ -115,7 +111,7 @@ _withStore: IndexedDB操作共通ラッパ
 
 ### <a href="#authClient-_withStore_top"><span id="authClient-_withStore_desc">🧾 _withStore 概説</span></a>
 
-_withStore: IndexedDB操作共通ラッパ<br><br>
+_withStore: IndexedDB操作共通ラッパ<br>@memberof authClient<br>@param {'readonly'|'readwrite'} mode<br>param {(store: IDBObjectStore)=>Promise<any>} fn<br><br>
 
 ### <a href="#authClient-_withStore_top"><span id="authClient-_withStore_param">▶️ _withStore 引数</span></a>
 
@@ -128,7 +124,7 @@ exec: ローカル関数の処理要求を処理
 
 ### <a href="#authClient-exec_top"><span id="authClient-exec_desc">🧾 exec 概説</span></a>
 
-exec: ローカル関数の処理要求を処理<br>- エラー時はErrorオブジェクト化して戻り値とする<br><br>
+exec: ローカル関数の処理要求を処理<br>- エラー時はErrorオブジェクト化して戻り値とする<br>@memberof authClient<br>@param {string} func - サーバ側関数名<br>@param {any[]} arg=[] - サーバ側関数に渡す引数<br>@param {number} [depth=0] - 再帰呼出時の階層<br>@returns {any|Error} 処理結果<br><br>
 
 ### <a href="#authClient-exec_top"><span id="authClient-exec_param">▶️ exec 引数</span></a>
 
@@ -149,7 +145,7 @@ fetch: サーバ側APIの呼び出し
 
 ### <a href="#authClient-fetch_top"><span id="authClient-fetch_desc">🧾 fetch 概説</span></a>
 
-fetch: サーバ側APIの呼び出し<br><br>
+fetch: サーバ側APIの呼び出し<br>@memberof authClient<br>@param {authRequest} request - 処理要求<br>@returns {authResponse|Error} 処理結果<br><br>
 
 ### <a href="#authClient-fetch_top"><span id="authClient-fetch_param">▶️ fetch 引数</span></a>
 
@@ -168,7 +164,7 @@ getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取
 
 ### <a href="#authClient-getIndexedDB_top"><span id="authClient-getIndexedDB_desc">🧾 getIndexedDB 概説</span></a>
 
-getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得<br><br>
+getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得<br>@memberof authClient<br>@param {void}<br>@returns {Object<string,any>} this.idbに格納したIndexedDBの内容({キー:値}形式)<br><br>
 
 ### <a href="#authClient-getIndexedDB_top"><span id="authClient-getIndexedDB_param">▶️ getIndexedDB 引数</span></a>
 
@@ -187,7 +183,7 @@ initialize: authClientインスタンス作成
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_desc">🧾 initialize 概説</span></a>
 
-initialize: authClientインスタンス作成<br>- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br><br>
+initialize: authClientインスタンス作成<br>- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br>@static<br>@memberof authClient<br>@param {Object} config - authClient/Server共通＋authClient専用設定情報<br>  ※共通/専用設定情報は事前に結合しておくこと(ex.mergeDeeply)<br>@returns {authClient|Error}<br><br>
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_param">▶️ initialize 引数</span></a>
 
@@ -206,7 +202,7 @@ setIndexedDB: IndexedDBの更新(upsert)
 
 ### <a href="#authClient-setIndexedDB_top"><span id="authClient-setIndexedDB_desc">🧾 setIndexedDB 概説</span></a>
 
-setIndexedDB: IndexedDBの更新(upsert)<br><br>
+setIndexedDB: IndexedDBの更新(upsert)<br>@memberof authClient<br>@param {Object<string, string>} arg <br>@returns {null|Error}<br><br>
 
 ### <a href="#authClient-setIndexedDB_top"><span id="authClient-setIndexedDB_param">▶️ setIndexedDB 引数</span></a>
 

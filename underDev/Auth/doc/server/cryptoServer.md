@@ -48,16 +48,14 @@ cryptoServer: サーバ側の暗号化・署名検証
 
 ## <a href="#cryptoServer_top"><span id="cryptoServer_desc">🧾 cryptoServer 概説</span></a>
 
-cryptoServer: サーバ側の暗号化・署名検証<br><br>
-
-サーバ側の暗号化・署名検証<br><br>
+cryptoServer: サーバ側の暗号化・署名検証<br>@class<br>@classdesc サーバ側の暗号化・署名検証<br>@prop {authServerConfig} cf - authServer設定情報<br>@prop {ScriptProperties} prop - PropertiesService.getScriptProperties()<br>@prop {authScriptProperties} keys - ScriptPropertiesに保存された鍵ペア情報<br>@prop {string[]} keyList - ScriptPropertiesに保存された項目名の一覧<br><br>
 ## <span id="cryptoServer-constructor_top">🧩 constructor()</span>
 
 constructor
 
 ### <a href="#cryptoServer-constructor_top"><span id="cryptoServer-constructor_desc">🧾 constructor 概説</span></a>
 
-constructor<br><br>
+constructor<br>@param {authServerConfig} cf - authServer設定値<br><br>
 
 ### <a href="#cryptoServer-constructor_top"><span id="cryptoServer-constructor_param">▶️ constructor 引数</span></a>
 
@@ -70,7 +68,7 @@ encrypt: 処理結果を暗号化＋署名
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_desc">🧾 encrypt 概説</span></a>
 
-encrypt: 処理結果を暗号化＋署名<br><br>
+encrypt: 処理結果を暗号化＋署名<br>@param {authResponse} response - 処理結果<br>@param {string} CPkeySign - クライアント側署名用公開鍵<br>@returns {encryptedResponse}<br><br>
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_param">▶️ encrypt 引数</span></a>
 
@@ -90,7 +88,7 @@ decrypt: 暗号化された処理要求を復号・署名検証
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_desc">🧾 decrypt 概説</span></a>
 
-decrypt: 暗号化された処理要求を復号・署名検証<br><br>
+decrypt: 暗号化された処理要求を復号・署名検証<br>@param {encryptedRequest} request - 暗号化されたサーバ側処理結果<br>@param {string} CPkeySign - クライアント側署名用公開鍵<br>@returns {authRequest}<br><br>
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_param">▶️ decrypt 引数</span></a>
 
@@ -110,7 +108,7 @@ generateKeys: PEM形式のRSA鍵ペアを生成
 
 ### <a href="#cryptoServer-generateKeys_top"><span id="cryptoServer-generateKeys_desc">🧾 generateKeys 概説</span></a>
 
-generateKeys: PEM形式のRSA鍵ペアを生成<br>- 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない<br><br>
+generateKeys: PEM形式のRSA鍵ペアを生成<br>- 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない<br>@param {void}<br>@returns {Object} 生成された鍵ペア<br><br>
 
 ### <a href="#cryptoServer-generateKeys_top"><span id="cryptoServer-generateKeys_param">▶️ generateKeys 引数</span></a>
 
@@ -129,14 +127,14 @@ generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
 
 ### <a href="#cryptoServer-generateAndSave_top"><span id="cryptoServer-generateAndSave_desc">🧾 generateAndSave 概説</span></a>
 
-generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する<br><br>
+generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する<br>@returns {Object|Error} 生成・保存された鍵情報<br><br>
 ## <span id="cryptoServer-initialize_top">🧩 initialize()</span>
 
 initialize: cryptoServerインスタンス作成
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_desc">🧾 initialize 概説</span></a>
 
-initialize: cryptoServerインスタンス作成<br>- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br><br>
+initialize: cryptoServerインスタンス作成<br>- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す<br>@static<br>@param {authServerConfig} cf - authServer設定値<br>@returns {cryptoServer|Error}<br><br>
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_param">▶️ initialize 引数</span></a>
 

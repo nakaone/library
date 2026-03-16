@@ -411,7 +411,9 @@ async function createSpec(opt={}){
           if( v.m ) this.parsed.label = v.m[1];
 
           // タグ(@xxx)ごとに分解
-          v.m = v.doclet.comment.matchAll(/(\/\*\*|@[a-zA-Z]+)\s*([^@]+)/g);
+          v.separator = /(\/\*\*|\* @[a-zA-Z]+)\s*(.+)/g;
+          //v.separator = /(\/\*\*|@[a-zA-Z]+)\s*([^@]+)/g
+          v.m = v.doclet.comment.matchAll(v.separator);
           [...v.m].forEach(tag => {
 
             // タグ単位に{key,val}形式に変換
