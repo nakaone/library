@@ -24,4 +24,4 @@
 
 # <span id="clearAuthEnvironment_top">🧩 clearAuthEnvironment()</span>
 
-undefined
+clearAuthEnvironment

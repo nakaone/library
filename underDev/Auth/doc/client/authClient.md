@@ -48,6 +48,33 @@ authClient: クライアント側中核クラス
 | 7 | <a href="#authClient-getIndexedDB_top">getIndexedDB</a> | getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得 |
 | 8 | <a href="#authClient-initialize_top">initialize</a> | initialize: authClientインスタンス作成 |
 | 9 | <a href="#authClient-setIndexedDB_top">setIndexedDB</a> | setIndexedDB: IndexedDBの更新(upsert) |
+
+## <a href="#authClient_top"><span id="authClient_desc">🧾 authClient 概説</span></a>
+
+クライアント側中核クラス<br>classdesc line.2<br>classdesc line.3<br><br>- 初期化の際に非同期処理が必要なため、インスタンス作成は<br>  `new authClient()`ではなく`authClient.initialize()`で行う<br>インスタンス作成のサンプル
+```js
+async function onLoad(){
+  const v = {whois:`onLoad`, rv:null};
+  dev.start(v);
+  try {
+
+    dev.step(1);  // authClientインスタンス作成
+    const auth = await authClient.initialize({
+      adminMail: 'ena.kaon@gmail.com',
+      adminName: 'あどみ',
+      api: 'abcdefghijklmnopqrstuvwxyz',
+    });
+
+    dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
+    globalThis.auth = auth;
+    v.rv = auth;
+
+    dev.end(); // 終了処理
+    return v.rv;
+
+  } catch (e) { return dev.error(e); }
+}
+```
 ## <span id="authClient-constructor_top">🧩 constructor()</span>
 
 constructor
@@ -102,6 +129,10 @@ _withStore: IndexedDB操作共通ラッパ
 
 exec: ローカル関数の処理要求を処理
 
+### <a href="#authClient-exec_top"><span id="authClient-exec_desc">🧾 exec 概説</span></a>
+
+- エラー時はErrorオブジェクト化して戻り値とする
+
 ### <a href="#authClient-exec_top"><span id="authClient-exec_param">▶️ exec 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
@@ -148,6 +179,10 @@ getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取
 ## <span id="authClient-initialize_top">🧩 initialize()</span>
 
 initialize: authClientインスタンス作成
+
+### <a href="#authClient-initialize_top"><span id="authClient-initialize_desc">🧾 initialize 概説</span></a>
+
+- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_param">▶️ initialize 引数</span></a>
 

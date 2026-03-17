@@ -260,7 +260,7 @@ const menu22 = () => asv.resetSPkey();
 | :-- | :-- |
 | [authServer](authServer.md) | authServer: サーバ側中核クラス |
 | [cryptoServer](cryptoServer.md) | cryptoServer: サーバ側の暗号化・署名検証 |
-| [Member](Member.md) |  |
+| [Member](Member.md) | Member |
 
 # <span id="typedefList">データ型定義一覧</span>
 

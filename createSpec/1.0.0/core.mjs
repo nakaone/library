@@ -426,6 +426,7 @@ async function createSpec(opt={}){
         }
 
         dev.step(5);    // commentをパース、concatenatedを作成
+        this.label = '';
         this.parsed = {};
         this.concatenated = '';
         v.descTags = ['description','classdesc','example'];
@@ -457,8 +458,8 @@ async function createSpec(opt={}){
           v.tags.forEach(x => {
             if( x.text && x.text.length > 0 ){
               // 出現したタグをthis.parsedに登録
-              if( !Object.hasOwn(this.parsed,x.label) ) this.parsed[x.label] = '';
-              this.parsed[x.label] += x.text;
+              this.parsed[x.label] = (Object.hasOwn(this.parsed,x.label)
+              ? (this.parsed[x.label] + '\n') : '') + x.text;
               // 対象タグはv.textにも追加
               if( v.descTags.includes(x.label) ) v.text += `\n${x.text}`;
             }
@@ -470,10 +471,10 @@ async function createSpec(opt={}){
           v.isSource = false; // ```〜```およびその内部ならtrue
           for( v.i=1 ; v.i<v.lines.length ; v.i++ ){
             if( /```/.test(v.lines[v.i]) ){
-              this.concatenated += '\\n' + v.lines[v.i];
+              this.concatenated += '\n' + v.lines[v.i];
               v.isSource = v.isSource ? false : true;
             } else {
-              this.concatenated += (v.isSource ? '\\n' : '<br>') + v.lines[v.i];
+              this.concatenated += (v.isSource ? '\n' : '<br>') + v.lines[v.i];
             }
           }
         } else {
@@ -481,21 +482,31 @@ async function createSpec(opt={}){
           v.descTags.forEach(x => this.concatenated += (v.doclet[x] ?? ''));
         }
 
-        // いまここ
-        dev.step(6,this.parsed);  // labelを設定
-        // ① JSDoc先頭の「/**」に続く文字列
+        dev.step(6);  // labelを設定
+        // ① JSDoc先頭の「/**」に続く文字列(⇒step.5.11で設定済)
         // ② "@name"に続く文字列
         // ③ typdef, interface
-        // ④ description, classdescの先頭行
+        // ④ description, classdescの先頭行(=concatenatedの先頭行)
         // ⑤ v.doclet.longname
-        if( this.parsed.label === null ){
-        } //else if( Object.hasOwn(this.parsed,'@name') ){
-        // 以降、work.20260316.txt参照
-
-
-
-
-
+        if( this.label.length === 0 ){
+          if( Object.hasOwn(this.parsed,'name') ){
+            this.label = this.parsed.name;
+          } else if( Object.hasOwn(this.parsed,'typedef') ){
+            // `@typedef {...} xxx - 説明`形式 ⇒ label=説明
+            v.m1 = this.parsed['@typedef'].match(/\}\s+[^\-]+\s+\-\s+(.+)$/);
+            // `@typedef {...} xxx`形式 ⇒ label=xxx
+            v.m2 = this.parsed['@typedef'].match(/\}\s+(.+)$/);
+            this.label = v.m1 !== null ? v.m1[1]
+              : (v.m2 !== null ? v.m2[1] : '(ラベル未設定)');
+          } else if( Object.hasOwn(this.parsed,'interface') ){
+            this.label = this.parsed.interface;
+          } else if( this.concatenated.length > 0 ){
+            this.label = this.concatenated.split(/<br>|\n/)[0];
+          } else if( Object.hasOwn(v.doclet,'longname') ){
+            this.label = v.doclet.longname;
+          }
+        }
+        this.label = this.label.trim();
 
         dev.step(7);  // properties
         if( Object.hasOwn(v.doclet,'properties') && v.doclet.properties.length > 0 ){
@@ -1215,27 +1226,13 @@ async function createSpec(opt={}){
         }
 
         dev.step(5); // 説明文
-        // 元データであるdoclet.descriptionは@descが複数箇所に分かれていた場合、最後の@descのみ有効
-        // ⇒ 複数の@desc結合済のdoclet.parsed.descriptionを使用
-        v.r = '';
-        if( typeof v.d.parsed['@description'] !== 'undefined' ){
-          v.r += `\n${v.d.parsed['@description']}<br>\n`;
-        }
-        if( typeof v.d.parsed['@classdesc'] !== 'undefined' ){
-          v.r += `\n${v.d.parsed['@classdesc']}<br>\n`;
-        }
-        if( typeof v.d.parsed['@example'] !== 'undefined' ){
-          v.r += `\n${v.d.parsed['@example']}\n\n`;
-        }
-
-        if( v.r.length > 0 ){
-          // 記事の作成
+        if( v.d.concatenated.length > 0 ){
           v.r = this.article({
             title: `🧾 ${v.d.name} 概説`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_desc`,
-            content: v.r.trim(),
+            content: v.d.concatenated.trim(),
           });
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(v.r);

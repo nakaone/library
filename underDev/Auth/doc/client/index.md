@@ -245,7 +245,7 @@
 | クラス/関数名 | 概要 |
 | :-- | :-- |
 | [authClient](authClient.md) | authClient: クライアント側中核クラス |
-| [clearAuthEnvironment](clearAuthEnvironment.md) |  |
+| [clearAuthEnvironment](clearAuthEnvironment.md) | clearAuthEnvironment |
 | [cryptoClient](cryptoClient.md) | cryptoClient: クライアント側の暗号化・署名検証 |
 | [localFunc](localFunc.md) | localFunc: テスト用：処理要求発行 |
 

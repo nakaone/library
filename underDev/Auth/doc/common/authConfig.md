@@ -43,10 +43,14 @@
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#authConfig-constructor_top">constructor</a> |  |
+| 1 | <a href="#authConfig-constructor_top">constructor</a> | authConfig.exports.authConfig |
+
+## <a href="#authConfig_top"><span id="authConfig_desc">🧾 authConfig 概説</span></a>
+
+クライアント・サーバ共通設定情報
 ## <span id="authConfig-constructor_top">🧩 constructor()</span>
 
-undefined
+authConfig.exports.authConfig
 
 ### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_param">▶️ constructor 引数</span></a>
 

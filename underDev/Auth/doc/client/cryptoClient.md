@@ -41,6 +41,10 @@ cryptoClient: クライアント側の暗号化・署名検証
 | 2 | <a href="#cryptoClient-encrypt_top">encrypt</a> | encrypt: 処理要求を暗号化＋署名 |
 | 3 | <a href="#cryptoClient-decrypt_top">decrypt</a> | decrypt: 暗号化された処理結果を復号・署名検証 |
 | 4 | <a href="#cryptoClient-generateKeys_top">generateKeys</a> | generateKeys: RSA鍵ペアを生成 |
+
+## <a href="#cryptoClient_top"><span id="cryptoClient_desc">🧾 cryptoClient 概説</span></a>
+
+クライアント側の暗号化・署名検証
 ## <span id="cryptoClient-constructor_top">🧩 constructor()</span>
 
 constructor
@@ -106,6 +110,10 @@ decrypt: 暗号化された処理結果を復号・署名検証
 ## <span id="cryptoClient-generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: RSA鍵ペアを生成
+
+### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_desc">🧾 generateKeys 概説</span></a>
+
+- 生成のみ、IndexedDBやメンバ変数への格納は行わない
 
 ### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_param">▶️ generateKeys 引数</span></a>
 
