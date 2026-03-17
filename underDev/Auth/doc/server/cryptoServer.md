@@ -26,7 +26,7 @@
 
 # <span id="cryptoServer_top">🧩 cryptoServerクラス仕様書</span>
 
-<p class="source">source: server/cryptoServer.mjs line.9</p>cryptoServer: サーバ側の暗号化・署名検証
+<p class="source">source: server/cryptoServer.mjs line.9</p>サーバ側の暗号化・署名検証
 
 ## <a href="#cryptoServer_top"><span id="cryptoServer_prop">🔢 cryptoServer メンバ一覧</span></a>
 
@@ -42,11 +42,11 @@
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
 | 1 | <a href="#cryptoServer-constructor_top">constructor</a> | constructor |
-| 2 | <a href="#cryptoServer-encrypt_top">encrypt</a> | encrypt: 処理結果を暗号化＋署名 |
-| 3 | <a href="#cryptoServer-decrypt_top">decrypt</a> | decrypt: 暗号化された処理要求を復号・署名検証 |
-| 4 | <a href="#cryptoServer-generateKeys_top">generateKeys</a> | generateKeys: PEM形式のRSA鍵ペアを生成 |
-| 5 | <a href="#cryptoServer-generateAndSave_top">generateAndSave</a> | generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する |
-| 6 | <a href="#cryptoServer-initialize_top">initialize</a> | initialize: cryptoServerインスタンス作成 |
+| 2 | <a href="#cryptoServer-encrypt_top">encrypt</a> | cryptoServer#encrypt |
+| 3 | <a href="#cryptoServer-decrypt_top">decrypt</a> | cryptoServer#decrypt |
+| 4 | <a href="#cryptoServer-generateKeys_top">generateKeys</a> | - 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない |
+| 5 | <a href="#cryptoServer-generateAndSave_top">generateAndSave</a> | cryptoServer#generateAndSave |
+| 6 | <a href="#cryptoServer-initialize_top">initialize</a> | - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行 |
 
 ## <a href="#cryptoServer_top"><span id="cryptoServer_desc">🧾 cryptoServer 概説</span></a>
 
@@ -62,7 +62,7 @@ constructor
 | cf | authServerConfig | 必須 | authServer設定値 |
 ## <span id="cryptoServer-encrypt_top">🧩 encrypt()</span>
 
-encrypt: 処理結果を暗号化＋署名
+cryptoServer#encrypt
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_param">▶️ encrypt 引数</span></a>
 
@@ -78,7 +78,7 @@ encrypt: 処理結果を暗号化＋署名
 | encryptedResponse |  |
 ## <span id="cryptoServer-decrypt_top">🧩 decrypt()</span>
 
-decrypt: 暗号化された処理要求を復号・署名検証
+cryptoServer#decrypt
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_param">▶️ decrypt 引数</span></a>
 
@@ -94,7 +94,7 @@ decrypt: 暗号化された処理要求を復号・署名検証
 | authRequest |  |
 ## <span id="cryptoServer-generateKeys_top">🧩 generateKeys()</span>
 
-generateKeys: PEM形式のRSA鍵ペアを生成
+- 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない
 
 ### <a href="#cryptoServer-generateKeys_top"><span id="cryptoServer-generateKeys_desc">🧾 generateKeys 概説</span></a>
 
@@ -113,10 +113,10 @@ generateKeys: PEM形式のRSA鍵ペアを生成
 | Object | 生成された鍵ペア |
 ## <span id="cryptoServer-generateAndSave_top">🧩 generateAndSave()</span>
 
-generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
+cryptoServer#generateAndSave
 ## <span id="cryptoServer-initialize_top">🧩 initialize()</span>
 
-initialize: cryptoServerインスタンス作成
+- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_desc">🧾 initialize 概説</span></a>
 

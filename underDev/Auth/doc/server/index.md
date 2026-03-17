@@ -260,25 +260,25 @@ const menu22 = () => asv.resetSPkey();
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
-| [authServer](authServer.md) | authServer: サーバ側中核クラス |
-| [cryptoServer](cryptoServer.md) | cryptoServer: サーバ側の暗号化・署名検証 |
-| [Member](Member.md) | Member |
+| [authServer](authServer.md) | サーバ側中核クラス |
+| [cryptoServer](cryptoServer.md) | サーバ側の暗号化・署名検証 |
+| [Member](Member.md) |  |
 
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [authAuditLog](#authAuditLog) | authAuditLog: authServerの監査ログをシートに出力 |
-| 2 | [authErrorLog](#authErrorLog) | authErrorLog: authServerのエラーログをシートに出力 |
-| 3 | [authRequestLog](#authRequestLog) | authRequestLog: 重複チェック用のリクエスト履歴 |
-| 4 | [authScriptProperties](#authScriptProperties) | authScriptProperties: サーバ側ScriptPropertiesに保存する情報 |
-| 5 | [authServerConfig](#authServerConfig) | this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加 |
-| 6 | [authServerFuncDef](#authServerFuncDef) | authServerFuncDef: サーバ側関数設定オブジェクト |
-| 7 | [MemberDevice](#MemberDevice) | MemberDevice: メンバが使用する通信機器の情報 |
-| 8 | [MemberLog](#MemberLog) | MemberLog: メンバの各種要求・状態変化の時刻 |
-| 9 | [MemberProfile](#MemberProfile) | MemberProfile: メンバの属性情報 |
-| 10 | [MemberTrial](#MemberTrial) | MemberTrial: ログイン試行情報の管理・判定 |
-| 11 | [MemberTrialLog](#MemberTrialLog) | MemberTrialLog: パスコード入力単位の試行記録 |
+| 1 | [authAuditLog](#authAuditLog) | authServerの監査ログをシートに出力 |
+| 2 | [authErrorLog](#authErrorLog) | authServerのエラーログをシートに出力 |
+| 3 | [authRequestLog](#authRequestLog) | 重複チェック用のリクエスト履歴 |
+| 4 | [authScriptProperties](#authScriptProperties) | サーバ側ScriptPropertiesに保存する内容 |
+| 5 | [authServerConfig](#authServerConfig) | authServer特有の設定項目 |
+| 6 | [authServerFuncDef](#authServerFuncDef) | サーバ側関数設定 |
+| 7 | [MemberDevice](#MemberDevice) | メンバが使用する通信機器の情報 |
+| 8 | [MemberLog](#MemberLog) | メンバの各種要求・状態変化の時刻 |
+| 9 | [MemberProfile](#MemberProfile) | メンバの属性情報 |
+| 10 | [MemberTrial](#MemberTrial) | ログイン試行情報の管理・判定 |
+| 11 | [MemberTrialLog](#MemberTrialLog) | パスコード入力単位の試行記録 |
 
 # 個別データ型定義
 

@@ -26,7 +26,7 @@
 
 # <span id="cryptoClient_top">🧩 cryptoClientクラス仕様書</span>
 
-<p class="source">source: client/cryptoClient.mjs line.7</p>cryptoClient: クライアント側の暗号化・署名検証
+<p class="source">source: client/cryptoClient.mjs line.7</p>クライアント側の暗号化・署名検証
 
 ## <a href="#cryptoClient_top"><span id="cryptoClient_prop">🔢 cryptoClient メンバ一覧</span></a>
 
@@ -40,9 +40,9 @@
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
 | 1 | <a href="#cryptoClient-constructor_top">constructor</a> | constructor |
-| 2 | <a href="#cryptoClient-encrypt_top">encrypt</a> | encrypt: 処理要求を暗号化＋署名 |
-| 3 | <a href="#cryptoClient-decrypt_top">decrypt</a> | decrypt: 暗号化された処理結果を復号・署名検証 |
-| 4 | <a href="#cryptoClient-generateKeys_top">generateKeys</a> | generateKeys: RSA鍵ペアを生成 |
+| 2 | <a href="#cryptoClient-encrypt_top">encrypt</a> | cryptoClient#encrypt |
+| 3 | <a href="#cryptoClient-decrypt_top">decrypt</a> | cryptoClient#decrypt |
+| 4 | <a href="#cryptoClient-generateKeys_top">generateKeys</a> | - 生成のみ、IndexedDBやメンバ変数への格納は行わない |
 
 ## <a href="#cryptoClient_top"><span id="cryptoClient_desc">🧾 cryptoClient 概説</span></a>
 
@@ -59,13 +59,13 @@ constructor
 | RSAbits | number | 必須 | RSA鍵長 |
 ## <span id="cryptoClient-encrypt_top">🧩 encrypt()</span>
 
-encrypt: 処理要求を暗号化＋署名
+cryptoClient#encrypt
 
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_func">🧱 encrypt メソッド・内部関数一覧</span></a>
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#cryptoClient-encrypt-dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー |
+| 1 | <a href="#cryptoClient-encrypt-dummyFunc_top">dummyFunc</a> | cryptoClient#encrypt.dummyFunc |
 
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_param">▶️ encrypt 引数</span></a>
 
@@ -80,7 +80,7 @@ encrypt: 処理要求を暗号化＋署名
 | encryptedRequest |  |
 ### <span id="cryptoClient-encrypt-dummyFunc_top">🧩 dummyFunc()</span>
 
-dummyFunc: テスト用ダミー
+cryptoClient#encrypt.dummyFunc
 
 #### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_param">▶️ dummyFunc 引数</span></a>
 
@@ -96,7 +96,7 @@ dummyFunc: テスト用ダミー
 | number |  |
 ## <span id="cryptoClient-decrypt_top">🧩 decrypt()</span>
 
-decrypt: 暗号化された処理結果を復号・署名検証
+cryptoClient#decrypt
 
 ### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_param">▶️ decrypt 引数</span></a>
 
@@ -111,7 +111,7 @@ decrypt: 暗号化された処理結果を復号・署名検証
 | authResponse |  |
 ## <span id="cryptoClient-generateKeys_top">🧩 generateKeys()</span>
 
-generateKeys: RSA鍵ペアを生成
+- 生成のみ、IndexedDBやメンバ変数への格納は行わない
 
 ### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_desc">🧾 generateKeys 概説</span></a>
 

@@ -26,7 +26,7 @@
 
 # <span id="localFunc_top">🧩 localFunc()</span>
 
-<p class="source">source: client/localFunc.mjs line.5</p>localFunc: 【開発用】処理要求発行
+<p class="source">source: client/localFunc.mjs line.5</p>localFunc
 
 ## <a href="#localFunc_top"><span id="localFunc_param">▶️ localFunc 引数</span></a>
 

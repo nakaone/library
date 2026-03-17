@@ -26,7 +26,7 @@
 
 # <span id="authServer_top">🧩 authServerクラス仕様書</span>
 
-<p class="source">source: server/authServer.mjs line.9</p>authServer: サーバ側中核クラス
+<p class="source">source: server/authServer.mjs line.9</p>サーバ側中核クラス
 
 ## <a href="#authServer_top"><span id="authServer_prop">🔢 authServer メンバ一覧</span></a>
 
@@ -39,21 +39,19 @@
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#authServer-constructor_top">constructor</a> | constructor |
-| 2 | <a href="#authServer-authLogger_top">authLogger</a> | authLogger: 監査ログ／エラーログを自動振り分けで出力 |
-| 3 | <a href="#authServer-authResponse_top">authResponse</a> | authResponse: authResponse型のオブジェクトを作成 |
-| 4 | <a href="#authServer-dumpProperties_top">dumpProperties</a> | dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用) |
-| 5 | <a href="#authServer-initialize_top">initialize</a> | initialize: authServerインスタンス作成 |
-| 6 | <a href="#authServer-exec_top">exec</a> | exec: 処理要求に対するサーバ側中核処理 |
-| 7 | <a href="#authServer-resetSPkey_top">resetSPkey</a> | resetSPkey: 緊急時、サーバ側鍵ペアを更新 |
-| 8 | <a href="#authServer-setupEnvironment_top">setupEnvironment</a> | setupEnvironment: 初回実行時に必要なOAuth権限を一括取得 |
+| 1 | <a href="#authServer-constructor_top">constructor</a> |  |
+| 2 | <a href="#authServer-authLogger_top">authLogger</a> | - 監査ログ：authAuditLog型 |
+| 3 | <a href="#authServer-authResponse_top">authResponse</a> | authServer#authResponse |
+| 4 | <a href="#authServer-dumpProperties_top">dumpProperties</a> | authServer.dumpProperties |
+| 5 | <a href="#authServer-initialize_top">initialize</a> | - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行 |
+| 6 | <a href="#authServer-exec_top">exec</a> | authServer#exec |
+| 7 | <a href="#authServer-resetSPkey_top">resetSPkey</a> | - 管理者が Spread メニューから手動実行する |
+| 8 | <a href="#authServer-setupEnvironment_top">setupEnvironment</a> | - 管理者が Spread メニューから手動実行する |
 
 ## <a href="#authServer_top"><span id="authServer_desc">🧾 authServer 概説</span></a>
 
 サーバ側中核クラス
 ## <span id="authServer-constructor_top">🧩 constructor()</span>
-
-constructor
 
 ### <a href="#authServer-constructor_top"><span id="authServer-constructor_param">▶️ constructor 引数</span></a>
 
@@ -62,7 +60,7 @@ constructor
 | config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |
 ## <span id="authServer-authLogger_top">🧩 authLogger()</span>
 
-authLogger: 監査ログ／エラーログを自動振り分けで出力
+- 監査ログ：authAuditLog型
 
 ### <a href="#authServer-authLogger_top"><span id="authServer-authLogger_desc">🧾 authLogger 概説</span></a>
 
@@ -81,7 +79,7 @@ authLogger: 監査ログ／エラーログを自動振り分けで出力
 | authResponse |  |
 ## <span id="authServer-authResponse_top">🧩 authResponse()</span>
 
-authResponse: authResponse型のオブジェクトを作成
+authServer#authResponse
 
 ### <a href="#authServer-authResponse_top"><span id="authServer-authResponse_param">▶️ authResponse 引数</span></a>
 
@@ -96,10 +94,10 @@ authResponse: authResponse型のオブジェクトを作成
 | authResponse |  |
 ## <span id="authServer-dumpProperties_top">🧩 dumpProperties()</span>
 
-dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用)
+authServer.dumpProperties
 ## <span id="authServer-initialize_top">🧩 initialize()</span>
 
-initialize: authServerインスタンス作成
+- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
 
 ### <a href="#authServer-initialize_top"><span id="authServer-initialize_desc">🧾 initialize 概説</span></a>
 
@@ -118,7 +116,7 @@ initialize: authServerインスタンス作成
 | authServer \| Error |  |
 ## <span id="authServer-exec_top">🧩 exec()</span>
 
-exec: 処理要求に対するサーバ側中核処理
+authServer#exec
 
 ### <a href="#authServer-exec_top"><span id="authServer-exec_param">▶️ exec 引数</span></a>
 
@@ -133,7 +131,7 @@ exec: 処理要求に対するサーバ側中核処理
 | null \| Error | 戻り値 |
 ## <span id="authServer-resetSPkey_top">🧩 resetSPkey()</span>
 
-resetSPkey: 緊急時、サーバ側鍵ペアを更新
+- 管理者が Spread メニューから手動実行する
 
 ### <a href="#authServer-resetSPkey_top"><span id="authServer-resetSPkey_desc">🧾 resetSPkey 概説</span></a>
 
@@ -152,7 +150,7 @@ resetSPkey: 緊急時、サーバ側鍵ペアを更新
 | null |  |
 ## <span id="authServer-setupEnvironment_top">🧩 setupEnvironment()</span>
 
-setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
+- 管理者が Spread メニューから手動実行する
 
 ### <a href="#authServer-setupEnvironment_top"><span id="authServer-setupEnvironment_desc">🧾 setupEnvironment 概説</span></a>
 

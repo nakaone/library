@@ -28,16 +28,16 @@
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
-| [authConfig](authConfig.md) | authConfig: クライアント・サーバ共通設定情報 |
+| [authConfig](authConfig.md) | クライアント・サーバ共通設定情報 |
 
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [authRequest](#authRequest) | authRequest: authClientからauthServerへの処理要求(平文) |
-| 2 | [authResponse](#authResponse) | authResponse: authServerからauthClientへの処理結果(平文) |
-| 3 | [encryptedRequest](#encryptedRequest) | encryptedRequest: 暗号化された処理要求 |
-| 4 | [encryptedResponse](#encryptedResponse) | encryptedResponse: 暗号化された処理結果 |
+| 1 | [authRequest](#authRequest) | authRequest |
+| 2 | [authResponse](#authResponse) | authServerからauthClientへの処理結果(平文) |
+| 3 | [encryptedRequest](#encryptedRequest) | 暗号化された処理要求 |
+| 4 | [encryptedResponse](#encryptedResponse) | 暗号化された処理結果 |
 
 # 個別データ型定義
 

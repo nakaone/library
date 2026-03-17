@@ -486,32 +486,37 @@ async function createSpec(opt={}){
         }
 
         dev.step(6);  // labelを設定
-        // ① JSDoc先頭の「/**」に続く文字列(⇒step.5.11で設定済)
-        // ② constructorは「(memberof.)constructor」
-        // ③ "@name"に続く文字列
-        // ④ typdef, interface
-        // ⑤ description, classdescの先頭行(=concatenatedの先頭行)
-        // ⑥ v.doclet.longname
         if( this.label.length === 0 ){
-          if( Object.hasOwn(this.parsed,'name') ){
-            this.label = this.parsed.name;
-          } else if( this.docletType === 'constructor' ){
-            this.label = (this.parsed.memberof ? this.parsed.memberof+'.' : '')
-            + 'constructor';
-          } else if( Object.hasOwn(this.parsed,'typedef') ){
-            // `@typedef {...} xxx - 説明`形式 ⇒ label=説明
-            v.m1 = this.parsed['@typedef'].match(/\}\s+[^\-]+\s+\-\s+(.+)$/);
-            // `@typedef {...} xxx`形式 ⇒ label=xxx
-            v.m2 = this.parsed['@typedef'].match(/\}\s+(.+)$/);
-            this.label = v.m1 !== null ? v.m1[1]
-              : (v.m2 !== null ? v.m2[1] : '(ラベル未設定)');
-          } else if( Object.hasOwn(this.parsed,'interface') ){
-            this.label = this.parsed.interface;
-          } else if( this.concatenated.length > 0 ){
-            this.label = this.concatenated.split(/<br>|\n/)[0];
-          } else if( Object.hasOwn(v.doclet,'longname') ){
-            this.label = v.doclet.longname;
-          }
+          dev.step(6.1);  // ① JSDoc先頭の「/**」に続く文字列(⇒step.5.11で設定済)
+        } else if( this.docletType === 'constructor' ){
+          dev.step(6.2);  // ② constructorは「(memberof.)constructor」
+          this.label = (this.parsed.memberof ? this.parsed.memberof+'.' : '')
+          + 'constructor';
+        } else if( Object.hasOwn(this.parsed,'name') ){
+          dev.step(6.3);  // ③ "@name"に続く文字列
+          this.label = this.parsed.name;
+        } else if( Object.hasOwn(this.parsed,'typedef') ){
+          dev.step(6.41); // ④ typdef, interface
+          // `@typedef {...} xxx - 説明`形式 ⇒ label=説明
+          v.m1 = this.parsed.typedef.match(/\}\s+[^\-]+\s+\-\s+(.+)$/);
+          // `@typedef {...} xxx`形式 ⇒ label=xxx
+          v.m2 = this.parsed.typedef.match(/\}\s+(.+)$/);
+          this.label = v.m1 !== null ? v.m1[1]
+            : (v.m2 !== null ? v.m2[1] : '(ラベル未設定)');
+        } else if( Object.hasOwn(this.parsed,'interface') ){
+          dev.step(6.42);
+          this.label = this.parsed.interface;
+        } else if( this.concatenated.length > 0 ){
+          dev.step(6.5);  // ⑤ description, classdescの先頭行(=concatenatedの先頭行)
+          this.label = this.concatenated.split(/<br>|\n/)[0];
+        } else if( Object.hasOwn(v.doclet,'longname') ){
+          dev.step(6.6);  // ⑥ v.doclet.longname
+          this.label = v.doclet.longname;
+        }
+        dev.step(6.7);  // ラベルの先頭に「名称：」が有った場合、nameが重複するので削除
+        if( Object.hasOwn(this,'name') ){
+          v.rex = new RegExp(`^${this.name}[:：]\s*(.+)`);
+          this.label = v.rex.test(this.label) ? this.label.match(v.rex)[1] : this.label;
         }
         this.label = this.label.trim();
 
@@ -1173,7 +1178,7 @@ async function createSpec(opt={}){
           v.label = `継承元：${v.augments.join(', ')}<br>`
         }
 
-        dev.step(2.2,v.d.meta);  // 出典(ソースファイルの位置)
+        dev.step(2.2);  // 出典(ソースファイルの位置)
         if( ['function','class','typedef','interface'].includes(v.d.docletType) ){
           v.label += `<p class="source">source: ${
             v.d.unique ?? ''}${

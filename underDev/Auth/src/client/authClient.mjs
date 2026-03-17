@@ -2,19 +2,16 @@ import { mergeDeeply } from "../lib/mergeDeeply.2_0_0.mjs";
 import { authConfig } from "../common/authConfig.mjs";
 
 /** authClient: クライアント側中核クラス
- * @class
- * @classdesc クライアント側中核クラス
- * classdesc line.2
- * classdesc line.3
- * 
  * - 初期化の際に非同期処理が必要なため、インスタンス作成は
  *   `new authClient()`ではなく`authClient.initialize()`で行う
+ * 
+ * @class
  * @prop {authClientConfig} cf - authClient設定情報
  * @prop {Object} idb - IndexedDBと同期、authClient内で共有
  * @prop {cryptoClient} crypto - 暗号化・署名検証
  * @prop {IDBObjectStore} _IndexedDB - データベース接続オブジェクトを格納する静的変数
  * 
- * @example インスタンス作成のサンプル
+ * @example **インスタンス作成のサンプル**
  * ```js
  * async function onLoad(){
  *   const v = {whois:`onLoad`, rv:null};

@@ -246,17 +246,17 @@
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
-| [authClient](authClient.md) | authClient: クライアント側中核クラス |
-| [clearAuthEnvironment](clearAuthEnvironment.md) | clearAuthEnvironment: 【開発用】IndexedDBの"Auth"データベースを削除し、環境をリセットする |
-| [cryptoClient](cryptoClient.md) | cryptoClient: クライアント側の暗号化・署名検証 |
-| [localFunc](localFunc.md) | localFunc: 【開発用】処理要求発行 |
+| [authClient](authClient.md) | - 初期化の際に非同期処理が必要なため、インスタンス作成は |
+| [clearAuthEnvironment](clearAuthEnvironment.md) | clearAuthEnvironment |
+| [cryptoClient](cryptoClient.md) | クライアント側の暗号化・署名検証 |
+| [localFunc](localFunc.md) | localFunc |
 
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [authClientConfig](#authClientConfig) | authClientConfig: 共通設定情報にauthClient特有項目を追加 |
-| 2 | [authIndexedDB](#authIndexedDB) | authIndexedDB: IndexedDBに保存する内容(=this.idb) |
+| 1 | [authClientConfig](#authClientConfig) | authClient特有の設定項目 |
+| 2 | [authIndexedDB](#authIndexedDB) | IndexedDBに保存する内容(=this.idb) |
 
 # 個別データ型定義
 

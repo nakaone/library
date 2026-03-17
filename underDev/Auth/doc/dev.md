@@ -38,10 +38,11 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - クラス・グローバル関数の場所が分かりづらい
-    source: unique/filename.mjs line.nnn
+  - 概要(label)先頭にある「名前：」は削除
   - common/authConfig.md: 継承元「Schema」にリンクが無い
   == 対応済 ==================================
+  - クラス・グローバル関数の場所が分かりづらい
+    source: unique/filename.mjs line.nnn
   - [bug] client/index.md: 不明なclearAuthEnvironmentクラスが定義されている
   - [bug] common/authConfig.md: constructorのラベルが不正(authConfig.exports.authConfig)
   - common/authConfig.md: メンバ一覧、備考に設定値が無いのに列が表示される

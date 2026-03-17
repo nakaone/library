@@ -26,7 +26,7 @@
 
 # <span id="authConfig_top">🧩 authConfigクラス仕様書</span>
 
-継承元：Schema<br><p class="source">source: common/authConfig.mjs line.17</p>authConfig: クライアント・サーバ共通設定情報
+継承元：Schema<br><p class="source">source: common/authConfig.mjs line.17</p>クライアント・サーバ共通設定情報
 
 ## <a href="#authConfig_top"><span id="authConfig_prop">🔢 authConfig メンバ一覧</span></a>
 
@@ -45,14 +45,12 @@
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#authConfig-constructor_top">constructor</a> | authConfig.constructor |
+| 1 | <a href="#authConfig-constructor_top">constructor</a> |  |
 
 ## <a href="#authConfig_top"><span id="authConfig_desc">🧾 authConfig 概説</span></a>
 
 クライアント・サーバ共通設定情報
 ## <span id="authConfig-constructor_top">🧩 constructor()</span>
-
-authConfig.constructor
 
 ### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_param">▶️ constructor 引数</span></a>
 

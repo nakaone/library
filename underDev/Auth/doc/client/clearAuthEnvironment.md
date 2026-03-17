@@ -26,7 +26,7 @@
 
 # <span id="clearAuthEnvironment_top">🧩 clearAuthEnvironment()</span>
 
-<p class="source">source: client/localFunc.mjs line.26</p>clearAuthEnvironment: 【開発用】IndexedDBの"Auth"データベースを削除し、環境をリセットする
+<p class="source">source: client/localFunc.mjs line.26</p>clearAuthEnvironment
 
 ## <a href="#clearAuthEnvironment_top"><span id="clearAuthEnvironment_param">▶️ clearAuthEnvironment 引数</span></a>
 
