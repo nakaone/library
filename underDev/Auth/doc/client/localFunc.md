@@ -24,7 +24,7 @@
 
 # <span id="localFunc_top">🧩 localFunc()</span>
 
-localFunc: テスト用：処理要求発行
+localFunc: 【開発用】処理要求発行
 
 ## <a href="#localFunc_top"><span id="localFunc_param">▶️ localFunc 引数</span></a>
 

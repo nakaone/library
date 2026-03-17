@@ -1,4 +1,4 @@
-/** localFunc: テスト用：処理要求発行
+/** localFunc: 【開発用】処理要求発行
  * @param {void}
  * @returns {void}
  */
@@ -19,8 +19,8 @@ export async function localFunc(){
   } catch (e) { return dev.error(e); }
 }
 
-/**
- * clearAuthEnvironment: IndexedDBの"Auth"データベースを削除し、環境をリセットする
+/** clearAuthEnvironment: 【開発用】IndexedDBの"Auth"データベースを削除し、環境をリセットする
+ * @param {void}
  * @returns {Promise<void>}
  */
 async function clearAuthEnvironment() {

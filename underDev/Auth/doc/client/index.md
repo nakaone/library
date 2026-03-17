@@ -245,9 +245,9 @@
 | クラス/関数名 | 概要 |
 | :-- | :-- |
 | [authClient](authClient.md) | authClient: クライアント側中核クラス |
-| [clearAuthEnvironment](clearAuthEnvironment.md) | clearAuthEnvironment |
+| [clearAuthEnvironment](clearAuthEnvironment.md) | clearAuthEnvironment: 【開発用】IndexedDBの"Auth"データベースを削除し、環境をリセットする |
 | [cryptoClient](cryptoClient.md) | cryptoClient: クライアント側の暗号化・署名検証 |
-| [localFunc](localFunc.md) | localFunc: テスト用：処理要求発行 |
+| [localFunc](localFunc.md) | localFunc: 【開発用】処理要求発行 |
 
 # <span id="typedefList">データ型定義一覧</span>
 

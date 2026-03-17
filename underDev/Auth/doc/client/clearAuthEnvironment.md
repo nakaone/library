@@ -24,4 +24,16 @@
 
 # <span id="clearAuthEnvironment_top">🧩 clearAuthEnvironment()</span>
 
-clearAuthEnvironment
+clearAuthEnvironment: 【開発用】IndexedDBの"Auth"データベースを削除し、環境をリセットする
+
+## <a href="#clearAuthEnvironment_top"><span id="clearAuthEnvironment_param">▶️ clearAuthEnvironment 引数</span></a>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | void | 必須 |  |
+
+## <a href="#clearAuthEnvironment_top"><span id="clearAuthEnvironment_return">◀️ clearAuthEnvironment 戻り値</span></a>
+
+| データ型 | 説明 |
+| :-- | :-- |
+| Promise.<void> |  |
