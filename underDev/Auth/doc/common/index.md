@@ -95,7 +95,7 @@ encryptedRequest: 暗号化された処理要求
 | meta.signOnly | boolean | false | 暗号化せず署名のみで送信する場合true |  |
 | meta.sym | string | null | 使用した共通鍵方式"AES-256-GCM" |  |
 | meta.rsabits | number | 必須 | 暗号化に使用したRSA鍵長 |  |
-| meta.keyProvisioning | boolean | false | 鍵配布・鍵更新目的ならtrue<br><br>  「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。<br><br>  通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。 |  |
+| meta.keyProvisioning | boolean | false | 鍵配布・鍵更新目的ならtrue<br>  「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。<br>  通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。 |  |
 
 
 ## <a href="#typedefList"><span id="encryptedResponse">"encryptedResponse" データ型定義</span></a>

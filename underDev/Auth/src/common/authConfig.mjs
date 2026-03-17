@@ -112,8 +112,8 @@ export class authConfig extends Schema {
          * @prop {boolean} meta.signOnly=false - 暗号化せず署名のみで送信する場合true
          * @prop {string} meta.sym=null - 使用した共通鍵方式"AES-256-GCM"
          * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
-         * @prop {boolean} meta.keyProvisioning=false - 鍵配布・鍵更新目的ならtrue<br>
-         *   「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。<br>
+         * @prop {boolean} meta.keyProvisioning=false - 鍵配布・鍵更新目的ならtrue
+         *   「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。
          *   通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。
          */
         encryptedRequest: {desc: '暗号化された要求',
