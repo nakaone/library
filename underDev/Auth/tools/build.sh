@@ -7,6 +7,7 @@ function main { # メイン処理
   makeNotes       # AI質問用にノート作成
   ending          # 終了時処理
 }
+
 function setup {  # 事前準備
   echo "== setup start."
 
@@ -63,6 +64,7 @@ function setup {  # 事前準備
   # ----------------------
   find $GitHub -name '.DS_Store' -type f -ls -delete
 }
+
 function ending { # 終了時処理
   echo "== ending start."
 
@@ -75,12 +77,13 @@ function ending { # 終了時処理
   elapsed_ms=$(printf "%.0f" "$(echo "($end_time - $start_time) * 1000" | bc -l)")
   echo "処理時間: ${elapsed_ms} ms"
 }
-function detailedDesign {  # JavaScriptソースからMarkdown作成
+
+function detailedDesign {  # createSpecでJavaScriptソース(JSDoc)からMarkdown作成
   echo "== detailedDesign start."
   # index.md及びクラス・グローバル関数個別MDをtmpに作成
   # ※ 最終的にsrc/doc/header.mdを先頭に付けるため、出力先はtmp/
   # ※ jsdoc実行時エラーを表示するため、標準エラー出力はリダイレクトしない
-  node $createSpec $src/(client|common|server)/**/*.(js|mjs) \
+  node $createSpec $src/(client|common|server|lib)/**/*.(js|mjs) \
   -o $tmp/createSpec -r $tmp/DocletTree.json \
   1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
 
@@ -106,6 +109,7 @@ function detailedDesign {  # JavaScriptソースからMarkdown作成
   [ -f $tmp/createSpec/index.md ] && cat tmp/header.md $tmp/createSpec/index.md \
   > $doc/index.md
 }
+
 function overviewDesign {  # readme/index.md他の全体的な仕様書
   echo "== overviewDesign start."
   # 図表
@@ -126,6 +130,7 @@ function overviewDesign {  # readme/index.md他の全体的な仕様書
   # 開発仕様
   cat $tmp/header.md  $src/doc/dev.md > $doc/dev.md
 }
+
 function deploy {  # ソースをdeployに作成、clasp実行
   echo "== deploy start."
   ## ----------------------------------------------
@@ -194,6 +199,7 @@ function deploy {  # ソースをdeployに作成、clasp実行
   #fi
 
 }
+
 function makeNotes { # AI質問用にノート作成
   echo "== makeNotes start."
 
@@ -243,6 +249,7 @@ function makeNotes { # AI質問用にノート作成
   )
   dumpFile
 }
+
 function dumpFile { # makeNotesから呼ばれる個別ファイルの内容追加関数
   for f in $files; do
     {

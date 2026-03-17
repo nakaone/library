@@ -20,7 +20,7 @@
 </style>
 <div style="text-align: right;">
 
-[総説](../readme.md) | [CL/SV共通](../common/index.md) | [CL側](../client/index.md) | [SV側](../server/index.md) | [暗号化](../crypto.md) | [メンバ](../Member.md) | [開発](../dev.md)
+[総説](../readme.md) | [CL/SV共通](../common/index.md) | [CL側](../client/index.md) | [SV側](../server/index.md) | [暗号化](../crypto.md) | [メンバ](../Member.md) | [独自Lib](../lib/index.md) | [開発](../dev.md)
 
 </div>
 
@@ -34,7 +34,7 @@
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [authRequest](#authRequest) | authRequest |
+| 1 | [authRequest](#authRequest) | authClientからauthServerへの処理要求(平文) |
 | 2 | [authResponse](#authResponse) | authServerからauthClientへの処理結果(平文) |
 | 3 | [encryptedRequest](#encryptedRequest) | 暗号化された処理要求 |
 | 4 | [encryptedResponse](#encryptedResponse) | 暗号化された処理結果 |

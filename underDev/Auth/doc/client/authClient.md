@@ -20,13 +20,13 @@
 </style>
 <div style="text-align: right;">
 
-[総説](../readme.md) | [CL/SV共通](../common/index.md) | [CL側](../client/index.md) | [SV側](../server/index.md) | [暗号化](../crypto.md) | [メンバ](../Member.md) | [開発](../dev.md)
+[総説](../readme.md) | [CL/SV共通](../common/index.md) | [CL側](../client/index.md) | [SV側](../server/index.md) | [暗号化](../crypto.md) | [メンバ](../Member.md) | [独自Lib](../lib/index.md) | [開発](../dev.md)
 
 </div>
 
 # <span id="authClient_top">🧩 authClientクラス仕様書</span>
 
-<p class="source">source: client/authClient.mjs line.39</p>- 初期化の際に非同期処理が必要なため、インスタンス作成は
+<p class="source">source: client/authClient.mjs line.39</p>クライアント側中核クラス
 
 ## <a href="#authClient_top"><span id="authClient_prop">🔢 authClient メンバ一覧</span></a>
 
@@ -41,15 +41,15 @@
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#authClient-constructor_top">constructor</a> | authClient.constructor |
-| 2 | <a href="#authClient-_exportIfCryptoKey_top">_exportIfCryptoKey</a> | authClient#_exportIfCryptoKey |
-| 3 | <a href="#authClient-_importIfCryptoKey_top">_importIfCryptoKey</a> | authClient#_importIfCryptoKey |
-| 4 | <a href="#authClient-_withStore_top">_withStore</a> | authClient#_withStore |
-| 5 | <a href="#authClient-exec_top">exec</a> | - エラー時はErrorオブジェクト化して戻り値とする |
-| 6 | <a href="#authClient-fetch_top">fetch</a> | authClient#fetch |
-| 7 | <a href="#authClient-getIndexedDB_top">getIndexedDB</a> | authClient#getIndexedDB |
-| 8 | <a href="#authClient-initialize_top">initialize</a> | - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行 |
-| 9 | <a href="#authClient-setIndexedDB_top">setIndexedDB</a> | authClient#setIndexedDB |
+| 1 | <a href="#authClient-constructor_top">constructor</a> | constructor |
+| 2 | <a href="#authClient-_exportIfCryptoKey_top">_exportIfCryptoKey</a> | CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換 |
+| 3 | <a href="#authClient-_importIfCryptoKey_top">_importIfCryptoKey</a> | IndexedDBに保存されたRSA鍵をCryptoKey型に変換 |
+| 4 | <a href="#authClient-_withStore_top">_withStore</a> | IndexedDB操作共通ラッパ |
+| 5 | <a href="#authClient-exec_top">exec</a> | ローカル関数の処理要求を処理 |
+| 6 | <a href="#authClient-fetch_top">fetch</a> | サーバ側APIの呼び出し |
+| 7 | <a href="#authClient-getIndexedDB_top">getIndexedDB</a> | IndexedDBの全てのキー・値をオブジェクト形式で取得 |
+| 8 | <a href="#authClient-initialize_top">initialize</a> | authClientインスタンス作成 |
+| 9 | <a href="#authClient-setIndexedDB_top">setIndexedDB</a> | IndexedDBの更新(upsert) |
 
 ## <a href="#authClient_top"><span id="authClient_desc">🧾 authClient 概説</span></a>
 
@@ -79,7 +79,7 @@ async function onLoad(){
 ```
 ## <span id="authClient-constructor_top">🧩 constructor()</span>
 
-authClient.constructor
+constructor
 
 ### <a href="#authClient-constructor_top"><span id="authClient-constructor_param">▶️ constructor 引数</span></a>
 
@@ -88,7 +88,7 @@ authClient.constructor
 | config | Object | 必須 | authClient/Server共通設定情報 |
 ## <span id="authClient-_exportIfCryptoKey_top">🧩 _exportIfCryptoKey()</span>
 
-authClient#_exportIfCryptoKey
+CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
 
 ### <a href="#authClient-_exportIfCryptoKey_top"><span id="authClient-_exportIfCryptoKey_param">▶️ _exportIfCryptoKey 引数</span></a>
 
@@ -104,7 +104,7 @@ authClient#_exportIfCryptoKey
 | string |  |
 ## <span id="authClient-_importIfCryptoKey_top">🧩 _importIfCryptoKey()</span>
 
-authClient#_importIfCryptoKey
+IndexedDBに保存されたRSA鍵をCryptoKey型に変換
 
 ### <a href="#authClient-_importIfCryptoKey_top"><span id="authClient-_importIfCryptoKey_param">▶️ _importIfCryptoKey 引数</span></a>
 
@@ -120,7 +120,7 @@ authClient#_importIfCryptoKey
 | CryptoKey |  |
 ## <span id="authClient-_withStore_top">🧩 _withStore()</span>
 
-authClient#_withStore
+IndexedDB操作共通ラッパ
 
 ### <a href="#authClient-_withStore_top"><span id="authClient-_withStore_param">▶️ _withStore 引数</span></a>
 
@@ -129,7 +129,7 @@ authClient#_withStore
 | mode | 'readonly' \| 'readwrite' | 必須 | param {(store: IDBObjectStore)=>Promise<any>} fn |
 ## <span id="authClient-exec_top">🧩 exec()</span>
 
-- エラー時はErrorオブジェクト化して戻り値とする
+ローカル関数の処理要求を処理
 
 ### <a href="#authClient-exec_top"><span id="authClient-exec_desc">🧾 exec 概説</span></a>
 
@@ -150,7 +150,7 @@ authClient#_withStore
 | any \| Error | 処理結果 |
 ## <span id="authClient-fetch_top">🧩 fetch()</span>
 
-authClient#fetch
+サーバ側APIの呼び出し
 
 ### <a href="#authClient-fetch_top"><span id="authClient-fetch_param">▶️ fetch 引数</span></a>
 
@@ -165,7 +165,7 @@ authClient#fetch
 | authResponse \| Error | 処理結果 |
 ## <span id="authClient-getIndexedDB_top">🧩 getIndexedDB()</span>
 
-authClient#getIndexedDB
+IndexedDBの全てのキー・値をオブジェクト形式で取得
 
 ### <a href="#authClient-getIndexedDB_top"><span id="authClient-getIndexedDB_param">▶️ getIndexedDB 引数</span></a>
 
@@ -180,7 +180,7 @@ authClient#getIndexedDB
 | Object.<string, any> | this.idbに格納したIndexedDBの内容({キー:値}形式) |
 ## <span id="authClient-initialize_top">🧩 initialize()</span>
 
-- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
+authClientインスタンス作成
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_desc">🧾 initialize 概説</span></a>
 
@@ -199,7 +199,7 @@ authClient#getIndexedDB
 | authClient \| Error |  |
 ## <span id="authClient-setIndexedDB_top">🧩 setIndexedDB()</span>
 
-authClient#setIndexedDB
+IndexedDBの更新(upsert)
 
 ### <a href="#authClient-setIndexedDB_top"><span id="authClient-setIndexedDB_param">▶️ setIndexedDB 引数</span></a>
 

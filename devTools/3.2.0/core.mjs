@@ -1,4 +1,30 @@
+/** devToolsOpt: オプション設定値
+ * @typedef {Object} devToolsOpt
+ * @prop {string} [mode='pipe'] - 出力モード
+ *   | mode     | エラー | 開始・終了 | step | 用途・備考    |
+ *   | :--      | :--:  | :--:     | :--:      | :--          |
+ *   | "none"   | ❌    | ❌        | ❌        | 出力無し      |
+ *   | "error"  | ⭕    | ❌        | ❌        | エラーのみ出力 |
+ *   | "normal" | ⭕    | ⭕        | ❌        | 本番用        |
+ *   | "dev"    | ⭕    | ⭕        | ⭕        | 開発用        |
+ *   | "pipe"   | ⭕    | ❌        | ⭕        | パイプ処理用   |
+ * @prop {number} [digit=4] - 処理順(seq)をログ出力する際の桁数
+ * @prop {boolean} [footer=false] - 実行結果(startTime,endTime,elaps)を出力するならtrue
+ * @prop {number} [maxDepth=10] - 再帰呼出時の最深階層数
+ */
 /** devTools: 開発支援関係メソッド集
+ * @class
+ * @prop {string} whois='' - 関数名またはクラス名.メソッド名
+ * @prop {number} seq - 関数・メソッドの呼出順
+ * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
+ * @prop {Object} v={} - 関数・メソッド内汎用変数
+ * @prop {string} stepNo=1 - 関数・メソッド内の現在位置
+ * @prop {string[]} log=[] - {string[]} 実行順に並べたdev.stepNo
+ * @prop {number} startTime=Date.now() - 開始時刻
+ * @prop {number} endTime - 終了時刻
+ * @prop {number} elaps - 所要時間(ミリ秒)
+ * @prop {devToolsOpt} opt - オプション設定値
+ * 
  * @example
  * function xxx(o){
  *   const v = {whois:'xxx',arg:{o},rv:null};
@@ -42,33 +68,6 @@
  *     start/endでメッセージ表示を抑止するため、引数"rt(run time option)"を追加
  *   - rev.1.0.0 : 2025/01/26
  *     SpreadDb.1.2.0 test.jsとして作成していたのを分離
- */
-/** devToolsOpt: オプション設定値
- * @typedef {Object} devToolsOpt
- * @prop {string} [mode='pipe'] - 出力モード
- *   | mode     | エラー | 開始・終了 | step | 用途・備考    |
- *   | :--      | :--:  | :--:     | :--:      | :--          |
- *   | "none"   | ❌    | ❌        | ❌        | 出力無し      |
- *   | "error"  | ⭕    | ❌        | ❌        | エラーのみ出力 |
- *   | "normal" | ⭕    | ⭕        | ❌        | 本番用        |
- *   | "dev"    | ⭕    | ⭕        | ⭕        | 開発用        |
- *   | "pipe"   | ⭕    | ❌        | ⭕        | パイプ処理用   |
- * @prop {number} [digit=4] - 処理順(seq)をログ出力する際の桁数
- * @prop {boolean} [footer=false] - 実行結果(startTime,endTime,elaps)を出力するならtrue
- * @prop {number} [maxDepth=10] - 再帰呼出時の最深階層数
- */
-/**
- * @class
- * @prop {string} whois='' - 関数名またはクラス名.メソッド名
- * @prop {number} seq - 関数・メソッドの呼出順
- * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
- * @prop {Object} v={} - 関数・メソッド内汎用変数
- * @prop {string} stepNo=1 - 関数・メソッド内の現在位置
- * @prop {string[]} log=[] - {string[]} 実行順に並べたdev.stepNo
- * @prop {number} startTime=Date.now() - 開始時刻
- * @prop {number} endTime - 終了時刻
- * @prop {number} elaps - 所要時間(ミリ秒)
- * @prop {devToolsOpt} opt - オプション設定値
  */
 export class devTools {
 

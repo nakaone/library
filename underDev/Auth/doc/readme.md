@@ -20,7 +20,7 @@
 </style>
 <div style="text-align: right;">
 
-[総説](readme.md) | [CL/SV共通](common/index.md) | [CL側](client/index.md) | [SV側](server/index.md) | [暗号化](crypto.md) | [メンバ](Member.md) | [開発](dev.md)
+[総説](readme.md) | [CL/SV共通](common/index.md) | [CL側](client/index.md) | [SV側](server/index.md) | [暗号化](crypto.md) | [メンバ](Member.md) | [独自Lib](lib/index.md) | [開発](dev.md)
 
 </div>
 

@@ -12,9 +12,10 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - index.md: データ型定義のメンバ一覧、備考に設定値が無いのに列が表示される
+  - client/index.md: グローバル関数・クラス一覧のauthClientの概要がconcatenatedの1行目になっている
   - common/authConfig.md: 継承元「Schema」にリンクが無い
   == 対応済 ==================================
+  - index.md: データ型定義のメンバ一覧、備考に設定値が無いのに列が表示される
   - 概要(label)先頭にある「名前：」は削除
   - クラス・グローバル関数の場所が分かりづらい
     source: unique/filename.mjs line.nnn

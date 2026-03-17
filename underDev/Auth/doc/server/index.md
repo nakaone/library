@@ -20,7 +20,7 @@
 </style>
 <div style="text-align: right;">
 
-[総説](../readme.md) | [CL/SV共通](../common/index.md) | [CL側](../client/index.md) | [SV側](../server/index.md) | [暗号化](../crypto.md) | [メンバ](../Member.md) | [開発](../dev.md)
+[総説](../readme.md) | [CL/SV共通](../common/index.md) | [CL側](../client/index.md) | [SV側](../server/index.md) | [暗号化](../crypto.md) | [メンバ](../Member.md) | [独自Lib](../lib/index.md) | [開発](../dev.md)
 
 </div>
 
@@ -262,7 +262,7 @@ const menu22 = () => asv.resetSPkey();
 | :-- | :-- |
 | [authServer](authServer.md) | サーバ側中核クラス |
 | [cryptoServer](cryptoServer.md) | サーバ側の暗号化・署名検証 |
-| [Member](Member.md) |  |
+| [Member](Member.md) | Member |
 
 # <span id="typedefList">データ型定義一覧</span>
 
@@ -271,9 +271,9 @@ const menu22 = () => asv.resetSPkey();
 | 1 | [authAuditLog](#authAuditLog) | authServerの監査ログをシートに出力 |
 | 2 | [authErrorLog](#authErrorLog) | authServerのエラーログをシートに出力 |
 | 3 | [authRequestLog](#authRequestLog) | 重複チェック用のリクエスト履歴 |
-| 4 | [authScriptProperties](#authScriptProperties) | サーバ側ScriptPropertiesに保存する内容 |
-| 5 | [authServerConfig](#authServerConfig) | authServer特有の設定項目 |
-| 6 | [authServerFuncDef](#authServerFuncDef) | サーバ側関数設定 |
+| 4 | [authScriptProperties](#authScriptProperties) | サーバ側ScriptPropertiesに保存する情報 |
+| 5 | [authServerConfig](#authServerConfig) | this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加 |
+| 6 | [authServerFuncDef](#authServerFuncDef) | サーバ側関数設定オブジェクト |
 | 7 | [MemberDevice](#MemberDevice) | メンバが使用する通信機器の情報 |
 | 8 | [MemberLog](#MemberLog) | メンバの各種要求・状態変化の時刻 |
 | 9 | [MemberProfile](#MemberProfile) | メンバの属性情報 |

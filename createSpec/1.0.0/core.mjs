@@ -28,6 +28,10 @@ createSpec();
  * - 独自タグ「history」対応
  */
 
+/** createSpec: JavaScriptソース(JSDoc)からMarkdown仕様書を作成
+ * @param {Object} opt 
+ * @returns {void}
+ */
 async function createSpec(opt={}){
   const pv = {whois:`createSpec`, arg:{}, rv:null};
   const cf = {  // jsdocコマンド動作環境整備関係(config)
@@ -97,6 +101,7 @@ async function createSpec(opt={}){
 
   /** DocletColRow: データ項目一覧作成用追加情報
    * @typedef {Object} DocletColRow
+   * @memberof createSpec
    * @prop {string} name - 項目名
    * @prop {string} type - データ型
    * @prop {string} value - 要否/既定値
@@ -105,6 +110,7 @@ async function createSpec(opt={}){
    */
   /** DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
    * @typedef {Object} DocletColDef
+   * @memberof createSpec
    * @prop {Object}   type - データ型情報オブジェクト
    * @prop {string[]} type.names - データ型名の配列
    *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
@@ -126,6 +132,7 @@ async function createSpec(opt={}){
    */
   /** Doclet: `jsdoc -X`で配列で返されるオブジェクト
    * @typedef {Object} Doclet
+   * @memberof createSpec
    * @prop {string[]} augments - ＠augments/＠extendsによる継承元情報
    *   親クラスや継承対象の一覧
    * @prop {string}   classdesc - ＠classdescタグで指定されたクラス専用の説明文
@@ -234,6 +241,7 @@ async function createSpec(opt={}){
    */
   /** docletTypeの判定ロジック
    * @name decision logic of docletType
+   * @memberof createSpec
    * @desc
    * 
    * 以下第一レベルがdocletTypeとする文字列
@@ -272,6 +280,7 @@ async function createSpec(opt={}){
    */
   /** docletType毎のlongname命名規則
    * @name "longname" naming rules
+   * @memberof createSpec
    * @desc
    * 
    * - class: longnameそのまま使用
@@ -373,6 +382,7 @@ async function createSpec(opt={}){
   class DocletEx {
     /**
      * @constructor
+     * @memberof DocletEx
      * @param {Doclet} doclet
      * @param {Object} [opt={}] - オプション設定値
      */
@@ -484,9 +494,10 @@ async function createSpec(opt={}){
           dev.step(5.4);  // commentが無い場合、存在する@description,@classdesc,@example を設定
           v.descTags.forEach(x => this.concatenated += (v.doclet[x] ?? ''));
         }
+        this.concatenated = this.concatenated.trim();
 
-        dev.step(6);  // labelを設定
-        if( this.label.length === 0 ){
+        dev.step(6,{label:this.label,parsed:this.parsed});  // labelを設定
+        if( this.label !== '' ){
           dev.step(6.1);  // ① JSDoc先頭の「/**」に続く文字列(⇒step.5.11で設定済)
         } else if( this.docletType === 'constructor' ){
           dev.step(6.2);  // ② constructorは「(memberof.)constructor」
@@ -520,7 +531,7 @@ async function createSpec(opt={}){
         }
         this.label = this.label.trim();
 
-        dev.step(7);  // properties
+        dev.step(7,{label:this.label,parsed:this.parsed});  // properties
         if( Object.hasOwn(v.doclet,'properties') && v.doclet.properties.length > 0 ){
           v.doclet.properties.forEach(prop => {
             v.r = this.addRowToColumn(prop);
@@ -553,8 +564,8 @@ async function createSpec(opt={}){
     }
 
     /** addRowToColumn: データ項目情報から一覧作成用情報を作成
-     * 
      * データ項目情報：Doclet.properties/params/returnsの各要素。配列では無くオブジェクト
+     * @memberof DocletEx
      * @param {DocletColDef} prop - データ項目情報
      * @returns {DocletColRow|Error}
      */
@@ -663,6 +674,7 @@ async function createSpec(opt={}){
 
   /** DocletTreeFile: 個別入力ファイル情報
    * @typedef {Object} DocletTreeFile
+   * @memberof createSpec
    * @prop {string} full - フルパス＋ファイル名
    * @prop {string} unique - 固有パス(フルパス−共通部分)
    *   ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/")
@@ -672,6 +684,7 @@ async function createSpec(opt={}){
    */
   /** DocletTreeSource: 統合版入力ファイル(JSソース)情報
    * @typedef {Object} DocletTreeSource
+   * @memberof createSpec
    * @prop {string} [common=''] - フルパスの共通部分
    * @prop {string} [outDir=''] - 出力先フォルダ名(フルパス)
    * @prop {number} [num=0] - 対象ファイルの個数
@@ -680,6 +693,7 @@ async function createSpec(opt={}){
    */
   /** DocletTreeFolder: パス毎の所属Doclet管理(フォルダ管理)
    * @class DocletTreeFolder
+   * @memberof createSpec
    * @prop {string} folderName
    * @prop {Object.<string, DocletEx>} funclass - グローバル関数・クラス定義(key=DocletEx.uuid)
    * @prop {Object.<string, DocletEx>} typedef - データ型定義(key=DocletEx.uuid)
@@ -687,12 +701,15 @@ async function createSpec(opt={}){
    */
   /** DocletTreeSymbol: クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
    * - 作成はDocletTree.registration内で行う
+   * @interface DocletTreeSymbol
+   * @memberof createSpec
    * @prop {string} name - クラス・グローバル関数名・データ型定義名
    * @prop {RegExp} rex - 名称を含むかを判定する正規表現
    * @prop {string} link - 参照先URL(aタグ)を付けた名称
    */
   /** DocletTreeOpt: オプション設定値
    * @typedef {Object} DocletTreeOpt
+   * @memberof createSpec
    * @prop {Object.<string, string>} title - Markdown文書のタイトル行
    * @prop {string} [lang='ja-JP'] - 使用言語
    * @prop {string} [indexMd='index.md'] - フォルダ直下の管理ファイル名
@@ -706,6 +723,7 @@ async function createSpec(opt={}){
    */
   /** DocletTree: 処理対象ソース・Docletの全体構造を管理
    * @class DocletTree
+   * @memberof createSpec
    * @prop {DocletTreeSource} source - 処理対象となるソースファイル
    * @prop {DocletEx[]} doclet - 独自情報を付加したDocletExの配列
    * @prop {Object.<string, DocletEx>} map - 各種IdをキーにしたDocletExのマップ(命名はregistration()内)
@@ -722,6 +740,7 @@ async function createSpec(opt={}){
     static symbols = {};
     /**
      * @constructor
+     * @memberof DocletTree
      * @param {DocletTreeSource} arg - 入力ファイル(JSソース)情報
      * @param {*} opt 
      * @returns {DocletTree}
@@ -797,6 +816,7 @@ async function createSpec(opt={}){
     }
 
     /** article: タイトル行＋記事のMarkdown文字列作成
+     * @memberof DocletTree
      * @param {Object} arg
      * @param {string} arg.title - タイトルの文字列
      * @param {number} [arg.level=1] - タイトル行のレベル
@@ -976,6 +996,9 @@ async function createSpec(opt={}){
      *   1. child.memberof === parent.longname
      *   2. child.rangeが包含されている直近の要素
      * - 項目一覧のデータ型からindex.md#個別データ型へのリンク作成
+     * @memberof DocletTree
+     * @param {void}
+     * @returns {void}
      */
     linkage(){
       const v = {whois:`${this.constructor.name}.linkage`, arg:{}, rv:null};
@@ -1112,6 +1135,7 @@ async function createSpec(opt={}){
     }
 
     /** makeDocletMD: 単一DocletExのインスタンスからMarkdownを作成
+     * @memberof DocletTree
      * @param {string} [uuid=this.uuid] - 対象DocletEx.uuid
      * @param {number} [level=1] - 階層の深さ
      * @returns {string|Error}
@@ -1349,7 +1373,8 @@ async function createSpec(opt={}){
     }
 
     /** makeIndexMD: フォルダ単位のクラス・グローバル関数一覧＋データ型定義のMarkdownを作成
-     * @param {DocletTreeFolder} folder 
+     * @memberof DocletTree
+     * @param {DocletTreeFolder} folder
      * @returns {string|Error}
      */
     makeIndexMD(folder){
@@ -1442,6 +1467,7 @@ async function createSpec(opt={}){
     }
 
     /** makeTable: Markdownのテーブル作成
+     * @memberof DocletTree
      * @param {Object.<string, any[]>} data - テーブル作成用データ
      * @param {Object} [opt={}]
      * @param {Object[]} [opt.header=[]] - {key,label,align}形式のオブジェクト
@@ -1512,6 +1538,7 @@ async function createSpec(opt={}){
      * - 出力先配下にフォルダ作成＋index.mdの作成
      * - markdown()を呼び出しDocletEx単位のMarkdownを作成
      * - 出力先フォルダにMarkdownファイルを作成
+     * @memberof DocletTree
      * @param {DocletTreeFolder} [folder=this.folder] - 対象フォルダ
      * @param {string} [outDir=this.source.outDir] - 出力先(親)フォルダのパス
      * @returns {null|Error}
@@ -1559,6 +1586,7 @@ async function createSpec(opt={}){
      * 重複登録：同一の「／** 〜 *／」から複数のDocletが生成され、
      * 特定のタグ情報が片方にしかない状態。
      * 
+     * @memberof DocletTree
      * @param {DocletEx} doclet - 生成直後のDocletExインスタンス
      * @param {DocletTreeFile} file - doclet抽出元の個別入力ファイル情報
      * @returns {null|Error}
@@ -1663,6 +1691,7 @@ async function createSpec(opt={}){
 
   /** listSource: 事前準備、対象ファイルリスト作成
    * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
+   * @memberof createSpec
    * @param {void}
    * @returns {DocletTreeSource|string|Error} 入力0件なら文字列"No input file"
    */
