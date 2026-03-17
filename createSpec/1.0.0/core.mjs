@@ -1178,10 +1178,14 @@ async function createSpec(opt={}){
 
         dev.step(3); // メンバ一覧
         if( Object.hasOwn(v.d,'properties') && v.d.properties.length > 0 ){
-          v.r = DocletTree.makeTable(
-            v.d.properties.map(x => x.row),
-            {header: this.opt.propHeader}
-          );
+          v.data = v.d.properties.map(x => x.row);
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader))};
+          // 備考欄が全て空白なら割愛
+          if( v.data.map(x => x.note).every(x => x === '') ){
+            v.opt.header = v.opt.header.filter(x => x.key !== 'note');
+          }
+          v.r = DocletTree.makeTable(v.data,v.opt);
+          if( v.r instanceof Error ) throw v.r;
           v.r = this.article({
             title: `🔢 ${v.d.name} メンバ一覧`,
             level: level+1,
@@ -1240,10 +1244,14 @@ async function createSpec(opt={}){
 
         dev.step(6); // 引数
         if( Object.hasOwn(v.d,'params') && v.d.params.length > 0 ){
-          v.r = DocletTree.makeTable(
-            v.d.params.map(x => x.row),
-            {header: this.opt.propHeader}
-          );
+          v.data = v.d.params.map(x => x.row);
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader))};
+          // 備考欄が全て空白なら割愛
+          if( v.data.map(x => x.note).every(x => x === '') ){
+            v.opt.header = v.opt.header.filter(x => x.key !== 'note');
+          }
+          v.r = DocletTree.makeTable(v.data,v.opt);
+          if( v.r instanceof Error ) throw v.r;
           v.r = this.article({
             title: `▶️ ${v.d.name} 引数`,
             level: level+1,
@@ -1257,10 +1265,14 @@ async function createSpec(opt={}){
 
         dev.step(7); // 戻り値
         if( Object.hasOwn(v.d,'returns') && v.d.params.length > 0 ){
-          v.r = DocletTree.makeTable(
-            v.d.returns.map(x => x.row),
-            {header: this.opt.returnHeader}
-          );
+          v.data = v.d.returns.map(x => x.row);
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.returnHeader))};
+          // 備考欄が全て空白なら割愛
+          if( v.data.map(x => x.note).every(x => x === '') ){
+            v.opt.header = v.opt.header.filter(x => x.key !== 'note');
+          }
+          v.r = DocletTree.makeTable(v.data,v.opt);
+          if( v.r instanceof Error ) throw v.r;
           v.r = this.article({
             title: `◀️ ${v.d.name} 戻り値`,
             level: level+1,

@@ -28,12 +28,12 @@ localFunc: テスト用：処理要求発行
 
 ## <a href="#localFunc_top"><span id="localFunc_param">▶️ localFunc 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | void | 必須 |  |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | void | 必須 |  |
 
 ## <a href="#localFunc_top"><span id="localFunc_return">◀️ localFunc 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| void |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| void |  |

@@ -28,10 +28,10 @@ cryptoClient: クライアント側の暗号化・署名検証
 
 ## <a href="#cryptoClient_top"><span id="cryptoClient_prop">🔢 cryptoClient メンバ一覧</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| idb | authIndexedDB | 必須 | authClient.idb(IndexedDB)のコピー |  |
-| RSAbits | string | 必須 | RSA鍵長(=authConfig.RSAbits) |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| idb | authIndexedDB | 必須 | authClient.idb(IndexedDB)のコピー |
+| RSAbits | string | 必須 | RSA鍵長(=authConfig.RSAbits) |
 
 ## <a href="#cryptoClient_top"><span id="cryptoClient_func">🧱 cryptoClient メソッド・内部関数一覧</span></a>
 
@@ -51,10 +51,10 @@ constructor
 
 ### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_param">▶️ constructor 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数<br>  CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |  |
-| RSAbits | number | 必須 | RSA鍵長 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数<br>  CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
+| RSAbits | number | 必須 | RSA鍵長 |
 ## <span id="cryptoClient-encrypt_top">🧩 encrypt()</span>
 
 encrypt: 処理要求を暗号化＋署名
@@ -67,46 +67,46 @@ encrypt: 処理要求を暗号化＋署名
 
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_param">▶️ encrypt 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| request | authRequest | 必須 | 処理要求 |
 
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_return">◀️ encrypt 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| encryptedRequest |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| encryptedRequest |  |
 ### <span id="cryptoClient-encrypt-dummyFunc_top">🧩 dummyFunc()</span>
 
 dummyFunc: テスト用ダミー
 
 #### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_param">▶️ dummyFunc 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| a | number | 必須 |  |  |
-| b | number | 必須 |  |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| a | number | 必須 |  |
+| b | number | 必須 |  |
 
 #### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_return">◀️ dummyFunc 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| number |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| number |  |
 ## <span id="cryptoClient-decrypt_top">🧩 decrypt()</span>
 
 decrypt: 暗号化された処理結果を復号・署名検証
 
 ### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_param">▶️ decrypt 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| response | encryptedResponse | 必須 | 暗号化されたサーバ側処理結果 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| response | encryptedResponse | 必須 | 暗号化されたサーバ側処理結果 |
 
 ### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_return">◀️ decrypt 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authResponse |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| authResponse |  |
 ## <span id="cryptoClient-generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: RSA鍵ペアを生成
@@ -117,12 +117,12 @@ generateKeys: RSA鍵ペアを生成
 
 ### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_param">▶️ generateKeys 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | void | 必須 |  |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | void | 必須 |  |
 
 ### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_return">◀️ generateKeys 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| Object | 生成された鍵ペア |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| Object | 生成された鍵ペア |

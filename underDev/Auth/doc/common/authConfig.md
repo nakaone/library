@@ -28,16 +28,16 @@
 
 ## <a href="#authConfig_top"><span id="authConfig_prop">🔢 authConfig メンバ一覧</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| systemName | string | "auth" | システム名 |  |
-| adminMail | string | 必須 | 管理者のメールアドレス |  |
-| adminName | string | 必須 | 管理者氏名 |  |
-| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差既定値は2分 |  |
-| RSAbits | string | 2048 | 鍵ペアの鍵長 |  |
-| maxDepth | number | 10 | 再帰呼出時の最大階層 |  |
-| underDev | Object | 必須 | テスト時の設定 |  |
-| underDev.isTest | boolean | false | 開発モードならtrue |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| systemName | string | "auth" | システム名 |
+| adminMail | string | 必須 | 管理者のメールアドレス |
+| adminName | string | 必須 | 管理者氏名 |
+| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差既定値は2分 |
+| RSAbits | string | 2048 | 鍵ペアの鍵長 |
+| maxDepth | number | 10 | 再帰呼出時の最大階層 |
+| underDev | Object | 必須 | テスト時の設定 |
+| underDev.isTest | boolean | false | 開発モードならtrue |
 
 ## <a href="#authConfig_top"><span id="authConfig_func">🧱 authConfig メソッド・内部関数一覧</span></a>
 
@@ -54,6 +54,6 @@ authConfig.exports.authConfig
 
 ### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_param">▶️ constructor 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| arg | authConfig | 必須 | 設定情報(既定値からの変更部分) |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| arg | authConfig | 必須 | 設定情報(既定値からの変更部分) |

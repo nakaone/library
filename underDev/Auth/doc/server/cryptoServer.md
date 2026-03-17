@@ -28,12 +28,12 @@ cryptoServer: サーバ側の暗号化・署名検証
 
 ## <a href="#cryptoServer_top"><span id="cryptoServer_prop">🔢 cryptoServer メンバ一覧</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| cf | authServerConfig | 必須 | authServer設定情報 |  |
-| prop | ScriptProperties | 必須 | PropertiesService.getScriptProperties() |  |
-| keys | authScriptProperties | 必須 | ScriptPropertiesに保存された鍵ペア情報 |  |
-| keyList | string[] | 必須 | ScriptPropertiesに保存された項目名の一覧 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| cf | authServerConfig | 必須 | authServer設定情報 |
+| prop | ScriptProperties | 必須 | PropertiesService.getScriptProperties() |
+| keys | authScriptProperties | 必須 | ScriptPropertiesに保存された鍵ペア情報 |
+| keyList | string[] | 必須 | ScriptPropertiesに保存された項目名の一覧 |
 
 ## <a href="#cryptoServer_top"><span id="cryptoServer_func">🧱 cryptoServer メソッド・内部関数一覧</span></a>
 
@@ -55,41 +55,41 @@ constructor
 
 ### <a href="#cryptoServer-constructor_top"><span id="cryptoServer-constructor_param">▶️ constructor 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| cf | authServerConfig | 必須 | authServer設定値 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| cf | authServerConfig | 必須 | authServer設定値 |
 ## <span id="cryptoServer-encrypt_top">🧩 encrypt()</span>
 
 encrypt: 処理結果を暗号化＋署名
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_param">▶️ encrypt 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| response | authResponse | 必須 | 処理結果 |  |
-| CPkeySign | string | 必須 | クライアント側署名用公開鍵 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| response | authResponse | 必須 | 処理結果 |
+| CPkeySign | string | 必須 | クライアント側署名用公開鍵 |
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_return">◀️ encrypt 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| encryptedResponse |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| encryptedResponse |  |
 ## <span id="cryptoServer-decrypt_top">🧩 decrypt()</span>
 
 decrypt: 暗号化された処理要求を復号・署名検証
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_param">▶️ decrypt 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| request | encryptedRequest | 必須 | 暗号化されたサーバ側処理結果 |  |
-| CPkeySign | string | 必須 | クライアント側署名用公開鍵 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| request | encryptedRequest | 必須 | 暗号化されたサーバ側処理結果 |
+| CPkeySign | string | 必須 | クライアント側署名用公開鍵 |
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_return">◀️ decrypt 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authRequest |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| authRequest |  |
 ## <span id="cryptoServer-generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: PEM形式のRSA鍵ペアを生成
@@ -100,15 +100,15 @@ generateKeys: PEM形式のRSA鍵ペアを生成
 
 ### <a href="#cryptoServer-generateKeys_top"><span id="cryptoServer-generateKeys_param">▶️ generateKeys 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | void | 必須 |  |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | void | 必須 |  |
 
 ### <a href="#cryptoServer-generateKeys_top"><span id="cryptoServer-generateKeys_return">◀️ generateKeys 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| Object | 生成された鍵ペア |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| Object | 生成された鍵ペア |
 ## <span id="cryptoServer-generateAndSave_top">🧩 generateAndSave()</span>
 
 generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
@@ -122,12 +122,12 @@ initialize: cryptoServerインスタンス作成
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_param">▶️ initialize 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| cf | authServerConfig | 必須 | authServer設定値 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| cf | authServerConfig | 必須 | authServer設定値 |
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_return">◀️ initialize 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| cryptoServer \| Error |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| cryptoServer \| Error |  |

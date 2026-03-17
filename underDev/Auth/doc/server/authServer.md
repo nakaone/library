@@ -28,10 +28,10 @@ authServer: サーバ側中核クラス
 
 ## <a href="#authServer_top"><span id="authServer_prop">🔢 authServer メンバ一覧</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| cf | authServerConfig | 必須 | authServer設定項目 |  |
-| cryptoLib | cryptoServer | 必須 | 暗号化・署名検証 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| cf | authServerConfig | 必須 | authServer設定項目 |
+| cryptoLib | cryptoServer | 必須 | 暗号化・署名検証 |
 
 ## <a href="#authServer_top"><span id="authServer_func">🧱 authServer メソッド・内部関数一覧</span></a>
 
@@ -55,9 +55,9 @@ authServer#authServer
 
 ### <a href="#authServer-constructor_top"><span id="authServer-constructor_param">▶️ constructor 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |
 ## <span id="authServer-authLogger_top">🧩 authLogger()</span>
 
 authLogger: 監査ログ／エラーログを自動振り分けで出力
@@ -68,30 +68,30 @@ authLogger: 監査ログ／エラーログを自動振り分けで出力
 
 ### <a href="#authServer-authLogger_top"><span id="authServer-authLogger_param">▶️ authLogger 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| response | authResponse | 必須 |  |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| response | authResponse | 必須 |  |
 
 ### <a href="#authServer-authLogger_top"><span id="authServer-authLogger_return">◀️ authLogger 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authResponse |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| authResponse |  |
 ## <span id="authServer-authResponse_top">🧩 authResponse()</span>
 
 authResponse: authResponse型のオブジェクトを作成
 
 ### <a href="#authServer-authResponse_top"><span id="authServer-authResponse_param">▶️ authResponse 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求オブジェクト |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| request | authRequest | 必須 | 処理要求オブジェクト |
 
 ### <a href="#authServer-authResponse_top"><span id="authServer-authResponse_return">◀️ authResponse 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authResponse |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| authResponse |  |
 ## <span id="authServer-dumpProperties_top">🧩 dumpProperties()</span>
 
 dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用)
@@ -105,30 +105,30 @@ initialize: authServerインスタンス作成
 
 ### <a href="#authServer-initialize_top"><span id="authServer-initialize_param">▶️ initialize 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |
 
 ### <a href="#authServer-initialize_top"><span id="authServer-initialize_return">◀️ initialize 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| authServer \| Error |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| authServer \| Error |  |
 ## <span id="authServer-exec_top">🧩 exec()</span>
 
 exec: 処理要求に対するサーバ側中核処理
 
 ### <a href="#authServer-exec_top"><span id="authServer-exec_param">▶️ exec 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| arg | string | 必須 | 引数 |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| arg | string | 必須 | 引数 |
 
 ### <a href="#authServer-exec_top"><span id="authServer-exec_return">◀️ exec 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| null \| Error | 戻り値 |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| null \| Error | 戻り値 |
 ## <span id="authServer-resetSPkey_top">🧩 resetSPkey()</span>
 
 resetSPkey: 緊急時、サーバ側鍵ペアを更新
@@ -139,15 +139,15 @@ resetSPkey: 緊急時、サーバ側鍵ペアを更新
 
 ### <a href="#authServer-resetSPkey_top"><span id="authServer-resetSPkey_param">▶️ resetSPkey 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | void | 必須 |  |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | void | 必須 |  |
 
 ### <a href="#authServer-resetSPkey_top"><span id="authServer-resetSPkey_return">◀️ resetSPkey 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| null |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| null |  |
 ## <span id="authServer-setupEnvironment_top">🧩 setupEnvironment()</span>
 
 setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
@@ -158,12 +158,12 @@ setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
 
 ### <a href="#authServer-setupEnvironment_top"><span id="authServer-setupEnvironment_param">▶️ setupEnvironment 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| config | Object | 必須 | adminMail設定を含むオブジェクト |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| config | Object | 必須 | adminMail設定を含むオブジェクト |
 
 ### <a href="#authServer-setupEnvironment_top"><span id="authServer-setupEnvironment_return">◀️ setupEnvironment 戻り値</span></a>
 
-| データ型 | 説明 | 備考 |
-| :-- | :-- | :-- |
-| null |  |  |
+| データ型 | 説明 |
+| :-- | :-- |
+| null |  |

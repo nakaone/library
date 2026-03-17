@@ -12,7 +12,7 @@ import { mergeDeeply } from "../lib/mergeDeeply.2_0_0.mjs"
  * @prop {string} [RSAbits=2048] - 鍵ペアの鍵長
  * @prop {number} [maxDepth=10] - 再帰呼出時の最大階層
  * @prop {Object} underDev - テスト時の設定
- * @prop {boolean} underDev.isTest=false - 開発モードならtrue
+ * @prop {boolean} [underDev.isTest=false] - 開発モードならtrue
  */
 export class authConfig extends Schema {
   /**

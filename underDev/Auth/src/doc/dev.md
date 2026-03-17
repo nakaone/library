@@ -12,11 +12,11 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - [bug] common/index.md: meta.keyProvisioningの説明に不要な改行
-  - [bug] common/authConfig.md: 継承元「Schema」にリンクが無い
   - common/authConfig.md: メンバ一覧、備考に設定値が無いのに列が表示される
+  - [bug] common/authConfig.md: 継承元「Schema」にリンクが無い
   - [bug] common/authConfig.md: constructorのラベルが不正(authConfig.exports.authConfig)
   == 対応済 ==================================
+  - [bug] common/index.md: meta.keyProvisioningの説明に不要な改行
   - [bug] client/authClient.md: 「インスタンス作成のサンプル」がソースではなく文字列として表示
     - 改行が<br>になっている
     - メアドの@gmailがタグと認識され、以降が処理されない
