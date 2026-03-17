@@ -12,9 +12,11 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - [bug] client/index.md: 不明なclearAuthEnvironmentクラスが定義されている
-  - [bug] common/authConfig.md: 継承元「Schema」にリンクが無い
+  - クラス・グローバル関数の場所が分かりづらい
+    source: unique/filename.mjs line.nnn
+  - common/authConfig.md: 継承元「Schema」にリンクが無い
   == 対応済 ==================================
+  - [bug] client/index.md: 不明なclearAuthEnvironmentクラスが定義されている
   - [bug] common/authConfig.md: constructorのラベルが不正(authConfig.exports.authConfig)
   - common/authConfig.md: メンバ一覧、備考に設定値が無いのに列が表示される
   - [bug] common/index.md: meta.keyProvisioningの説明に不要な改行

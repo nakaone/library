@@ -1146,8 +1146,8 @@ async function createSpec(opt={}){
 
         dev.step(2);  // ヘッダ部
         v.label = '';
+        dev.step(2.1);  // 継承が有った場合、継承元情報を付記
         if( Object.hasOwn(v.d,'augments') ){
-          dev.step(2.1);  // 継承が有った場合、継承元情報を付記
           v.augments = [];
           v.d.augments.forEach(augment => {
             // 継承元へのURLを取得
@@ -1172,7 +1172,20 @@ async function createSpec(opt={}){
           });
           v.label = `継承元：${v.augments.join(', ')}<br>`
         }
+
+        dev.step(2.2,v.d.meta);  // 出典(ソースファイルの位置)
+        if( ['function','class','typedef','interface'].includes(v.d.docletType) ){
+          v.label += `<p class="source">source: ${
+            v.d.unique ?? ''}${
+            v.d.meta?.filename ?? v.d.basename} ${
+            typeof v.d.meta?.lineno === 'number' ? `line.${v.d.meta.lineno}` : ''
+          }</p>`;
+        }
+
+        dev.step(2.3);  // ラベル文字列
         v.label += v.d.label;
+
+        dev.step(2.4);  // 記事作成
         v.r = this.article({
           title: `🧩 ${this.opt.title[v.d.docletType].replace('_',v.d.name)}`,
           level: level,
