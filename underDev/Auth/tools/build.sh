@@ -205,6 +205,7 @@ function makeNotes { # AI質問用にノート作成
   tree $prj -I 'archives' > $outfile
   echo "\n\f" >> $outfile  # 改ページコード（フォームフィード）
   # 1.2 対象ファイルリスト作成
+  # - : シンボリックリンクも対象に含める(ex."D-.N")
   # . : 通常ファイルのみ（ディレクトリやシンボリックリンクを除外）
   # / : ディレクトリのみ
   # D : ドットファイル（隠しファイル）も含める
@@ -224,7 +225,6 @@ function makeNotes { # AI質問用にノート作成
   files=(
     #$dep/**/*(DN) # jsrsasignは除外すること
     $src/(client|common|server)/**/*(-.N)
-    # シンボリックリンクも対象とする場合、'-'を指定
   )
   dumpFile
 
@@ -239,7 +239,7 @@ function makeNotes { # AI質問用にノート作成
   outfile="$notes/libraries.txt"
   files=(
     $src/lib/**/*(-.N)
-    # シンボリックリンクも対象とする場合、'-'を指定
+    $tmp/createSpec.*(.N) # createSpec実行結果
   )
   dumpFile
 }

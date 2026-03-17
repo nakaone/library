@@ -337,11 +337,10 @@ async function createSpec(opt={}){
    * @prop {string} docletType - Docletの種類。下記「docletTypeの判定ロジック」参照
    * @prop {Object.<string, string>} parsed - Doclet内で定義されたタグの値
    *   例： parsed: {
-   *     label:"method01: メソッドテスト", // string
-   *     ＠description:"method01: メソッドテスト", // string
-   *     ＠memberof:"class01", // string
-   *     ＠param:"{number} arg - method01の引数", // string
-   *     ＠returns:"{{qId:number,name:string}} NG: qId,name指定無しのObjectになる", // string
+   *     description:"method01: メソッドテスト", // string
+   *     memberof:"class01", // string
+   *     param:"{number} arg - method01の引数", // string
+   *     returns:"{{qId:number,name:string}} NG: qId,name指定無しのObjectになる", // string
    *   }
    * @prop {string} label - 1行で簡潔に記述された概要説明
    *   ① JSDoc先頭の「/**」に続く文字列
@@ -350,6 +349,7 @@ async function createSpec(opt={}){
    *   ④ description, classdescの先頭行
    *   ⑤ doclet.longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
+   * @prop {string} concatenated - description,classdesc,exmapleを出現順に結合。MD出力用
    * @prop {DocletColDef[]} [properties] - メンバ一覧
    * @prop {DocletColDef[]} [params] - 引数。クラスの場合はconstructorの引数(※同上)
    * @prop {DocletColDef[]} [returns=[]] - 戻り値(※同上)
@@ -376,14 +376,38 @@ async function createSpec(opt={}){
      * @param {Object} [opt={}] - オプション設定値
      */
     constructor(doclet,opt={}){
-      const v = {whois:`DocletEx.constructor`, arg:{doclet,opt}, rv:null};
+      const v = {whois:`DocletEx.constructor`,arg:{doclet,opt},rv:null,tag:{},tags:[]};
       const dev = new devTools(v,{mode:'pipe'});
       try {
 
         dev.step(1);  // オリジナルのメンバをコピー
         // JSDocが解析済の全フィールドに対して改行を<br>に置換
-        v.doclet = JSON.parse(JSON.stringify(doclet).replaceAll(/\\n/g,'<br>').trim());
+        v.doclet = JSON.parse(JSON.stringify(doclet)
+          .replaceAll(/\\n/g,'<br>')
+          .trim()
+        );
         Object.keys(v.doclet).forEach(x => this[x] = v.doclet[x]);
+        // v.restoreNL: @examples等、ソース表示部分("```〜```")についてbrを改行コードに戻す
+        v.restoreNL = (str) => {
+          if( typeof str !== 'string' ) return str;
+          return str
+          // ① ``` に囲まれた範囲内の <br> を \n に変換
+          .replace(/```[\s\S]*?```/g, (match) => match.replaceAll('<br>', '\n'))
+          // ② ``` の直前にある <br> を \n に変換 (ポジティブ・ルックアヘッド)
+          .replace(/<br>(?=```)/g, '\n')
+          // ③ ``` の直後にある <br> を \n に変換 (ポジティブ・ルックビハインド)
+          .replace(/(?<=```)<br>/g, '\n');
+        };
+        ['description','classdesc'].forEach(x => {
+          if( Object.hasOwn(v.doclet,x) ){
+            v.doclet[x] = v.restoreNL(v.doclet[x]);
+          }
+        });
+        if( Object.hasOwn(v.doclet,'examples') ){
+          for( v.i=0 ; v.i<v.doclet.examples.length ; v.i++ ){
+            v.doclet.examples[v.i] = v.restoreNL(v.doclet.examples[v.i]);
+          }
+        }
 
         dev.step(2);  // オプション設定
         this.opt = opt;
@@ -401,90 +425,79 @@ async function createSpec(opt={}){
           this.longname += "#constructor";
         }
 
-        dev.step(5);    // label
-        dev.step(5.1);  // 原文(comment)からタグの内容を整理
-        this.parsed = {label:null};
-        if( Object.hasOwn(v.doclet,'comment') ){
-
-          // "/**"で始まる行はラベルと判断
-          v.m = v.doclet.comment.split(/<br>/)[0].match(/\/\*\*\s+([^@].+)/);
-          if( v.m ) this.parsed.label = v.m[1];
-
-          // タグ(@xxx)ごとに分解
-          v.separator = /(\/\*\*|\* @[a-zA-Z]+)\s*(.+)/g;
-          //v.separator = /(\/\*\*|@[a-zA-Z]+)\s*([^@]+)/g
-          v.m = v.doclet.comment.matchAll(v.separator);
-          [...v.m].forEach(tag => {
-
-            // タグ単位に{key,val}形式に変換
-            // ex.`@name User#test<br>` ⇒ {key:"@name",val:"User#test"})
-            v.tag = {key:tag[1],val:tag[2]};
-
-            // タグの表記統一
-            if( ['/**','@desc'].includes(v.tag.key) )
-              v.tag.key = '@description';
-            if( v.tag.key === '@prop' )
-              v.tag.key = '@property';
-
-            // 不要な余白・コメント指示を削除
-            v.tag.val = v.tag.val.replace(/^\* /,'')  // 先頭の"* "
-            .replaceAll(/<br>\s+\* /g,'<br>')  // 行頭の" * "
-            .replace(/\*\/?\s*$/,'')  // 末尾の"*/"
-            .trim();
-
-            // タグの種類毎に配列に追加
-            if( Object.hasOwn(this.parsed,v.tag.key) ){
-              // 出現済タグの場合は配列に追加
-              this.parsed[v.tag.key].push(v.tag.val);
+        dev.step(5);    // commentをパース、concatenatedを作成
+        this.parsed = {};
+        this.concatenated = '';
+        v.descTags = ['description','classdesc','example'];
+        if( Object.hasOwn(doclet,'comment') && doclet.comment.length > 0 ){
+          dev.step(5.1);  // ＠タグ毎に分割して{タグ名：内容}形式でv.tags配列に格納
+          doclet.comment.match(/^([\s\S]+)\s*\*\//)[1]  // コメント末尾の「＊/」削除
+            .trim().split('\n').forEach(l => {          // 行単位に分割して順次処理
+            if( v.m = l.match(/^\/\*\*+\s*(.+)/) ){
+              dev.step(5.11); // 「／**」に続く文字列はラベルと看做す
+              this.label = v.m[1];
+              v.tag = {label:'description',text:''};
+            } else if( v.m = l.match(/\s+\*\s+@([a-zA-Z]+)\s*(.*)/) ){
+              dev.step(5.12); // 前行と異なる＠タグが出現したら前行までの結果を保存して新たなv.tagを作成
+              v.tags.push(v.tag);
+              v.tag = {label:v.m[1],text:(v.m[2] ?? '')};
+              // 短縮形のタグ名は正式な形に統一
+              if( v.tag.label === 'desc' ) v.tag.label = 'description';
+              if( v.tag.label === 'prop' ) v.tag.label = 'property';
             } else {
-              // 未出現タグの場合、配列を用意した上で格納
-              this.parsed[v.tag.key] = [v.tag.val];
+              dev.step(5.13); // 「／**」でも＠タグ行でも無い場合、前行までの結果に追加
+              v.tag.text += '\n' + ((v.m = l.match(/^\s+\*\s(.*)/)) === null ? l : v.m[1]);
+              // 行頭" * "のマッチでは'*'後のスペースはインデントを崩さないよう1文字のみ
+            }
+          });
+          v.tags.push(v.tag); // 最終のタグを登録
+
+          dev.step(5.2);  // 対象タグの説明文は出現順に、concatenatedに順次追加
+          v.text = '';
+          v.tags.forEach(x => {
+            if( x.text && x.text.length > 0 ){
+              // 出現したタグをthis.parsedに登録
+              if( !Object.hasOwn(this.parsed,x.label) ) this.parsed[x.label] = '';
+              this.parsed[x.label] += x.text;
+              // 対象タグはv.textにも追加
+              if( v.descTags.includes(x.label) ) v.text += `\n${x.text}`;
             }
           });
 
-          // 各タグの値を結合
-          Object.keys(this.parsed).forEach(key => {
-            if( Array.isArray(this.parsed[key]) ){
-              this.parsed[key] = this.parsed[key].join('<br>').trim();
+          dev.step(5.3);  // parse.descの改行をbr化。但しソース部分は'\n'のままにする
+          v.lines = v.text.trim().split('\n');
+          this.concatenated = v.lines[0];
+          v.isSource = false; // ```〜```およびその内部ならtrue
+          for( v.i=1 ; v.i<v.lines.length ; v.i++ ){
+            if( /```/.test(v.lines[v.i]) ){
+              this.concatenated += '\\n' + v.lines[v.i];
+              v.isSource = v.isSource ? false : true;
+            } else {
+              this.concatenated += (v.isSource ? '\\n' : '<br>') + v.lines[v.i];
             }
-          })
+          }
+        } else {
+          dev.step(5.4);  // commentが無い場合、存在する@description,@classdesc,@example を設定
+          v.descTags.forEach(x => this.concatenated += (v.doclet[x] ?? ''));
         }
 
-        dev.step(5.2);  // 以下の優先順位でlabelを設定
+        // いまここ
+        dev.step(6,this.parsed);  // labelを設定
         // ① JSDoc先頭の「/**」に続く文字列
         // ② "@name"に続く文字列
         // ③ typdef, interface
         // ④ description, classdescの先頭行
         // ⑤ v.doclet.longname
-        if( this.parsed.label !== null ){
-          this.label = this.parsed.label;
-        } else if( Object.hasOwn(this.parsed,'@name') ){
-          this.label = this.parsed['@name'];
-        } else if( Object.hasOwn(this.parsed,'@typedef') ){
-          // `@typedef {...} xxx - 説明`形式 ⇒ label=説明
-          v.m1 = this.parsed['@typedef'].match(/\}\s+[^\-]+\s+\-\s+(.+)$/);
-          // `@typedef {...} xxx`形式 ⇒ label=xxx
-          v.m2 = this.parsed['@typedef'].match(/\}\s+(.+)$/);
-          this.label = v.m1 !== null ? v.m1[1]
-            : (v.m2 !== null ? v.m2[1] : '(ラベル未設定)');
-        } else if( Object.hasOwn(this.parsed,'@interface') ){
-          this.label = this.parsed['@interface'];
-        } else if( Object.hasOwn(this.parsed,'@description') ){
-          v.m = this.parsed['@description'].split(/<br>/);
-          this.label = v.m[0];
-          this.parsed['@description'] = v.doclet.description = v.m.slice(1).join('<br>');
-        } else if( Object.hasOwn(this.parsed,'@classdesc') ){
-          v.m = this.parsed['@classdesc'].split(/<br>/);
-          this.label = v.m[0];
-          this.parsed['@classdesc'] = v.doclet.classdesc = v.m.slice(1).join('<br>');
-        } else if( Object.hasOwn(v.doclet,'longname') ){
-          this.label = v.doclet.longname;
-        } else {
-          this.label = '(ラベル未設定)';
-        }
-        this.label = this.label.trim();
+        if( this.parsed.label === null ){
+        } //else if( Object.hasOwn(this.parsed,'@name') ){
+        // 以降、work.20260316.txt参照
 
-        dev.step(6);  // properties
+
+
+
+
+
+        dev.step(7);  // properties
         if( Object.hasOwn(v.doclet,'properties') && v.doclet.properties.length > 0 ){
           v.doclet.properties.forEach(prop => {
             v.r = this.addRowToColumn(prop);
@@ -493,7 +506,7 @@ async function createSpec(opt={}){
           });
         }
 
-        dev.step(7);  // params
+        dev.step(8);  // params
         if( Object.hasOwn(v.doclet,'params') && v.doclet.params.length > 0 ){
           v.doclet.params.forEach(prop => {
             v.r = this.addRowToColumn(prop);
@@ -502,7 +515,7 @@ async function createSpec(opt={}){
           });
         }
 
-        dev.step(8);  // returns
+        dev.step(9);  // returns
         if( Object.hasOwn(v.doclet,'returns') && v.doclet.returns.length > 0 ){
           v.doclet.returns.forEach(prop => {
             v.r = this.addRowToColumn(prop);

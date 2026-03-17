@@ -39,6 +39,7 @@
   - [bug] client/authClient.md: 「インスタンス作成のサンプル」がソースではなく文字列として表示
     - 改行が<br>になっている
     - メアドの@gmailがタグと認識され、以降が処理されない
+  - [bug] client/authClient.md: description内に@propが混在する
 
 - build0009: 仕様書とソースの一体化<br>
   specDef.js + specify.mjs では仕様書とソース(JSDoc)の乖離で管理工数・不一致が増大<br>

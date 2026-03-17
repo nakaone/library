@@ -26,10 +26,6 @@
 
 localFunc: テスト用：処理要求発行
 
-## <a href="#localFunc_top"><span id="localFunc_desc">🧾 localFunc 概説</span></a>
-
-localFunc: テスト用：処理要求発行<br>@param {void}<br>@returns {void}<br><br>
-
 ## <a href="#localFunc_top"><span id="localFunc_param">▶️ localFunc 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |

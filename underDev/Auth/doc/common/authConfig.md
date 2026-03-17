@@ -44,15 +44,9 @@
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
 | 1 | <a href="#authConfig-constructor_top">constructor</a> |  |
-
-## <a href="#authConfig_top"><span id="authConfig_desc">🧾 authConfig 概説</span></a>
-
-authConfig: クライアント・サーバ共通設定情報<br>@class<br>@classdesc クライアント・サーバ共通設定情報<br>@extends Schema<br>@prop {string} [systemName="auth"] - システム名<br>@prop {string} adminMail - 管理者のメールアドレス<br>@prop {string} adminName - 管理者氏名<br>@prop {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差既定値は2分<br>@prop {string} [RSAbits=2048] - 鍵ペアの鍵長<br>@prop {number} [maxDepth=10] - 再帰呼出時の最大階層<br>@prop {Object} underDev - テスト時の設定<br>@prop {boolean} underDev.isTest=false - 開発モードならtrue<br><br>
 ## <span id="authConfig-constructor_top">🧩 constructor()</span>
 
-### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_desc">🧾 constructor 概説</span></a>
-
-@constructor<br>@memberof authConfig<br>@param {authConfig} arg - 設定情報(既定値からの変更部分)<br><br>
+undefined
 
 ### <a href="#authConfig-constructor_top"><span id="authConfig-constructor_param">▶️ constructor 引数</span></a>
 

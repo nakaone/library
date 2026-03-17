@@ -41,17 +41,9 @@ cryptoClient: クライアント側の暗号化・署名検証
 | 2 | <a href="#cryptoClient-encrypt_top">encrypt</a> | encrypt: 処理要求を暗号化＋署名 |
 | 3 | <a href="#cryptoClient-decrypt_top">decrypt</a> | decrypt: 暗号化された処理結果を復号・署名検証 |
 | 4 | <a href="#cryptoClient-generateKeys_top">generateKeys</a> | generateKeys: RSA鍵ペアを生成 |
-
-## <a href="#cryptoClient_top"><span id="cryptoClient_desc">🧾 cryptoClient 概説</span></a>
-
-cryptoClient: クライアント側の暗号化・署名検証<br>@class<br>@classdesc クライアント側の暗号化・署名検証<br>@prop {authIndexedDB} idb - authClient.idb(IndexedDB)のコピー<br>@prop {string} RSAbits - RSA鍵長(=authConfig.RSAbits)<br><br>
 ## <span id="cryptoClient-constructor_top">🧩 constructor()</span>
 
 constructor
-
-### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_desc">🧾 constructor 概説</span></a>
-
-constructor<br>@constructor<br>@param {authIndexedDB} idb - IndexedDBの内容を保持するauthClientのメンバ変数<br>  CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在<br>@param {number} RSAbits - RSA鍵長<br><br>
 
 ### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_param">▶️ constructor 引数</span></a>
 
@@ -69,10 +61,6 @@ encrypt: 処理要求を暗号化＋署名
 | --: | :-- | :-- |
 | 1 | <a href="#cryptoClient-encrypt-dummyFunc_top">dummyFunc</a> | dummyFunc: テスト用ダミー |
 
-### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_desc">🧾 encrypt 概説</span></a>
-
-encrypt: 処理要求を暗号化＋署名<br>@memberof cryptoClient<br>@param {authRequest} request - 処理要求<br>@returns {encryptedRequest}<br><br>
-
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_param">▶️ encrypt 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
@@ -87,10 +75,6 @@ encrypt: 処理要求を暗号化＋署名<br>@memberof cryptoClient<br>@param {
 ### <span id="cryptoClient-encrypt-dummyFunc_top">🧩 dummyFunc()</span>
 
 dummyFunc: テスト用ダミー
-
-#### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_desc">🧾 dummyFunc 概説</span></a>
-
-dummyFunc: テスト用ダミー<br>@memberof cryptoClient#encrypt<br>@param {number} a<br>@param {number} b<br>@returns {number}<br><br>
 
 #### <a href="#cryptoClient-encrypt-dummyFunc_top"><span id="cryptoClient-encrypt-dummyFunc_param">▶️ dummyFunc 引数</span></a>
 
@@ -108,10 +92,6 @@ dummyFunc: テスト用ダミー<br>@memberof cryptoClient#encrypt<br>@param {nu
 
 decrypt: 暗号化された処理結果を復号・署名検証
 
-### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_desc">🧾 decrypt 概説</span></a>
-
-decrypt: 暗号化された処理結果を復号・署名検証<br>@param {encryptedResponse} response - 暗号化されたサーバ側処理結果<br>@returns {authResponse}<br><br>
-
 ### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_param">▶️ decrypt 引数</span></a>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
@@ -126,10 +106,6 @@ decrypt: 暗号化された処理結果を復号・署名検証<br>@param {encry
 ## <span id="cryptoClient-generateKeys_top">🧩 generateKeys()</span>
 
 generateKeys: RSA鍵ペアを生成
-
-### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_desc">🧾 generateKeys 概説</span></a>
-
-generateKeys: RSA鍵ペアを生成<br>- 生成のみ、IndexedDBやメンバ変数への格納は行わない<br>@param {void}<br>@returns {Object} 生成された鍵ペア<br><br>
 
 ### <a href="#cryptoClient-generateKeys_top"><span id="cryptoClient-generateKeys_param">▶️ generateKeys 引数</span></a>
 
