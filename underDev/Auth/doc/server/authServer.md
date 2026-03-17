@@ -37,7 +37,7 @@ authServer: サーバ側中核クラス
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
-| 1 | <a href="#authServer-constructor_top">constructor</a> | authServer#authServer |
+| 1 | <a href="#authServer-constructor_top">constructor</a> | constructor |
 | 2 | <a href="#authServer-authLogger_top">authLogger</a> | authLogger: 監査ログ／エラーログを自動振り分けで出力 |
 | 3 | <a href="#authServer-authResponse_top">authResponse</a> | authResponse: authResponse型のオブジェクトを作成 |
 | 4 | <a href="#authServer-dumpProperties_top">dumpProperties</a> | dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用) |
@@ -51,7 +51,7 @@ authServer: サーバ側中核クラス
 サーバ側中核クラス
 ## <span id="authServer-constructor_top">🧩 constructor()</span>
 
-authServer#authServer
+constructor
 
 ### <a href="#authServer-constructor_top"><span id="authServer-constructor_param">▶️ constructor 引数</span></a>
 

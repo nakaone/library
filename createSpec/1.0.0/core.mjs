@@ -344,10 +344,11 @@ async function createSpec(opt={}){
    *   }
    * @prop {string} label - 1行で簡潔に記述された概要説明
    *   ① JSDoc先頭の「/**」に続く文字列
-   *   ② "＠name"に続く文字列
-   *   ③ typdef, interface
-   *   ④ description, classdescの先頭行
-   *   ⑤ doclet.longname
+   *   ② constructorは「(memberof.)constructor」
+   *   ③ "＠name"に続く文字列
+   *   ④ typdef, interface
+   *   ⑤ description, classdescの先頭行(=concatenatedの先頭行)
+   *   ⑥ v.doclet.longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
    * @prop {string} concatenated - description,classdesc,exmapleを出現順に結合。MD出力用
    * @prop {DocletColDef[]} [properties] - メンバ一覧
@@ -438,9 +439,11 @@ async function createSpec(opt={}){
               dev.step(5.11); // 「／**」に続く文字列はラベルと看做す
               this.label = v.m[1];
               v.tag = {label:'description',text:''};
-            } else if( v.m = l.match(/\s+\*\s+@([a-zA-Z]+)\s*(.*)/) ){
+            } else if( v.m = l.match(/^\s+\*\s+@([a-zA-Z]+)\s*(.*)/) ){
               dev.step(5.12); // 前行と異なる＠タグが出現したら前行までの結果を保存して新たなv.tagを作成
-              v.tags.push(v.tag);
+              if( Object.hasOwn(v.tag,'label') && !(v.tag.label === 'description' && v.tag.text === '') ){
+                v.tags.push(v.tag); // v.tagに有効な＠タグ情報が入っている場合は格納
+              }
               v.tag = {label:v.m[1],text:(v.m[2] ?? '')};
               // 短縮形のタグ名は正式な形に統一
               if( v.tag.label === 'desc' ) v.tag.label = 'description';
@@ -451,21 +454,21 @@ async function createSpec(opt={}){
               // 行頭" * "のマッチでは'*'後のスペースはインデントを崩さないよう1文字のみ
             }
           });
-          v.tags.push(v.tag); // 最終のタグを登録
+          if( Object.hasOwn(v.tag,'label') && !(v.tag.label === 'description' && v.tag.text === '') ){
+            v.tags.push(v.tag); // 最終のタグを登録
+          }
 
           dev.step(5.2);  // 対象タグの説明文は出現順に、concatenatedに順次追加
           v.text = '';
           v.tags.forEach(x => {
-            if( x.text && x.text.length > 0 ){
-              // 出現したタグをthis.parsedに登録
-              this.parsed[x.label] = (Object.hasOwn(this.parsed,x.label)
-              ? (this.parsed[x.label] + '\n') : '') + x.text;
-              // 対象タグはv.textにも追加
-              if( v.descTags.includes(x.label) ) v.text += `\n${x.text}`;
-            }
+            // 出現したタグをthis.parsedに登録
+            this.parsed[x.label] = (Object.hasOwn(this.parsed,x.label)
+            ? (this.parsed[x.label] + '\n') : '') + x.text;
+            // 対象タグはv.textにも追加
+            if( v.descTags.includes(x.label) ) v.text += `\n${x.text}`;
           });
 
-          dev.step(5.3);  // parse.descの改行をbr化。但しソース部分は'\n'のままにする
+          dev.step(5.3);  // concatenatedの改行をbr化。但しソース部分は'\n'のままにする
           v.lines = v.text.trim().split('\n');
           this.concatenated = v.lines[0];
           v.isSource = false; // ```〜```およびその内部ならtrue
@@ -484,13 +487,17 @@ async function createSpec(opt={}){
 
         dev.step(6);  // labelを設定
         // ① JSDoc先頭の「/**」に続く文字列(⇒step.5.11で設定済)
-        // ② "@name"に続く文字列
-        // ③ typdef, interface
-        // ④ description, classdescの先頭行(=concatenatedの先頭行)
-        // ⑤ v.doclet.longname
+        // ② constructorは「(memberof.)constructor」
+        // ③ "@name"に続く文字列
+        // ④ typdef, interface
+        // ⑤ description, classdescの先頭行(=concatenatedの先頭行)
+        // ⑥ v.doclet.longname
         if( this.label.length === 0 ){
           if( Object.hasOwn(this.parsed,'name') ){
             this.label = this.parsed.name;
+          } else if( this.docletType === 'constructor' ){
+            this.label = (this.parsed.memberof ? this.parsed.memberof+'.' : '')
+            + 'constructor';
           } else if( Object.hasOwn(this.parsed,'typedef') ){
             // `@typedef {...} xxx - 説明`形式 ⇒ label=説明
             v.m1 = this.parsed['@typedef'].match(/\}\s+[^\-]+\s+\-\s+(.+)$/);
