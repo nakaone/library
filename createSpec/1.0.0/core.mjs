@@ -1412,10 +1412,14 @@ async function createSpec(opt={}){
         v.rv.push('',`# 個別データ型定義`)
         v.list.forEach(doclet => {
           dev.step(4.1);  // 項目一覧
-          v.r = DocletTree.makeTable(
-            this.map[doclet.uuid].properties.map(x => x.row),
-            {header: this.opt.propHeader}
-          );
+          v.data = this.map[doclet.uuid].properties.map(x => x.row);
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader))};
+          // 備考欄が全て空白なら割愛
+          if( v.data.map(x => x.note).every(x => x === '') ){
+            v.opt.header = v.opt.header.filter(x => x.key !== 'note');
+          }
+          v.r = DocletTree.makeTable(v.data,v.opt);
+          if( v.r instanceof Error ) throw v.r;
           dev.step(4.2);  // 説明文を追加
           if( Object.hasOwn(doclet,'description') && doclet.description.length > 0 )
             v.r = doclet.description + '\n\n' + v.r;
