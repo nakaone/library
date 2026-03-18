@@ -293,8 +293,8 @@ export class devTools {
       return `${indent}${value}, // ${type}`;
     }
 
-    // 関数 (function)
-    if (type === 'function') {
+    // 関数 (function) または正規表現
+    if (type === 'function' || obj instanceof RegExp ) {
       // 関数は文字列化してデータ型を表示しない
       // toLocalISOString の例から、関数の値は引用符なしで表示します
       return `${indent}${obj.toString()},`;

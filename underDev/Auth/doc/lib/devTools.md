@@ -41,7 +41,7 @@
 | startTime | number | Date.now() | 開始時刻 |
 | endTime | number | 必須 | 終了時刻 |
 | elaps | number | 必須 | 所要時間(ミリ秒) |
-| opt | devToolsOpt | 必須 | オプション設定値 |
+| opt | <a href="../lib/index.md#devToolsOpt">devToolsOpt</a> | 必須 | オプション設定値 |
 
 ## <a href="#devTools_top"><span id="devTools_func">🧱 devTools メソッド・内部関数一覧</span></a>
 
@@ -81,7 +81,7 @@ constructor
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
 | v | Object | {} | 関数・メソッド内汎用変数 |
-| opt | devToolsOpt | {} |  |
+| opt | <a href="../lib/index.md#devToolsOpt">devToolsOpt</a> | {} |  |
 
 ## <span id="devTools-devToolsError_top">🧩 devToolsError()</span>
 

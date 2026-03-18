@@ -32,8 +32,8 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| cf | authServerConfig | 必須 | authServer設定項目 |
-| cryptoLib | cryptoServer | 必須 | 暗号化・署名検証 |
+| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定項目 |
+| cryptoLib | <a href="../server/cryptoServer.md">cryptoServer</a> | 必須 | 暗号化・署名検証 |
 
 ## <a href="#authServer_top"><span id="authServer_func">🧱 authServer メソッド・内部関数一覧</span></a>
 
@@ -60,7 +60,7 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |
+| config | <a href="../common/authConfig.md">authConfig</a> | 必須 | authClient/Server共通設定値オブジェクト |
 
 ## <span id="authServer-authLogger_top">🧩 authLogger()</span>
 
@@ -75,13 +75,13 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| response | authResponse | 必須 |  |
+| response | <a href="../common/index.md#authResponse">authResponse</a> | 必須 |  |
 
 ### <a href="#authServer-authLogger_top"><span id="authServer-authLogger_return">◀️ authLogger 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| authResponse |  |
+| <a href="../common/index.md#authResponse">authResponse</a> |  |
 
 ## <span id="authServer-authResponse_top">🧩 authResponse()</span>
 
@@ -91,13 +91,13 @@ authResponse型のオブジェクトを作成
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求オブジェクト |
+| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求オブジェクト |
 
 ### <a href="#authServer-authResponse_top"><span id="authServer-authResponse_return">◀️ authResponse 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| authResponse |  |
+| <a href="../common/index.md#authResponse">authResponse</a> |  |
 
 ## <span id="authServer-dumpProperties_top">🧩 dumpProperties()</span>
 
@@ -116,13 +116,13 @@ authServerインスタンス作成
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |
+| config | <a href="../common/authConfig.md">authConfig</a> | 必須 | authClient/Server共通設定値オブジェクト |
 
 ### <a href="#authServer-initialize_top"><span id="authServer-initialize_return">◀️ initialize 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| authServer \| Error |  |
+| <a href="../server/authServer.md">authServer</a> \| Error |  |
 
 ## <span id="authServer-exec_top">🧩 exec()</span>
 

@@ -32,9 +32,9 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| cf | authClientConfig | 必須 | authClient設定情報 |
+| cf | <a href="../client/index.md#authClientConfig">authClientConfig</a> | 必須 | authClient設定情報 |
 | idb | Object | 必須 | IndexedDBと同期、authClient内で共有 |
-| crypto | cryptoClient | 必須 | 暗号化・署名検証 |
+| crypto | <a href="../client/cryptoClient.md">cryptoClient</a> | 必須 | 暗号化・署名検証 |
 | _IndexedDB | IDBObjectStore | 必須 | データベース接続オブジェクトを格納する静的変数 |
 
 ## <a href="#authClient_top"><span id="authClient_func">🧱 authClient メソッド・内部関数一覧</span></a>
@@ -165,13 +165,13 @@ IndexedDB操作共通ラッパ
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| request | authRequest | 必須 | 処理要求 |
+| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求 |
 
 ### <a href="#authClient-fetch_top"><span id="authClient-fetch_return">◀️ fetch 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| authResponse \| Error | 処理結果 |
+| <a href="../common/index.md#authResponse">authResponse</a> \| Error | 処理結果 |
 
 ## <span id="authClient-getIndexedDB_top">🧩 getIndexedDB()</span>
 
@@ -208,7 +208,7 @@ authClientインスタンス作成
 
 | データ型 | 説明 |
 | :-- | :-- |
-| authClient \| Error |  |
+| <a href="../client/authClient.md">authClient</a> \| Error |  |
 
 ## <span id="authClient-setIndexedDB_top">🧩 setIndexedDB()</span>
 

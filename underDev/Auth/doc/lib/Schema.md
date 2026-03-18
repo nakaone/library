@@ -37,7 +37,7 @@
 | dbName | string | 任意 | 物理DB名。省略時はnameを流用 |
 | desc | string | '' | Schema全体に関する概要説明 |
 | note | string | '' | Schema全体に関する備考 |
-| types | Object.<string, TableDef> | 必須 | 論理テーブル名をキーとするテーブル定義 |
+| types | Object.<string, <a href="../lib/TableDef.md">TableDef</a>> | 必須 | 論理テーブル名をキーとするテーブル定義 |
 | original | string | 必須 | Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可 |
 
 ## <a href="#Schema_top"><span id="Schema_func">🧱 Schema メソッド・内部関数一覧</span></a>
@@ -74,10 +74,10 @@ Schema.constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| arg | Schema[] | [{} | 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定 |
+| arg | <a href="../lib/Schema.md">Schema</a>[] | [{} | 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定 |
 
 ### <a href="#Schema-constructor_top"><span id="Schema-constructor_return">◀️ constructor 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| Schema \| Error |  |
+| <a href="../lib/Schema.md">Schema</a> \| Error |  |

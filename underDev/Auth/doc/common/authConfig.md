@@ -59,4 +59,4 @@ authConfig.constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| arg | authConfig | 必須 | 設定情報(既定値からの変更部分) |
+| arg | <a href="../common/authConfig.md">authConfig</a> | 必須 | 設定情報(既定値からの変更部分) |

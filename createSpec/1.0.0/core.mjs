@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { devTools } from '../../devTools/3.2.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
+import { before } from 'node:test';
 createSpec();
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
@@ -728,6 +729,7 @@ async function createSpec(opt={}){
    * @prop {DocletTreeSource} source - 処理対象となるソースファイル
    * @prop {DocletEx[]} doclet - 独自情報を付加したDocletExの配列
    * @prop {Object.<string, DocletEx>} map - 各種IdをキーにしたDocletExのマップ(命名はregistration()内)
+   *   - UUID  : DocletEx.uuid
    *   - SHA256: 固有パス＋ファイル名＋commentのハッシュ
    *   - 〜:N〜 : 固有パス＋ファイル名＋linenoId
    *   - 〜:R〜 : 固有パス＋ファイル名＋range[0]
@@ -761,7 +763,6 @@ async function createSpec(opt={}){
         this.doclet = [];
         this.map = {};
         this.folder = this.makeFolder('/');
-        this.symbols = {};
         this.opt = Object.assign({title:{}},opt);
         // Markdown文書のタイトル行の既定値(deepcopyなので個別)
         this.opt.title = Object.assign({
@@ -1229,7 +1230,7 @@ async function createSpec(opt={}){
         dev.step(3); // メンバ一覧
         if( Object.hasOwn(v.d,'properties') && v.d.properties.length > 0 ){
           v.data = v.d.properties.map(x => x.row);
-          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader))};
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader)),doclet:v.d};
           // 備考欄が全て空白なら割愛
           if( v.data.map(x => x.note).every(x => x === '') ){
             v.opt.header = v.opt.header.filter(x => x.key !== 'note');
@@ -1266,7 +1267,7 @@ async function createSpec(opt={}){
             {key:'no',label:'No',align:'--:'},
             {key:'name',label:'名前',align:':--'},
             {key:'label',label:'概要',align:':--'},
-          ]});
+          ],doclet:v.d});
           if( v.r instanceof Error ) throw v.r;
 
           // 記事の作成
@@ -1327,7 +1328,7 @@ async function createSpec(opt={}){
         dev.step(6); // 引数
         if( Object.hasOwn(v.d,'params') && v.d.params.length > 0 ){
           v.data = v.d.params.map(x => x.row);
-          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader))};
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader)),doclet:v.d};
           // 備考欄が全て空白なら割愛
           if( v.data.map(x => x.note).every(x => x === '') ){
             v.opt.header = v.opt.header.filter(x => x.key !== 'note');
@@ -1348,7 +1349,7 @@ async function createSpec(opt={}){
         dev.step(7); // 戻り値
         if( Object.hasOwn(v.d,'returns') && v.d.params.length > 0 ){
           v.data = v.d.returns.map(x => x.row);
-          v.opt = {header:JSON.parse(JSON.stringify(this.opt.returnHeader))};
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.returnHeader)),doclet:v.d};
           // 備考欄が全て空白なら割愛
           if( v.data.map(x => x.note).every(x => x === '') ){
             v.opt.header = v.opt.header.filter(x => x.key !== 'note');
@@ -1541,24 +1542,29 @@ async function createSpec(opt={}){
         });
 
         dev.step(3);  // データ部
-        data.forEach(d => v.rv.push(opt.header.map(h => {
-          if( ['type'].includes(h.key) && opt.doclet !== null ){
-            // データ型欄にthis.symbolsに存在するデータ型名があればリンクを設定
-            v.str = String(d[h.key]);
-            // 呼出元Docletのフォルダ階層の深さ分だけ"../"を付けてルートまで遡上
-            v.depth = opt.doclet.unique === '/' ? 1
-              : opt.doclet.unique.replace(/\/$/,'').split('/').length;
-            for( v.i in DocletTree.symbols ){
-              v.str = v.str.replaceAll(
-                DocletTree.symbols[v.i].rex,
-                '../'.repeat(v.depth) + DocletTree.symbols[v.i].link
-              );
+        // v.depth: 呼出元Docletのフォルダ階層の深さ
+        // データ型定義等へのリンク設定時、この分だけ"../"を付けてルートまで遡上させる
+        v.depth = opt.doclet === null ? -1
+        : ( !Object.hasOwn(opt.doclet,'unique') ? 0 : (
+          opt.doclet.unique === '/' ? 1
+          : opt.doclet.unique.replace(/\/$/,'').split('/').length
+        ));
+        data.forEach(d => {
+          v.line = [];
+          opt.header.forEach(h => {
+            v.str = d[h.key];
+            // データ型欄のクラス・グローバル関数・データ型定義にリンクを設定
+            if( h.key === 'type' && v.depth > 0 && typeof v.str === 'string' ){
+              for( let x in DocletTree.symbols){
+                v.s = DocletTree.symbols[x];
+                v.str = v.str.replaceAll(v.s.rex,
+                  `<a href="${'../'.repeat(v.depth)+v.s.link}">${v.s.name}</a>`);
+              }
             }
-            return v.str;
-          } else {
-            return d[h.key];
-          }
-        })));
+            v.line.push(v.str);
+          });
+          v.rv.push(v.line);
+        });
 
         dev.step(4);  // テキストに変換
         v.rv = v.rv.map(l => `${' '.repeat(opt.indent)}| ${l.join(' | ')} |`).join('\n');
@@ -1710,7 +1716,7 @@ async function createSpec(opt={}){
             v.o = {
               name: doclet.name,
               rex: new RegExp(`${doclet.name}\\b`,'g'),
-              link: `<a href="${v.url}">${doclet.name}</a>`,
+              link: v.url,
             }
             DocletTree.symbols[doclet.name]
             = Object.hasOwn(DocletTree.symbols,doclet.name) ? null : v.o;
@@ -1843,7 +1849,7 @@ async function createSpec(opt={}){
     pv.r = pv.tree.output();
     if( pv.r instanceof Error ) throw pv.r;
 
-    dev.step(4);  // 【開発用】調査結果ファイルの出力
+    dev.step(4,DocletTree.symbols);  // 【開発用】調査結果ファイルの出力
     /* 例：JSON.stringify(
       pv.tree.doclet
       .filter(x => typeof x.familyTree !== 'undefined')
@@ -1851,9 +1857,14 @@ async function createSpec(opt={}){
       .map(x => {return {docletType:x.docletType,longname:x.longname,name:x.name,familyTree:x.familyTree}})
       //.filter(x => x.memberof).map(x => x.memberof)
       //.map(x => x.name)
-    ,null,2) */
+    ,null,2)
+
+    // mapの内、docletType === 'typedef' or 'interface'
+    Object.keys(pv.tree.map).filter(x => ['typedef','interface'].includes(pv.tree.map[x].docletType)).map(x => {return {label:x,doclet:pv.tree.map[x]}})
+    */
     if( pv.tree.source.research ){
-      writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree.doclet,null,2));
+      writeFileSync(pv.tree.source.research,JSON.stringify(DocletTree.symbols,null,2));
+      //writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree.doclet,null,2));
     }
 
     dev.end();

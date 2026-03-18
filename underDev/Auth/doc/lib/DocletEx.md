@@ -26,7 +26,7 @@
 
 # <span id="createSpec-DocletEx_top">🧩 DocletExクラス仕様書</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.426</p>jsdocから出力されるDocletに情報を付加したもの
+<p class="source">source: lib/createSpec.1_0_0.mjs line.427</p>jsdocから出力されるDocletに情報を付加したもの
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
 
@@ -40,9 +40,9 @@
 | parsed | Object.<string, string> | 必須 | Doclet内で定義されたタグの値<br>  例： parsed: {<br>    description:"method01: メソッドテスト", // string<br>    memberof:"class01", // string<br>    param:"{number} arg - method01の引数", // string<br>    returns:"{{qId:number,name:string}} NG: qId,name指定無しのObjectになる", // string<br>  } |
 | label | string | 必須 | 1行で簡潔に記述された概要説明<br>  ① JSDoc先頭の「/**」に続く文字列<br>  ② constructorは「(memberof.)constructor」<br>  ③ "＠name"に続く文字列<br>  ④ typdef, interface<br>  ⑤ description, classdescの先頭行(=concatenatedの先頭行)<br>  ⑥ v.doclet.longname<br>  ※ 上記に該当が無い場合、「(ラベル未設定)」 |
 | concatenated | string | 必須 | description,classdesc,exmapleを出現順に結合。MD出力用 |
-| properties | DocletColDef[] | 任意 | メンバ一覧 |
-| params | DocletColDef[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |
-| returns | DocletColDef[] | [] | 戻り値(※同上) |
+| properties | <a href="../lib/index.md#DocletColDef">DocletColDef</a>[] | 任意 | メンバ一覧 |
+| params | <a href="../lib/index.md#DocletColDef">DocletColDef</a>[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |
+| returns | <a href="../lib/index.md#DocletColDef">DocletColDef</a>[] | [] | 戻り値(※同上) |
 | parent | string | null | 親要素のDocletEx.uuid |
 | children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.uuid |
 | familyTree | string | 必須 | DocletEx.nameを連結した系図(親子関係) |
@@ -76,7 +76,7 @@ DocletEx.constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| doclet | Doclet | 必須 |  |
+| doclet | <a href="../lib/index.md#Doclet">Doclet</a> | 必須 |  |
 | opt | Object | {} | オプション設定値 |
 
 ## <span id="createSpec-DocletEx-addRowToColumn_top">🧩 addRowToColumn()</span>
@@ -91,13 +91,13 @@ DocletEx.constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| prop | DocletColDef | 必須 | データ項目情報 |
+| prop | <a href="../lib/index.md#DocletColDef">DocletColDef</a> | 必須 | データ項目情報 |
 
 ### <a href="#createSpec-DocletEx-addRowToColumn_top"><span id="createSpec-DocletEx-addRowToColumn_return">◀️ addRowToColumn 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| DocletColRow \| Error |  |
+| <a href="../lib/index.md#DocletColRow">DocletColRow</a> \| Error |  |
 
 ## <span id="createSpec-DocletEx-determineType_top">🧩 determineType()</span>
 
