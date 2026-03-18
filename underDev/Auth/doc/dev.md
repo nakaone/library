@@ -38,6 +38,8 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
+  - DocletTree(.doclet).json出力仕様が未記載
+  - クラス・グローバル関数内解説記事の扱い
   - lib/index.md 個別データ型定義Doclet.returns: DocletColDef型なのにリンクが無い
   - lib/DocletEx.md メンバ一覧.properties: DocletColDef型なのにリンクが無い
   - common/authConfig.md: 継承元「Schema」にリンクが無い

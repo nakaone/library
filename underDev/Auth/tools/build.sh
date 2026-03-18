@@ -83,9 +83,9 @@ function detailedDesign {  # createSpecでJavaScriptソース(JSDoc)からMarkdo
   # index.md及びクラス・グローバル関数個別MDをtmpに作成
   # ※ 最終的にsrc/doc/header.mdを先頭に付けるため、出力先はtmp/
   # ※ jsdoc実行時エラーを表示するため、標準エラー出力はリダイレクトしない
+  cs="$tmp/createSpec"
   node $createSpec $src/(client|common|server|lib)/**/*.(js|mjs) \
-  -o $tmp/createSpec -r $tmp/DocletTree.json \
-  1> $tmp/createSpec/result.log 2> $tmp/createSpec/error.log
+  -o $cs -r $cs/doclet.json 1> $cs/result.log 2> $cs/error.log
 
   # docルート直下文書用に相対パスを修正したheader.mdを用意
   cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md

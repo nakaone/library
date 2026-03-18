@@ -10,6 +10,7 @@ createSpec();
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
  * - 使用方法はcf.useageに記載(オプション無し起動時にコンソール表示)
+ * 
  * @param {Object} [opt={}] - オプション設定
  * @param {string} [opt.encode="utf-8"] - 入力ファイルのエンコード
  * @param {string} [opt.jsdocJson="jsdoc.json"] - jsdocコマンド設定ファイル名
@@ -86,7 +87,8 @@ async function createSpec(opt={}){
       
       - 入力側のフォルダに合わせて出力フォルダを作成
       - 一覧＋データ型定義のindex.md＋クラス・グローバル関数毎のMarkdownを作成
-      - 調査結果ファイル：DocletTreeインスタンスのJSON
+      - 調査結果ファイル：【開発用】DocletTreeインスタンスのJSON等
+        ※ 開発用調査なので、出力内容はcreateSpec.step.4で適宜編集のこと
       - 詳細は後掲「入出力イメージ」の項を参照
       
       # 使用上の注意
@@ -1849,24 +1851,19 @@ async function createSpec(opt={}){
     pv.r = pv.tree.output();
     if( pv.r instanceof Error ) throw pv.r;
 
-    dev.step(4);  // 調査結果ファイルの出力
-    if( pv.tree.source.research ){
-      writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree,null,2));
-      writeFileSync("../tmp/DocletTree.doclet.json",JSON.stringify(pv.tree.doclet,null,2));
-    }
-
-    dev.step(5);  // 【開発用】結果出力
-    //writeFileSync('tmp/DocletTree.doclet.json',JSON.stringify(pv.tree.doclet,null,2));
-    /* 
-    console.log(`l.1694 ${JSON.stringify(
+    dev.step(4);  // 【開発用】調査結果ファイルの出力
+    /* 例：JSON.stringify(
       pv.tree.doclet
       .filter(x => typeof x.familyTree !== 'undefined')
       //.sort((a,b) => a.docletType < b.docletType ? -1 : 1)
       .map(x => {return {docletType:x.docletType,longname:x.longname,name:x.name,familyTree:x.familyTree}})
       //.filter(x => x.memberof).map(x => x.memberof)
       //.map(x => x.name)
-    ,null,2)}`);
-    */
+    ,null,2) */
+    if( pv.tree.source.research ){
+      writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree.doclet,null,2));
+    }
+
     dev.end();
     return pv.rv;
 

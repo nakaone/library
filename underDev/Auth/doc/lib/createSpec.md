@@ -80,10 +80,16 @@
 
 ### <a href="#createSpec-Development process and remaining issues_top"><span id="createSpec-Development process and remaining issues_desc">🧾 Development process and remaining issues 概説</span></a>
 
-- 埋込指示子対応：<!--::command::{JSON}::--><br>  - setvalue: オブジェクトに設定する値の一覧<br>    {type:データ型名, value:{キー:値,...}}<br>    戻り値への値設定を想定。指定無しならdefaultvalueを表示<br>  - embed: 他ファイルの内容を埋め込み<br>    {file:パス＋ファイル名}<br>- commentを<details>タグで表示<br><br>- undocumentedチェックを追加<br>- 和文の他、英文のテンプレートも追加<br>- 文法チェック<br>  - ＠class の後に余計な文字列があればエラー<br>- createSpec���シェルの起動時パラメータを引数とする関数に変更<br>- 独自タグ「history」対応
+- 開発用スクリプトサンプル(test.sh等)
+  ```
+  node $createSpec $src/(client|common|server|lib)/**／*.(js|mjs) \
+                             最後のスラッシュは半角に戻す ^
+  -o $tmp/createSpec -r $tmp/DocletTree.json \
+  1> $tmp/createSpec/result.log 2> $tmp/createSpec/error.log
+  ```<br>- 埋込指示子対応：<!--::command::{JSON}::--><br>  - setvalue: オブジェクトに設定する値の一覧<br>    {type:データ型名, value:{キー:値,...}}<br>    戻り値への値設定を想定。指定無しならdefaultvalueを表示<br>  - embed: 他ファイルの内容を埋め込み<br>    {file:パス＋ファイル名}<br>- commentを<details>タグで表示<br><br>- undocumentedチェックを追加<br>- 和文の他、英文のテンプレートも追加<br>- 文法チェック<br>  - ＠class の後に余計な文字列があればエラー<br>- createSpecはシェルの起動時パラメータを引数とする関数に変更<br>- 独自タグ「history」対応
 ## <span id="createSpec-DocletColRow_top">🧩 DocletColRowデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.135</p>データ項目一覧作成用追加情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.142</p>データ項目一覧作成用追加情報
 
 ### <a href="#createSpec-DocletColRow_top"><span id="createSpec-DocletColRow_prop">🔢 DocletColRow メンバ一覧</span></a>
 
@@ -96,7 +102,7 @@
 | note | string | 必須 | 備考 |
 ## <span id="createSpec-DocletColDef_top">🧩 DocletColDefデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.144</p>Doclet.properties/params/returnsの要素(メンバ)定義情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.151</p>Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ### <a href="#createSpec-DocletColDef_top"><span id="createSpec-DocletColDef_prop">🔢 DocletColDef メンバ一覧</span></a>
 
@@ -115,7 +121,7 @@
 | row | DocletColRow | 必須 | DocletEx.addRowToColumnで追加される項目情報 |
 ## <span id="createSpec-Doclet_top">🧩 Docletデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.166</p>`jsdoc -X`で配列で返されるオブジェクト
+<p class="source">source: lib/createSpec.1_0_0.mjs line.173</p>`jsdoc -X`で配列で返されるオブジェクト
 
 ### <a href="#createSpec-Doclet_top"><span id="createSpec-Doclet_prop">🔢 Doclet メンバ一覧</span></a>
 
@@ -187,7 +193,7 @@ function createSpec(){
 ```
 ## <span id="createSpec-DocletEx_top">🧩 DocletExクラス仕様書</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.415</p>jsdocから出力されるDocletに情報を付加したもの
+<p class="source">source: lib/createSpec.1_0_0.mjs line.422</p>jsdocから出力されるDocletに情報を付加したもの
 
 ### <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
 
@@ -293,7 +299,7 @@ Docletの型を判定
 | number |  |
 ## <span id="createSpec-DocletTreeFile_top">🧩 DocletTreeFileデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.708</p>個別入力ファイル情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.715</p>個別入力ファイル情報
 
 ### <a href="#createSpec-DocletTreeFile_top"><span id="createSpec-DocletTreeFile_prop">🔢 DocletTreeFile メンバ一覧</span></a>
 
@@ -306,7 +312,7 @@ Docletの型を判定
 | jsdoc | Doclet[] | 必須 | `jsdoc -X`の実行結果オブジェクト |
 ## <span id="createSpec-DocletTreeSource_top">🧩 DocletTreeSourceデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.718</p>統合版入力ファイル(JSソース)情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.725</p>統合版入力ファイル(JSソース)情報
 
 ### <a href="#createSpec-DocletTreeSource_top"><span id="createSpec-DocletTreeSource_prop">🔢 DocletTreeSource メンバ一覧</span></a>
 
@@ -319,7 +325,7 @@ Docletの型を判定
 | research | string | 任意 | 調査結果ファイル名(=DocletTreeのJSON) |
 ## <span id="createSpec-DocletTreeSymbol_top">🧩 DocletTreeSymbolデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.735</p>クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.742</p>クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
 
 ### <a href="#createSpec-DocletTreeSymbol_top"><span id="createSpec-DocletTreeSymbol_prop">🔢 DocletTreeSymbol メンバ一覧</span></a>
 
@@ -334,7 +340,7 @@ Docletの型を判定
 - 作成はDocletTree.registration内で行う
 ## <span id="createSpec-DocletTreeOpt_top">🧩 DocletTreeOptデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.743</p>オプション設定値
+<p class="source">source: lib/createSpec.1_0_0.mjs line.750</p>オプション設定値
 
 ### <a href="#createSpec-DocletTreeOpt_top"><span id="createSpec-DocletTreeOpt_prop">🔢 DocletTreeOpt メンバ一覧</span></a>
 
@@ -360,7 +366,7 @@ Docletの型を判定
 
 ### <a href="#createSpec-listSource_top"><span id="createSpec-listSource_desc">🧾 listSource 概説</span></a>
 
-jsdoc動��環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
+jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
 
 ### <a href="#createSpec-listSource_top"><span id="createSpec-listSource_param">▶️ listSource 引数</span></a>
 
