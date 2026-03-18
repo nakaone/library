@@ -43,15 +43,15 @@
 
 | No | 名前 | 概要 |
 | --: | :-- | :-- |
+| 1 | <a href="#createSpec-Development process and remaining issues_top">Development process and remaining issues</a> | 開発工程・残課題 |
 | 2 | <a href="#createSpec-DocletColRow_top">DocletColRow</a> | データ項目一覧作成用追加情報 |
 | 3 | <a href="#createSpec-DocletColDef_top">DocletColDef</a> | Doclet.properties/params/returnsの要素(メンバ)定義情報 |
 | 4 | <a href="#createSpec-Doclet_top">Doclet</a> | `jsdoc -X`で配列で返されるオブジェクト |
+| 5 | <a href="#createSpec-decision logic of docletType_top">decision logic of docletType</a> | docletTypeの判定ロジック |
+| 6 | <a href="#createSpec-"longname" naming rules_top">"longname" naming rules</a> | docletType毎のlongname命名規則 |
 | 7 | <a href="#createSpec-DocletEx_top">DocletEx</a> | jsdocから出力されるDocletに情報を付加したもの |
 | 8 | <a href="#createSpec-DocletTreeFile_top">DocletTreeFile</a> | 個別入力ファイル情報 |
 | 9 | <a href="#createSpec-DocletTreeSource_top">DocletTreeSource</a> | 統合版入力ファイル(JSソース)情報 |
-| 10 | <a href="#createSpec-DocletTreeSymbol_top">DocletTreeSymbol</a> | クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報 |
-| 11 | <a href="#createSpec-DocletTreeOpt_top">DocletTreeOpt</a> | オプション設定値 |
-| 12 | <a href="#createSpec-listSource_top">listSource</a> | 事前準備、対象ファイルリスト作成 |
 
 ## <a href="#createSpec_top"><span id="createSpec_desc">🧾 createSpec 概説</span></a>
 
@@ -185,11 +185,6 @@
 | undocumented | boolean | 必須 | JSDoc コメントが存在しない要素かどうか<br>  true の場合、自動抽出されたがコメント未記述 |
 | type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報<br>  プリミティブ・Union・配列・オブジェクトなど |
 | type.names | string[] | 必須 | データ型名の配列<br>  `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる |
-
-### <a href="#createSpec-Doclet_top"><span id="createSpec-Doclet_func">🧱 Doclet メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
 
 ### <a href="#createSpec-Doclet_top"><span id="structure of fully qualified name">🧾 「完全修飾名」の構造</span></a>
 
@@ -389,11 +384,6 @@ Docletの型を判定
 ## <span id="createSpec-listSource_top">🧩 listSource()</span>
 
 事前準備、対象ファイルリスト作成
-
-### <a href="#createSpec-listSource_top"><span id="createSpec-listSource_func">🧱 listSource メソッド・内部関数一覧</span></a>
-
-| No | 名前 | 概要 |
-| --: | :-- | :-- |
 
 ### <a href="#createSpec-listSource_top"><span id="createSpec-listSource_desc">🧾 listSource 概説</span></a>
 

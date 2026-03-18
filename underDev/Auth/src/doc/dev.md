@@ -12,7 +12,6 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - 説明と備考は分けない(見づらい)
   - メソッド・内部関数一覧は要素が無い場合(typedef/interfaceの場合)割愛
   - [bug] lib/createSpec.md メソッド・内部関数一覧: 改行ミス
     "decision logic of docletType"の次行に"<a href="#createSpec-"longname" naming rules_top">〜"の記述
@@ -20,6 +19,7 @@
   - lib/DocletEx.md メンバ一覧.properties: DocletColDef型なのにリンクが無い
   - common/authConfig.md: 継承元「Schema」にリンクが無い
   == 対応済 ==================================
+  - 説明と備考は分けない(見づらい)
   - [bug] 説明文内の'#'のレベルがシフトしていない
     createSpec 概説 > 用語集・参考資料
   - [bug] concatenated内のbrタグは'\n'に修正

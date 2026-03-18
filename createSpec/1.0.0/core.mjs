@@ -1248,13 +1248,14 @@ async function createSpec(opt={}){
         }
 
         dev.step(4); // メソッド一覧
-        if( Object.hasOwn(v.d,'children') && v.d.children.length > 0 ){
+        v.methods = (v.d.children ?? [])
+        // 解説記事またはdocletType不明はメソッド一覧から外す
+        .filter(x => !['description','unknown'].includes(this.map[x].docletType));
+        if( v.methods.length > 0 ){
           // 一覧用のデータ作成
           v.list = [];
-          for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
+          for( v.i=0 ; v.i<v.methods.length ; v.i++ ){
             v.c = this.map[v.d.children[v.i]];
-            // 解説記事またはdocletType不明はメソッド一覧から外す
-            if( ['description','unknown'].includes(v.c.docletType) ) continue;
             v.list.push({
               no:    v.i+1,
               name:  `<a href="#${v.c.familyTree}_top">${v.c.name}</a>`,
