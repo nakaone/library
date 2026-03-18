@@ -44,7 +44,7 @@
 | 2 | [Doclet](#Doclet) | `jsdoc -X`で配列で返されるオブジェクト |
 | 3 | [DocletColDef](#DocletColDef) | Doclet.properties/params/returnsの要素(メンバ)定義情報 |
 | 4 | [DocletColRow](#DocletColRow) | データ項目一覧作成用追加情報 |
-| 5 | [DocletTreeFile](#DocletTreeFile) | ��別入力ファイル情報 |
+| 5 | [DocletTreeFile](#DocletTreeFile) | 個別入力ファイル情報 |
 | 6 | [DocletTreeOpt](#DocletTreeOpt) | オプション設定値 |
 | 7 | [DocletTreeSource](#DocletTreeSource) | 統合版入力ファイル(JSソース)情報 |
 | 8 | [DocletTreeSymbol](#DocletTreeSymbol) | クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報 |
@@ -106,7 +106,7 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 | type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる<br>  {typeDef[]\|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
 | undocumented | boolean | 必須 | JSDoc コメントが存在しない要素かどうか | true の場合、自動抽出されたがコメント未記述 |
 | type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報 | プリミティブ・Union・配列・オブジェクトなど |
-| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる<br><br><br># "meta.code.type"の内容<br><br>- 関数・メソッド系<br>  - FunctionDeclaration : `function foo() {}`形式の関数宣言。名前付き・巻き上げ対象<br>  - FunctionExpression : `const f = function() {}`のような関数式。無名／名前付きどちらもあり得る<br>  - ArrowFunctionExpression : `() => {}`形式のアロー関数。this を持たない<br>  - MethodDefinition : クラス内メソッド。`class A { foo() {} }`<br>- クラス系<br>  - ClassDeclaration : `class Foo {}`の宣言。トップレベルで定義されたクラス<br>  - ClassExpression : `const A = class {}`のようなクラス式<br>- 変数・メンバ系<br>  - VariableDeclaration : `var/let/const`による宣言全体。実体は VariableDeclarator に分かれる<br>  - VariableDeclarator : `const a = 10`の`a = 10`部分。JSDoc が member として拾うことが多い<br>  - Property : オブジェクトリテラルのプロパティ。`{ a: 10 }`<br>  - MemberExpression : `obj.prop`や`obj['prop']`。直接 Doclet になることは少ない（解析補助）<br>- オブジェクト・構造系<br>  - ObjectExpression : `{a:10,b:20}`。＠typedef の元になることがある<br>  - ArrayExpression : `[1,2,3]`。型推論や ＠type 補助に使用される<br>- モジュール・エクスポート系（ESM）<br>  - ImportDeclaration : `import x from 'y'`。Doclet 化されることは稀<br>  - ExportNamedDeclaration : `export { foo }`,`export const a = 1`<br>  - ExportDefaultDeclaration : `export default function () {}`,`export default class {}`<br>- その他　※出現頻度低め<br>  - AssignmentExpression : `a = 10`。グローバル代入や static メンバ検出に使用<br>  - Literal : 数値・文字列・真偽値などの即値<br>  - Identifier : 変数名・関数名そのもの。単体で Doclet になることはない<br><br><br># 「完全修飾名」の構造<br><br>## 基本構造<br><br>`[トップレベル] (区切り記号 [子要素])*`<br><br>例：<br>- `User#test`<br>- `module:auth~Config#timeout`<br>- `foo.age`<br><br>## 主な区切り記号と意味<br><br>\| 記号 \| 意味 \| 用途 \|<br>\| :-- \| :-- \| :-- \|<br>\| . \| 名前空間 / 静的・構造的所属 \| オブジェクト・typedef \|<br>\| # \| インスタンスメンバ \| クラスの instance \|<br>\| ~ \| 内部（inner）要素 \| クロージャ・内部関数 \|<br>\| : \| モジュール修飾子 \| module ��定 \| |
+| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる |
 
 
 ## <a href="#typedefList"><span id="DocletColDef">"DocletColDef" データ型定義</span></a>

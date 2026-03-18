@@ -231,10 +231,11 @@ async function createSpec(opt={}){
    *   プリミティブ・Union・配列・オブジェクトなど
    * @prop {string[]} type.names - データ型名の配列
    *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
-   * 
-   * 
-   * # "meta.code.type"の内容
-   * 
+   */
+  /** meta.code.typeの内容
+   * @name values of meta.code.type
+   * @memberof Doclet
+   * @desc
    * - 関数・メソッド系
    *   - FunctionDeclaration : `function foo() {}`形式の関数宣言。名前付き・巻き上げ対象
    *   - FunctionExpression : `const f = function() {}`のような関数式。無名／名前付きどちらもあり得る
@@ -259,11 +260,12 @@ async function createSpec(opt={}){
    *   - AssignmentExpression : `a = 10`。グローバル代入や static メンバ検出に使用
    *   - Literal : 数値・文字列・真偽値などの即値
    *   - Identifier : 変数名・関数名そのもの。単体で Doclet になることはない
-   * 
-   * 
-   * # 「完全修飾名」の構造
-   * 
-   * ## 基本構造
+   */
+  /** 「完全修飾名」の構造
+   * @name structure of fully qualified name
+   * @memberof Doclet
+   * @desc
+   * # 基本構造
    * 
    * `[トップレベル] (区切り記号 [子要素])*`
    * 
@@ -272,7 +274,7 @@ async function createSpec(opt={}){
    * - `module:auth~Config#timeout`
    * - `foo.age`
    * 
-   * ## 主な区切り記号と意味
+   * # 主な区切り記号と意味
    * 
    * | 記号 | 意味 | 用途 |
    * | :-- | :-- | :-- |
