@@ -30,28 +30,28 @@
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| name | string | 必須 | 【書換】constructorの場合のみ固定値"constructor"に変更 |  |
-| longname | string | 必須 | 【書換】constructorの場合のみ"#constructor"を追加 |  |
-| opt | Object | 必須 | DocletExインスタンス作成時のオプション | 現状未使用 |
-| uuid | string | 必須 | DocletExを一意に識別するためのUUID |  |
-| docletType | string | 必須 | Docletの種類。下記「docletTypeの判定ロジック」参照 |  |
-| parsed | Object.<string, string> | 必須 | Doclet内で定義されたタグの値 | 例： parsed: {<br>    description:"method01: メソッドテスト", // string<br>    memberof:"class01", // string<br>    param:"{number} arg - method01の引数", // string<br>    returns:"{{qId:number,name:string}} NG: qId,name指定無しのObjectになる", // string<br>  } |
-| label | string | 必須 | 1行で簡潔に記述された概要説明 | ① JSDoc先頭の「/**」に続く文字列<br>  ② constructorは「(memberof.)constructor」<br>  ③ "＠name"に続く文字列<br>  ④ typdef, interface<br>  ⑤ description, classdescの先頭行(=concatenatedの先頭行)<br>  ⑥ v.doclet.longname<br>  ※ 上記に該当が無い場合、「(ラベル未設定)」 |
-| concatenated | string | 必須 | description,classdesc,exmapleを出現順に結合。MD出力用 |  |
-| properties | DocletColDef[] | 任意 | メンバ一覧 |  |
-| params | DocletColDef[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |  |
-| returns | DocletColDef[] | [] | 戻り値(※同上) |  |
-| parent | string | null | 親要素のDocletEx.uuid |  |
-| children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.uuid |  |
-| familyTree | string | 必須 | DocletEx.nameを連結した系図(親子関係) |  |
-| unique | string | 任意 | 固有パス | ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
-| basename | string | 任意 | ファイル名 |  |
-| prefix | string | 任意 | 固有パス＋ファイル名 | 以下の各種IDの共通部分(固有パスの先頭・末尾の'/'有無処理済) |
-| rangeId | string | 任意 | 固有パス＋ファイル名＋':R'＋meta.range[0] | ※ Doclet以外のファイル情報が必要なため、DocletTree側で追加される項目 |
-| linenoId | string | 任意 | 固有パス＋ファイル名＋':N'＋meta.lineno ※同上 |  |
-| commentId | string | 任意 | 「固有パス＋ファイル名＋comment」のSHA256 | 同一commentが同一ファイル内に複数有った場合は設定しない |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| name | string | 必須 | 【書換】constructorの場合のみ固定値"constructor"に変更 |
+| longname | string | 必須 | 【書換】constructorの場合のみ"#constructor"を追加 |
+| opt | Object | 必須 | DocletExインスタンス作成時のオプション<br>  現状未使用 |
+| uuid | string | 必須 | DocletExを一意に識別するためのUUID |
+| docletType | string | 必須 | Docletの種類。下記「docletTypeの判定ロジック」参照 |
+| parsed | Object.<string, string> | 必須 | Doclet内で定義されたタグの値<br>  例： parsed: {<br>    description:"method01: メソッドテスト", // string<br>    memberof:"class01", // string<br>    param:"{number} arg - method01の引数", // string<br>    returns:"{{qId:number,name:string}} NG: qId,name指定無しのObjectになる", // string<br>  } |
+| label | string | 必須 | 1行で簡潔に記述された概要説明<br>  ① JSDoc先頭の「/**」に続く文字列<br>  ② constructorは「(memberof.)constructor」<br>  ③ "＠name"に続く文字列<br>  ④ typdef, interface<br>  ⑤ description, classdescの先頭行(=concatenatedの先頭行)<br>  ⑥ v.doclet.longname<br>  ※ 上記に該当が無い場合、「(ラベル未設定)」 |
+| concatenated | string | 必須 | description,classdesc,exmapleを出現順に結合。MD出力用 |
+| properties | DocletColDef[] | 任意 | メンバ一覧 |
+| params | DocletColDef[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |
+| returns | DocletColDef[] | [] | 戻り値(※同上) |
+| parent | string | null | 親要素のDocletEx.uuid |
+| children | string[] | [] | 子要素(メソッド・内部関数)のDocletEx.uuid |
+| familyTree | string | 必須 | DocletEx.nameを連結した系図(親子関係) |
+| unique | string | 任意 | 固有パス<br>  ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
+| basename | string | 任意 | ファイル名 |
+| prefix | string | 任意 | 固有パス＋ファイル名<br>  以下の各種IDの共通部分(固有パスの先頭・末尾の'/'有無処理済) |
+| rangeId | string | 任意 | 固有パス＋ファイル名＋':R'＋meta.range[0]<br>  ※ Doclet以外のファイル情報が必要なため、DocletTree側で追加される項目 |
+| linenoId | string | 任意 | 固有パス＋ファイル名＋':N'＋meta.lineno ※同上 |
+| commentId | string | 任意 | 「固有パス＋ファイル名＋comment」のSHA256<br>  同一commentが同一ファイル内に複数有った場合は設定しない |
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_func">🧱 DocletEx メソッド・内部関数一覧</span></a>
 

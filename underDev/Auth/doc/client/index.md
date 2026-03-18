@@ -266,12 +266,12 @@
 
 authClientConfig: 共通設定情報にauthClient特有項目を追加
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| api | string | 必須 | サーバ側WebアプリURLのID | https://script.google.com/macros/s/(この部分)/exec |
-| timeout | number | 300000 | サーバからの応答待機時間 | これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
-| storeName | string | "config" | IndexedDBのストア名 |  |
-| dbVersion | number | 1 | IndexedDBのバージョン |  |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| api | string | 必須 | サーバ側WebアプリURLのID<br>  https://script.google.com/macros/s/(この部分)/exec |
+| timeout | number | 300000 | サーバからの応答待機時間<br>  これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
+| storeName | string | "config" | IndexedDBのストア名 |
+| dbVersion | number | 1 | IndexedDBのバージョン |
 
 
 ## <a href="#typedefList"><span id="authIndexedDB">"authIndexedDB" データ型定義</span></a>

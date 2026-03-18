@@ -607,12 +607,9 @@ async function createSpec(opt={}){
           ? opt.value[opt.lang].optional : opt.value[opt.lang].required);
 
         dev.step(5);  // 説明・備考
-        v.desc = (prop.description ?? '').trim().split('\n');
-        // 先頭行は「説明」欄に
-        v.rv.desc = v.desc[0].trim();
-        // descriptionの2行目以降は「備考」欄に
-        v.rv.note = v.desc.length < 2 ? ''
-          : v.desc.slice(1).join('<br>').replaceAll(/\|/g,'\\|').trim();
+        // 当初「説明(1行目)」「備考(2行目以降)」と分けたが、見づらいので全て説明に統合
+        v.rv.desc = (prop.description ?? '').replaceAll(/\n/g,'<br>').replaceAll(/\|/g,'\\|').trim();
+        v.rv.note = '';
 
         dev.end(); // 終了処理
         return v.rv;

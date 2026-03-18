@@ -131,10 +131,10 @@ devTools専用拡張エラークラス
 
 ### <a href="#devTools-extract_top"><span id="devTools-extract_param">▶️ extract 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| data | Object \| Object[] | null | 抽出元オブジェクト |  |
-| cond | string | null | 抽出条件 | 基本形：①配列の場合の抽出条件＋②抽出結果オブジェクト定義<br>  1. 配列の場合の抽出条件：'['+filter関数(文字列)+']:'。抽出しない場合は省略。末尾':'必須<br>     - `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:`<br>  2. 抽出結果オブジェクト定義：'{'+抽出対象メンバ名+'}'。子孫要素指定は`{}`で記述<br>     - `{longname}`<br>     - `longname,meta:{lineno,columnno}}` |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| data | Object \| Object[] | null | 抽出元オブジェクト |
+| cond | string | null | 抽出条件<br>  基本形：①配列の場合の抽出条件＋②抽出結果オブジェクト定義<br>  1. 配列の場合の抽出条件：'['+filter関数(文字列)+']:'。抽出しない場合は省略。末尾':'必須<br>     - `[x => Object.hasOwn(x,'kind') && x.kind === 'class']:`<br>  2. 抽出結果オブジェクト定義：'{'+抽出対象メンバ名+'}'。子孫要素指定は`{}`で記述<br>     - `{longname}`<br>     - `longname,meta:{lineno,columnno}}` |
 
 ### <a href="#devTools-extract_top"><span id="devTools-extract_return">◀️ extract 戻り値</span></a>
 

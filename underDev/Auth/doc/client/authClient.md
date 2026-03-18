@@ -200,9 +200,9 @@ authClientインスタンス作成
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_param">▶️ initialize 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| config | Object | 必須 | authClient/Server共通＋authClient専用設定情報 | ※共通/専用設定情報は事前に結合しておくこと(ex.mergeDeeply) |
+| 項目名 | データ型 | 要否/既定値 | 説明 |
+| :-- | :-- | :-- | :-- |
+| config | Object | 必須 | authClient/Server共通＋authClient専用設定情報<br>  ※共通/専用設定情報は事前に結合しておくこと(ex.mergeDeeply) |
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_return">◀️ initialize 戻り値</span></a>
 
