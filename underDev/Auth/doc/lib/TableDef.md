@@ -30,16 +30,16 @@
 
 ## <a href="#TableDef_top"><span id="TableDef_prop">🔢 TableDef メンバ一覧</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| name | string | 必須 | 論理的な識別名（TableDef のキー）<br>  - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'<br>  - constructorに渡す定義オブジェクトでは省略(メンバ名を引用) |
-| desc | string | '' | テーブルに関する概要説明 |
-| note | string | '' | テーブルに関する備考 |
-| primaryKey | string[] | [] | 主キー項目名 |
-| unique | string[] | [] | 主キー以外の一意制約 |
-| cols | ColumnDef[] | 必須 | 項目定義（順序を考慮するため配列） |
-| header | string[] | 必須 | 項目名の一覧(引数不可、自動生成) |
-| map | Object.<string, ColumnDef> | 必須 | 項目名をキーとする項目定義集(引数不可、自動生成) |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| name | string | 必須 | 論理的な識別名（TableDef のキー） | - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'<br>  - constructorに渡す定義オブジェクトでは省略(メンバ名を引用) |
+| desc | string | '' | テーブルに関する概要説明 |  |
+| note | string | '' | テーブルに関する備考 |  |
+| primaryKey | string[] | [] | 主キー項目名 |  |
+| unique | string[] | [] | 主キー以外の一意制約 |  |
+| cols | ColumnDef[] | 必須 | 項目定義（順序を考慮するため配列） |  |
+| header | string[] | 必須 | 項目名の一覧(引数不可、自動生成) |  |
+| map | Object.<string, ColumnDef> | 必須 | 項目名をキーとする項目定義集(引数不可、自動生成) |  |
 
 ## <a href="#TableDef_top"><span id="TableDef_func">🧱 TableDef メソッド・内部関数一覧</span></a>
 

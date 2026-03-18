@@ -53,10 +53,10 @@ constructor
 
 ### <a href="#cryptoClient-constructor_top"><span id="cryptoClient-constructor_param">▶️ constructor 引数</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数<br>  CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
-| RSAbits | number | 必須 | RSA鍵長 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数 | CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
+| RSAbits | number | 必須 | RSA鍵長 |  |
 ## <span id="cryptoClient-encrypt_top">🧩 encrypt()</span>
 
 処理要求を暗号化＋署名

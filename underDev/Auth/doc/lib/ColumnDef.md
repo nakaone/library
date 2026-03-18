@@ -30,16 +30,16 @@
 
 ## <a href="#ColumnDef_top"><span id="ColumnDef_prop">🔢 ColumnDef メンバ一覧</span></a>
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| name | string | 必須 | 項目名（英数字・システム用） |
-| label | string | 任意 | 表示用ラベル（省略時は name) |
-| desc | string | '' | 項目に関する概要説明 |
-| note | string | '' | 項目に関する備考・意味説明 |
-| type | string | 'string' | 論理データ型。allowedColumnTypesの何れか |
-| nullable | boolean | true | null を許可するか |
-| default | any | null | 既定値<br>  - データ型が関数の場合、引数はfactoryメソッドに渡されるargと看做す |
-| allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可<br><br>  - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function' |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| name | string | 必須 | 項目名（英数字・システム用） |  |
+| label | string | 任意 | 表示用ラベル（省略時は name) |  |
+| desc | string | '' | 項目に関する概要説明 |  |
+| note | string | '' | 項目に関する備考・意味説明 |  |
+| type | string | 'string' | 論理データ型。allowedColumnTypesの何れか |  |
+| nullable | boolean | true | null を許可するか |  |
+| default | any | null | 既定値 | - データ型が関数の場合、引数はfactoryメソッドに渡されるargと看做す |
+| allowedColumnTypes | string[] | 必須 | 許容するColumnのデータ型のリスト。自動生成、設定不可<br> | - 'string' \| 'number' \| 'boolean' \| 'object' \| 'array' \| 'datetime' \| 'function' |
 
 ## <a href="#ColumnDef_top"><span id="ColumnDef_func">🧱 ColumnDef メソッド・内部関数一覧</span></a>
 

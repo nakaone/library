@@ -55,76 +55,76 @@
 
 devToolsOpt: オプション設定値
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| mode | string | 'pipe' | 出力モード<br>  | mode     | エラー | 開始・終了 | step | 用途・備考    |<br>  | :--      | :--:  | :--:     | :--:      | :--          |<br>  | "none"   | ❌    | ❌        | ❌        | 出力無し      |<br>  | "error"  | ⭕    | ❌        | ❌        | エラーのみ出力 |<br>  | "normal" | ⭕    | ⭕        | ❌        | 本番用        |<br>  | "dev"    | ⭕    | ⭕        | ⭕        | 開発用        |<br>  | "pipe"   | ⭕    | ❌        | ⭕        | パイプ処理用   | |
-| digit | number | 4 | 処理順(seq)をログ出力する際の桁数 |
-| footer | boolean | false | 実行結果(startTime,endTime,elaps)を出力するならtrue |
-| maxDepth | number | 10 | 再帰呼出時の最深階層数 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| mode | string | 'pipe' | 出力モード | \| mode     \| エラー \| 開始・終了 \| step \| 用途・備考    \|<br>  \| :--      \| :--:  \| :--:     \| :--:      \| :--          \|<br>  \| "none"   \| ❌    \| ❌        \| ❌        \| 出力無し      \|<br>  \| "error"  \| ⭕    \| ❌        \| ❌        \| エラーのみ出力 \|<br>  \| "normal" \| ⭕    \| ⭕        \| ❌        \| 本番用        \|<br>  \| "dev"    \| ⭕    \| ⭕        \| ⭕        \| 開発用        \|<br>  \| "pipe"   \| ⭕    \| ❌        \| ⭕        \| パイプ処理用   \| |
+| digit | number | 4 | 処理順(seq)をログ出力する際の桁数 |  |
+| footer | boolean | false | 実行結果(startTime,endTime,elaps)を出力するならtrue |  |
+| maxDepth | number | 10 | 再帰呼出時の最深階層数 |  |
 
 
 ## <a href="#typedefList"><span id="Doclet">"Doclet" データ型定義</span></a>
 
 Doclet: `jsdoc -X`で配列で返されるオブジェクト
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| augments | string[] | 必須 | ＠augments/＠extendsによる継承元情報<br>  親クラスや継承対象の一覧 |
-| classdesc | string | 必須 | ＠classdescタグで指定されたクラス専用の説明文<br>  description とは別枠で保持される |
-| comment | string | 必須 | ソース上に記載されたDocletの原文 |
-| description | string | 必須 | 説明文。タグ以外のcomment内の自由記述部分 |
-| examples | string[] | 必須 | ＠exampleタグの内容。使用例コードを配列で保持 |
-| kind | string | 必須 | Docletの対象種別<br>  例：function, class, member, typedef, module など |
-| longname | string | 必須 | 完全修飾名<br>  `module:foo~bar#baz`のように、モジュール・クラス・スコープを含む一意名 |
-| memberof | string | 必須 | 所属先（親）を示す完全修飾名<br>  どのクラス・モジュール・名前空間に属するかを示す |
-| meta | Object | 必須 | Docletが生成されたソース位置情報 |
-| meta.range | number[] | 必須 | ソースコード内での文字位置範囲<br>  桁数単位で、2要素ずつ組み合わせた開始・終了インデックス。 |
-| meta.filename | string | 必須 | 対象が定義されているソースファイル名 |
-| meta.lineno | number | 必須 | 対象定義の開始行番号 |
-| meta.columnno | number | 必須 | 対象定義の開始列番号 |
-| meta.path | string | 必須 | ソースファイルが存在するディレクトリパス |
-| meta.code | Object | 必須 | Doclet対象となったコード要素の構造情報 |
-| meta.code.id | string | 必須 | コード要素の内部識別子(AST由来、存在しない場合あり) |
-| meta.code.name | string | 必須 | コード要素の名前（関数名・クラス名・変数名など） |
-| meta.code.type | string | 必須 | コード要素の種別 |
-| meta.code.value | string | 必須 | コード要素のソース表現（代入値や関数本体の文字列表現） |
-| meta.code.paramnames | string[] | 必須 | 関数・メソッドの引数名一覧 |
-| meta.vars | Object.<string, string> | 必須 | スコープ内で参照される変数名とその値（簡易マップ） |
-| name | string | 必須 | 対象の短い名前(関数名・クラス名・プロパティ名など) |
-| params | DocletColDef[] | 必須 | ＠paramタグから生成された引数情報の配列 |
-| properties | DocletColDef[] | 必須 | ＠propertyタグから生成されたメンバ定義情報 |
-| returns | DocletColDef[] | 必須 | ＠returns/＠returnタグから生成された戻り値情報<br>  returnsはparams/propertiesと以下の点で異なる。<br>  1. 配列だが単一<br>  2. name/optional/defaultvalueは無い<br>  3. nullable,nullableTypeが付くことがある |
-| scope | string | 必須 | スコープ種別<br>  global,static,instance,innerなど、メンバの可視性・所属を示す |
-| tags | Object[] | 必須 | JSDoc上に記述されたタグのうち、専用フィールドに変換されなかった生タグ情報<br>  独自タグ、JSDocが意味解釈しないタグ、情報落ちしないよう保持された生情報 |
-| tags.meta | Object | 必須 | タグが記述されているソース位置情報 |
-| tags.originalTitle | string | 必須 | ソース上に記述されたタグ名（＠を除いた元の表記） |
-| tags.title | string | 必須 | 正規化されたタグ名(＠returns->return,＠History->history) |
-| tags.text | string | 必須 | タグ行の生テキスト（タグ名を除いた部分） |
-| tags.value | string | 必須 | タグ内容をJSDocが解釈・分解した結果の文字列表現<br>  単純タグではtextと同じになることが多い |
-| type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報<br>  プリミティブ・Union・配列・オブジェクトなど |
-| type.names | string[] | 必須 | データ型名の配列<br>  `{number|string}`等、'|'で区切られたUnion型の場合は複数になる<br>  {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
-| undocumented | boolean | 必須 | JSDoc コメントが存在しない要素かどうか<br>  true の場合、自動抽出されたがコメント未記述 |
-| type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報<br>  プリミティブ・Union・配列・オブジェクトなど |
-| type.names | string[] | 必須 | データ型名の配列<br>  `{number|string}`等、'|'で区切られたUnion型の場合は複数になる<br><br><br># "meta.code.type"の内容<br><br>- 関数・メソッド系<br>  - FunctionDeclaration : `function foo() {}`形式の関数宣言。名前付き・巻き上げ対象<br>  - FunctionExpression : `const f = function() {}`のような関数式。無名／名前付きどちらもあり得る<br>  - ArrowFunctionExpression : `() => {}`形式のアロー関数。this を持たない<br>  - MethodDefinition : クラス内メソッド。`class A { foo() {} }`<br>- クラス系<br>  - ClassDeclaration : `class Foo {}`の宣言。トップレベルで定義されたクラス<br>  - ClassExpression : `const A = class {}`のようなクラス式<br>- 変数・メンバ系<br>  - VariableDeclaration : `var/let/const`による宣言全体。実体は VariableDeclarator に分かれる<br>  - VariableDeclarator : `const a = 10`の`a = 10`部分。JSDoc が member として拾うことが多い<br>  - Property : オブジェクトリテラルのプロパティ。`{ a: 10 }`<br>  - MemberExpression : `obj.prop`や`obj['prop']`。直接 Doclet になることは少ない（解析補助）<br>- オブジェクト・構造系<br>  - ObjectExpression : `{a:10,b:20}`。＠typedef の元になることがある<br>  - ArrayExpression : `[1,2,3]`。型推論や ＠type 補助に使用される<br>- モジュール・エクスポート系（ESM）<br>  - ImportDeclaration : `import x from 'y'`。Doclet 化されることは稀<br>  - ExportNamedDeclaration : `export { foo }`,`export const a = 1`<br>  - ExportDefaultDeclaration : `export default function () {}`,`export default class {}`<br>- その他　※出現頻度低め<br>  - AssignmentExpression : `a = 10`。グローバル代入や static メンバ検出に使用<br>  - Literal : 数値・文字列・真偽値などの即値<br>  - Identifier : 変数名・関数名そのもの。単体で Doclet になることはない<br><br><br># 「完全修飾名」の構造<br><br>## 基本構造<br><br>`[トップレベル] (区切り記号 [子要素])*`<br><br>例：<br>- `User#test`<br>- `module:auth~Config#timeout`<br>- `foo.age`<br><br>## 主な区切り記号と意味<br><br>| 記号 | 意味 | 用途 |<br>| :-- | :-- | :-- |<br>| . | 名前空間 / 静的・構造的所属 | オブジェクト・typedef |<br>| # | インスタンスメンバ | クラスの instance |<br>| ~ | 内部（inner）要素 | クロージャ・内部関数 |<br>| : | モジュール修飾子 | module 指定 | |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| augments | string[] | 必須 | ＠augments/＠extendsによる継承元情報 | 親クラスや継承対象の一覧 |
+| classdesc | string | 必須 | ＠classdescタグで指定されたクラス専用の説明文 | description とは別枠で保持される |
+| comment | string | 必須 | ソース上に記載されたDocletの原文 |  |
+| description | string | 必須 | 説明文。タグ以外のcomment内の自由記述部分 |  |
+| examples | string[] | 必須 | ＠exampleタグの内容。使用例コードを配列で保持 |  |
+| kind | string | 必須 | Docletの対象種別 | 例：function, class, member, typedef, module など |
+| longname | string | 必須 | 完全修飾名 | `module:foo~bar#baz`のように、モジュール・クラス・スコープを含む一意名 |
+| memberof | string | 必須 | 所属先（親）を示す完全修飾名 | どのクラス・モジュール・名前空間に属するかを示す |
+| meta | Object | 必須 | Docletが生成されたソース位置情報 |  |
+| meta.range | number[] | 必須 | ソースコード内での文字位置範囲 | 桁数単位で、2要素ずつ組み合わせた開始・終了インデックス。 |
+| meta.filename | string | 必須 | 対象が定義されているソースファイル名 |  |
+| meta.lineno | number | 必須 | 対象定義の開始行番号 |  |
+| meta.columnno | number | 必須 | 対象定義の開始列番号 |  |
+| meta.path | string | 必須 | ソースファイルが存在するディレクトリパス |  |
+| meta.code | Object | 必須 | Doclet対象となったコード要素の構造情報 |  |
+| meta.code.id | string | 必須 | コード要素の内部識別子(AST由来、存在しない場合あり) |  |
+| meta.code.name | string | 必須 | コード要素の名前（関数名・クラス名・変数名など） |  |
+| meta.code.type | string | 必須 | コード要素の種別 |  |
+| meta.code.value | string | 必須 | コード要素のソース表現（代入値や関数本体の文字列表現） |  |
+| meta.code.paramnames | string[] | 必須 | 関数・メソッドの引数名一覧 |  |
+| meta.vars | Object.<string, string> | 必須 | スコープ内で参照される変数名とその値（簡易マップ） |  |
+| name | string | 必須 | 対象の短い名前(関数名・クラス名・プロパティ名など) |  |
+| params | DocletColDef[] | 必須 | ＠paramタグから生成された引数情報の配列 |  |
+| properties | DocletColDef[] | 必須 | ＠propertyタグから生成されたメンバ定義情報 |  |
+| returns | DocletColDef[] | 必須 | ＠returns/＠returnタグから生成された戻り値情報 | returnsはparams/propertiesと以下の点で異なる。<br>  1. 配列だが単一<br>  2. name/optional/defaultvalueは無い<br>  3. nullable,nullableTypeが付くことがある |
+| scope | string | 必須 | スコープ種別 | global,static,instance,innerなど、メンバの可視性・所属を示す |
+| tags | Object[] | 必須 | JSDoc上に記述されたタグのうち、専用フィールドに変換されなかった生タグ情報 | 独自タグ、JSDocが意味解釈しないタグ、情報落ちしないよう保持された生情報 |
+| tags.meta | Object | 必須 | タグが記述されているソース位置情報 |  |
+| tags.originalTitle | string | 必須 | ソース上に記述されたタグ名（＠を除いた元の表記） |  |
+| tags.title | string | 必須 | 正規化されたタグ名(＠returns->return,＠History->history) |  |
+| tags.text | string | 必須 | タグ行の生テキスト（タグ名を除いた部分） |  |
+| tags.value | string | 必須 | タグ内容をJSDocが解釈・分解した結果の文字列表現 | 単純タグではtextと同じになることが多い |
+| type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報 | プリミティブ・Union・配列・オブジェクトなど |
+| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる<br>  {typeDef[]\|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
+| undocumented | boolean | 必須 | JSDoc コメントが存在しない要素かどうか | true の場合、自動抽出されたがコメント未記述 |
+| type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報 | プリミティブ・Union・配列・オブジェクトなど |
+| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる<br><br><br># "meta.code.type"の内容<br><br>- 関数・メソッド系<br>  - FunctionDeclaration : `function foo() {}`形式の関数宣言。名前付き・巻き上げ対象<br>  - FunctionExpression : `const f = function() {}`のような関数式。無名／名前付きどちらもあり得る<br>  - ArrowFunctionExpression : `() => {}`形式のアロー関数。this を持たない<br>  - MethodDefinition : クラス内メソッド。`class A { foo() {} }`<br>- クラス系<br>  - ClassDeclaration : `class Foo {}`の宣言。トップレベルで定義されたクラス<br>  - ClassExpression : `const A = class {}`のようなクラス式<br>- 変数・メンバ系<br>  - VariableDeclaration : `var/let/const`による宣言全体。実体は VariableDeclarator に分かれる<br>  - VariableDeclarator : `const a = 10`の`a = 10`部分。JSDoc が member として拾うことが多い<br>  - Property : オブジェクトリテラルのプロパティ。`{ a: 10 }`<br>  - MemberExpression : `obj.prop`や`obj['prop']`。直接 Doclet になることは少ない（解析補助）<br>- オブジェクト・構造系<br>  - ObjectExpression : `{a:10,b:20}`。＠typedef の元になることがある<br>  - ArrayExpression : `[1,2,3]`。型推論や ＠type 補助に使用される<br>- モジュール・エクスポート系（ESM）<br>  - ImportDeclaration : `import x from 'y'`。Doclet 化されることは稀<br>  - ExportNamedDeclaration : `export { foo }`,`export const a = 1`<br>  - ExportDefaultDeclaration : `export default function () {}`,`export default class {}`<br>- その他　※出現頻度低め<br>  - AssignmentExpression : `a = 10`。グローバル代入や static メンバ検出に使用<br>  - Literal : 数値・文字列・真偽値などの即値<br>  - Identifier : 変数名・関数名そのもの。単体で Doclet になることはない<br><br><br># 「完全修飾名」の構造<br><br>## 基本構造<br><br>`[トップレベル] (区切り記号 [子要素])*`<br><br>例：<br>- `User#test`<br>- `module:auth~Config#timeout`<br>- `foo.age`<br><br>## 主な区切り記号と意味<br><br>\| 記号 \| 意味 \| 用途 \|<br>\| :-- \| :-- \| :-- \|<br>\| . \| 名前空間 / 静的・構造的所属 \| オブジェクト・typedef \|<br>\| # \| インスタンスメンバ \| クラスの instance \|<br>\| ~ \| 内部（inner）要素 \| クロージャ・内部関数 \|<br>\| : \| モジュール修飾子 \| module ��定 \| |
 
 
 ## <a href="#typedefList"><span id="DocletColDef">"DocletColDef" データ型定義</span></a>
 
 DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| type | Object | 必須 | データ型情報オブジェクト |
-| type.names | string[] | 必須 | データ型名の配列<br>  `{number|string}`等、'|'で区切られたUnion型の場合は複数になる<br>  {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
-| longname | string | 必須 | 対象要素の完全修飾名（所属関係・スコープを含む一意な識別子） |
-| scope | string | 必須 | 対象要素のスコープ種別<br>  - global : グローバル<br>  - static : クラス静的メンバ<br>  - instance : インスタンスメンバ<br>  - inner : 内部要素 |
-| memberof | string | 必須 |  |
-| description | string | 必須 | 説明文 |
-| name | string | 必須 | プロパティ名。階層化されている場合`parent.child`形式になる |
-| meta | Object | 必須 | プロパティ定義が存在するソース位置情報<br>  param/returnsには出ないがpropertiesには出ることがある |
-| defaultvalue | string | 必須 | 既定値(文字列表現。ex.'[]') |
-| optional | boolean | 必須 | trueの場合は任意項目 |
-| row | DocletColRow | 必須 | DocletEx.addRowToColumnで追加される項目情報 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| type | Object | 必須 | データ型情報オブジェクト |  |
+| type.names | string[] | 必須 | データ型名の配列 | `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる<br>  {typeDef[]\|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"] |
+| longname | string | 必須 | 対象要素の完全修飾名（所属関係・スコープを含む一意な識別子） |  |
+| scope | string | 必須 | 対象要素のスコープ種別 | - global : グローバル<br>  - static : クラス静的メンバ<br>  - instance : インスタンスメンバ<br>  - inner : 内部要素 |
+| memberof | string | 必須 |  |  |
+| description | string | 必須 | 説明文 |  |
+| name | string | 必須 | プロパティ名。階層化されている場合`parent.child`形式になる |  |
+| meta | Object | 必須 | プロパティ定義が存在するソース位置情報 | param/returnsには出ないがpropertiesには出ることがある |
+| defaultvalue | string | 必須 | 既定値(文字列表現。ex.'[]') |  |
+| optional | boolean | 必須 | trueの場合は任意項目 |  |
+| row | DocletColRow | 必須 | DocletEx.addRowToColumnで追加される項目情報 |  |
 
 
 ## <a href="#typedefList"><span id="DocletColRow">"DocletColRow" データ型定義</span></a>
@@ -144,29 +144,29 @@ DocletColRow: データ項目一覧作成用追加情報
 
 DocletTreeFile: 個別入力ファイル情報
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| full | string | 必須 | フルパス＋ファイル名 |
-| unique | string | 必須 | 固有パス(フルパス−共通部分)<br>  ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
-| basename | string | 必須 | ファイル名 |
-| content | string | 必須 | ファイルの内容 |
-| jsdoc | Doclet[] | 必須 | `jsdoc -X`の実行結果オブジェクト |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| full | string | 必須 | フルパス＋ファイル名 |  |
+| unique | string | 必須 | 固有パス(フルパス−共通部分) | ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
+| basename | string | 必須 | ファイル名 |  |
+| content | string | 必須 | ファイルの内容 |  |
+| jsdoc | Doclet[] | 必須 | `jsdoc -X`の実行結果オブジェクト |  |
 
 
 ## <a href="#typedefList"><span id="DocletTreeOpt">"DocletTreeOpt" データ型定義</span></a>
 
 DocletTreeOpt: オプション設定値
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| title | Object.<string, string> | 必須 | Markdown文書のタイトル行 |
-| lang | string | 'ja-JP' | 使用言語 |
-| indexMd | string | 'index.md' | フォルダ直下の管理ファイル名 |
-| propHeader | Object.<string, Array.<Object>> | 任意 | 項目一覧テーブルのヘッダ定義<br>  Object = {key,label,align} |
-| returnHeader | Object.<string, Array.<Object>> | 任意 | 戻り値テーブルのヘッダ定義<br>  Object = {key,label,align} |
-| jsdocJson | string | "jsdoc.json" | jsdoc設定ファイル名 |
-| dummyDir | string | "./dummy" | ダミーディレクトリ名 |
-| jsdocTarget | string | ".+\\.(js|mjs|gs|txt)$" | jsdoc処理対象ファイル名の正規表現 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| title | Object.<string, string> | 必須 | Markdown文書のタイトル行 |  |
+| lang | string | 'ja-JP' | 使用言語 |  |
+| indexMd | string | 'index.md' | フォルダ直下の管理ファイル名 |  |
+| propHeader | Object.<string, Array.<Object>> | 任意 | 項目一覧テーブルのヘッダ定義 | Object = {key,label,align} |
+| returnHeader | Object.<string, Array.<Object>> | 任意 | 戻り値テーブルのヘッダ定義 | Object = {key,label,align} |
+| jsdocJson | string | "jsdoc.json" | jsdoc設定ファイル名 |  |
+| dummyDir | string | "./dummy" | ダミーディレクトリ名 |  |
+| jsdocTarget | string | ".+\\.(js|mjs|gs|txt)$" | jsdoc処理対象ファイル名の正規表現 |  |
 
 
 ## <a href="#typedefList"><span id="DocletTreeSource">"DocletTreeSource" データ型定義</span></a>
@@ -184,7 +184,8 @@ DocletTreeSource: 統合版入力ファイル(JSソース)情報
 
 ## <a href="#typedefList"><span id="DocletTreeSymbol">"DocletTreeSymbol" データ型定義</span></a>
 
-DocletTreeSymbol: クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報<br>- 作成はDocletTree.registration内で行う
+DocletTreeSymbol: クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
+- 作成はDocletTree.registration内で行う
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |

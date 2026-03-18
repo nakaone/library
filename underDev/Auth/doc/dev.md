@@ -38,13 +38,17 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - [bug] 解説記事名が冒頭行で無くnameになっている
+  - [bug] concatenated内のbrタグは'\n'に修正
+    br一括修正をやめ、テーブル内に限定？
+  - [bug] 説明文内の'#'のレベルがシフトしていない
+    createSpec 概説 > 用語集・参考資料
   - [bug] lib/createSpec.md メソッド・内部関数一覧: 改行ミス
     "decision logic of docletType"の次行に"<a href="#createSpec-"longname" naming rules_top">〜"の記述
   - lib/index.md 個別データ型定義Doclet.returns: DocletColDef型なのにリンクが無い
   - lib/DocletEx.md メンバ一覧.properties: DocletColDef型なのにリンクが無い
   - common/authConfig.md: 継承元「Schema」にリンクが無い
   == 対応済 ==================================
+  - [bug] 解説記事名が冒頭行で無くnameになっている
   - クラス・グローバル関数内解説記事は概説の後に記載
   - DocletTree(.doclet).json出力仕様が未記載
   - [bug] client/index.md: グローバル関数・クラス一覧のauthClientの概要がconcatenatedの1行目になっている

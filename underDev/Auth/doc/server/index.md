@@ -344,89 +344,89 @@ authScriptProperties: サーバ側ScriptPropertiesに保存する情報
 
 this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| memberList | string | "memberList" | memberListシート名 |
-| defaultAuthority | number | 1 | 新規加入メンバの権限の既定値 |
-| memberLifeTime | number | 31536000000 | 加入有効期間<br>  メンバ加入承認後の有効期間。既定値は1年 |
-| prohibitedToJoin | number | 259200000 | 加入禁止期間<br>  管理者による加入否認後、再加入申請��自動的に却下される期間。既定値は3日 |
-| loginLifeTime | number | 86400000 | 認証有効時間<br>  ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日 |
-| loginFreeze | number | 600000 | 認証凍結時間<br>  認証失敗後、再認証要求が禁止される期間。既定値は10分 |
-| requestIdRetention | number | 300000 | 重複リクエスト拒否となる時間。既定値は5分 |
-| errorLog | string | "errorLog" | エラーログのシート名 |
-| storageDaysOfErrorLog | number | 604800000 | エラーログの保存日数<br>  単位はミリ秒。既定値は7日分 |
-| auditLog | string | "auditLog" | 監査ログのシート名 |
-| storageDaysOfAuditLog | number | 604800000 | 監査ログの保存日数<br>  単位はミリ秒。既定値は7日分 |
-| func | authServerFuncDef | {} | サーバ側関数設定<br><br>ログイン試行関係の設定値 |
-| passcodeLength | number | 6 | パスコードの桁数 |
-| maxTrial | number | 3 | パスコード入力の最大試行回数 |
-| passcodeLifeTime | number | 600000 | パスコードの有効期間。既定値は10分 |
-| maxTrialLog | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代<br><br>開発関係の設定値 |
-| udSendPasscode | boolean | false | 開発中識別フラグパスコード通知メール送信を抑止するならtrue |
-| udSendInvitation | boolean | false | 開発中の加入承認通知メール送信<br>  開発中に加入承認通知メール送信を抑止するならtrue |
-| typeDef | schemaDef | 必須 | データ型定義 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| memberList | string | "memberList" | memberListシート名 |  |
+| defaultAuthority | number | 1 | 新規加入メンバの権限の既定値 |  |
+| memberLifeTime | number | 31536000000 | 加入有効期間 | メンバ加入承認後の有効期間。既定値は1年 |
+| prohibitedToJoin | number | 259200000 | 加入禁止期間 | 管理者による加入否認後、再加入申請��自動的に却下される期間。既定値は3日 |
+| loginLifeTime | number | 86400000 | 認証有効時間 | ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日 |
+| loginFreeze | number | 600000 | 認証凍結時間 | 認証失敗後、再認証要求が禁止される期間。既定値は10分 |
+| requestIdRetention | number | 300000 | 重複リクエスト拒否となる時間。既定値は5分 |  |
+| errorLog | string | "errorLog" | エラーログのシート名 |  |
+| storageDaysOfErrorLog | number | 604800000 | エラーログの保存日数 | 単位はミリ秒。既定値は7日分 |
+| auditLog | string | "auditLog" | 監査ログのシート名 |  |
+| storageDaysOfAuditLog | number | 604800000 | 監査ログの保存日数 | 単位はミリ秒。既定値は7日分 |
+| func | authServerFuncDef | {} | サーバ側関数設定 | <br>ログイン試行関係の設定値 |
+| passcodeLength | number | 6 | パスコードの桁数 |  |
+| maxTrial | number | 3 | パスコード入力の最大試行回数 |  |
+| passcodeLifeTime | number | 600000 | パスコードの有効期間。既定値は10分 |  |
+| maxTrialLog | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 | <br>開発関係の設定値 |
+| udSendPasscode | boolean | false | 開発中識別フラグパスコード通知メール送信を抑止するならtrue |  |
+| udSendInvitation | boolean | false | 開発中の加入承認通知メール送信 | 開発中に加入承認通知メール送信を抑止するならtrue |
+| typeDef | schemaDef | 必須 | データ型定義 |  |
 
 
 ## <a href="#typedefList"><span id="authServerFuncDef">"authServerFuncDef" データ型定義</span></a>
 
 authServerFuncDef: サーバ側関数設定オブジェクト
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| func.authority | number | 0 | サーバ側関数の所要権限<br>  サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限<br>  ex. authServerConfig.func.authority === 0 |
-| func.do | function | 必須 | 実行するサーバ側関数 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| func.authority | number | 0 | サーバ側関数の所要権限 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限<br>  ex. authServerConfig.func.authority === 0 |
+| func.do | function | 必須 | 実行するサーバ側関数 |  |
 
 
 ## <a href="#typedefList"><span id="MemberDevice">"MemberDevice" データ型定義</span></a>
 
 MemberDevice: メンバが使用する通信機器の情報
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| deviceId | string | UUIDv4 | デバイスの識別子 |
-| status | string | "UC" | デバイスの状態<br>  未認証 : UC(uncertified)<br>  認証中 : LI(log in)<br>  試行中 : TR(tring)<br>  凍結中 : FR(freezed) |
-| CPkeySign | string | 必須 | デバイスの署名用公開鍵 |
-| CPkeyEnc | string | 必須 | デバイスの暗号化用公開鍵 |
-| CPkeyUpdated | number | Date.now() | 最新のCPkeyが登録された日時 |
-| trial | MemberTrial[] | [ | ログイン試行関連情報。オブジェクトシート上はJSON文字列 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| deviceId | string | UUIDv4 | デバイスの識別子 |  |
+| status | string | "UC" | デバイスの状態 | 未認証 : UC(uncertified)<br>  認証中 : LI(log in)<br>  試行中 : TR(tring)<br>  凍結中 : FR(freezed) |
+| CPkeySign | string | 必須 | デバイスの署名用公開鍵 |  |
+| CPkeyEnc | string | 必須 | デバイスの暗号化用公開鍵 |  |
+| CPkeyUpdated | number | Date.now() | 最新のCPkeyが登録された日時 |  |
+| trial | MemberTrial[] | [ | ログイン試行関連情報。オブジェクトシート上はJSON文字列 |  |
 
 
 ## <a href="#typedefList"><span id="MemberLog">"MemberLog" データ型定義</span></a>
 
 MemberLog: メンバの各種要求・状態変化の時刻
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| joiningRequest | number | Date.now() | 仮登録要求日時仮登録要求をサーバ側で受信した日時 |
-| approval | number | 0 | 加入承認日時<br>  管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一 |
-| denial | number | 0 | 加入否認日時<br>  管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一 |
-| loginRequest | number | 0 | 認証要求日時<br>  未認証メンバからの処理要求をサーバ側で受信した日時 |
-| loginSuccess | number | 0 | 認証成功日時<br>  未認証メンバの認証要求が成功した最新日時 |
-| loginExpiration | number | 0 | 認証有効期限<br>  認証成功日時＋認証有効時間 |
-| loginFailure | number | 0 | 認証失敗日時<br>  未認証メンバの認証要求失敗が確定した最新日時 |
-| unfreezeLogin | number | 0 | 認証無効期限<br>  認証失敗日時＋認証凍結時間 |
-| joiningExpiration | number | 0 | 加入有効期限<br>  加入承認日時＋加入有効期間 |
-| unfreezeDenial | number | 0 | 加入禁止期限<br>  加入否認日時＋加入禁止期間 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| joiningRequest | number | Date.now() | 仮登録要求日時仮登録要求をサーバ側で受信した日時 |  |
+| approval | number | 0 | 加入承認日時 | 管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一 |
+| denial | number | 0 | 加入否認日時 | 管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一 |
+| loginRequest | number | 0 | 認証要求日時 | 未認証メンバからの処理要求をサーバ側で受信した日時 |
+| loginSuccess | number | 0 | 認証成功日時 | 未認証メンバの認証要求が成功した最新日時 |
+| loginExpiration | number | 0 | 認証有効期限 | 認証成功日時＋認証有効時間 |
+| loginFailure | number | 0 | 認証失敗日時 | 未認証メンバの認証要求失敗が確定した最新日時 |
+| unfreezeLogin | number | 0 | 認証無効期限 | 認証失敗日時＋認証凍結時間 |
+| joiningExpiration | number | 0 | 加入有効期限 | 加入承認日時＋加入有効期間 |
+| unfreezeDenial | number | 0 | 加入禁止期限 | 加入否認日時＋加入禁止期間 |
 
 
 ## <a href="#typedefList"><span id="MemberProfile">"MemberProfile" データ型定義</span></a>
 
 MemberProfile: メンバの属性情報
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| authority | number | 必須 | メンバの持つ権限<br>  authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| authority | number | 必須 | メンバの持つ権限 | authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
 
 
 ## <a href="#typedefList"><span id="MemberTrial">"MemberTrial" データ型定義</span></a>
 
 MemberTrial: ログイン試行情報の管理・判定
 
-| 項目名 | データ型 | 要否/既定値 | 説明 |
-| :-- | :-- | :-- | :-- |
-| passcode | string | 必須 | 設定されているパスコード最初の認証試行で作成<br>  初期値はauthServerConfig.passcodeLengthで指定された桁数の数値 |
-| created | number | Date.now() | パスコード生成日時≒パスコード通知メール発信日時 |
-| log | MemberTrialLog[] | [ | 試行履歴常に最新が先頭(unshift()使用)<br>  保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| passcode | string | 必須 | 設定されているパスコード最初の認証試行で作成 | 初期値はauthServerConfig.passcodeLengthで指定された桁数の数値 |
+| created | number | Date.now() | パスコード生成日時≒パスコード通知メール発信日時 |  |
+| log | MemberTrialLog[] | [ | 試行履歴常に最新が先頭(unshift()使用) | 保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
 
 
 ## <a href="#typedefList"><span id="MemberTrialLog">"MemberTrialLog" データ型定義</span></a>
