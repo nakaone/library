@@ -1342,7 +1342,7 @@ async function createSpec(opt={}){
             if( v.c.docletType === 'description' ){
               // 記事の作成
               v.r = this.article({
-                title: `🧾 ${v.c.name}`,
+                title: `🧾 ${v.c.label ?? v.c.name}`,
                 level: level+1,
                 url: `#${v.anchor}_top`,
                 anchor: v.c.name ?? '',

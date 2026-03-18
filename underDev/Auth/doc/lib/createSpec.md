@@ -57,7 +57,7 @@
 
 - 使用方法はcf.useageに記載(オプション無し起動時にコンソール表示)<br><br><br><br># 用語集<br><br>- Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。<br>  `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。<br>- シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類<br><br># 参考資料<br><br>- [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
 
-## <a href="#createSpec_top"><span id="Development process and remaining issues">🧾 Development process and remaining issues</span></a>
+## <a href="#createSpec_top"><span id="Development process and remaining issues">🧾 開発工程・残課題</span></a>
 
 - 開発用スクリプトサンプル(test.sh等)
   ```
@@ -67,11 +67,11 @@
   1> $tmp/createSpec/result.log 2> $tmp/createSpec/error.log
   ```<br>- 埋込指示子対応：<!--::command::{JSON}::--><br>  - setvalue: オブジェクトに設定する値の一覧<br>    {type:データ型名, value:{キー:値,...}}<br>    戻り値への値設定を想定。指定無しならdefaultvalueを表示<br>  - embed: 他ファイルの内容を埋め込み<br>    {file:パス＋ファイル名}<br>- commentを<details>タグで表示<br><br>- undocumentedチェックを追加<br>- 和文の他、英文のテンプレートも追加<br>- 文法チェック<br>  - ＠class の後に余計な文字列があればエラー<br>- createSpecはシェルの起動時パラメータを引数とする関数に変更<br>- 独自タグ「history」対応
 
-## <a href="#createSpec_top"><span id="decision logic of docletType">🧾 decision logic of docletType</span></a>
+## <a href="#createSpec_top"><span id="decision logic of docletType">🧾 docletTypeの判定ロジック</span></a>
 
 以下第一レベルがdocletTypeとする文字列<br><br>- typedef<br>  kind === 'typedef'<br>- interface<br>  kind === 'interface'<br>- class<br>  kind === 'class'<br>  && (meta.code.type === "ClassDeclaration" || "ClassExpression")<br>- constructor<br>  kind === 'class'<br>  && meta?.code?.type === "MethodDefinition"<br>  && /＠constructor\b/.test(doclet.comment || "")<br>- method<br>  kind === "function"<br>  && meta?.code?.type === "MethodDefinition"<br>  && scope === "instance" または "static"<br>- function(グローバル関数) ※アロー関数を含む<br>  kind === 'function'<br>  && scope === 'global'<br>- innerFunc(関数内関数) ※アロー関数を含む<br>  kind === 'function'<br>  && scope === 'inner'<br>- description(説明文(＠name))<br>  meta.code が空<br>  && meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)<br>  && kindがtypedef/interface 以外<br>  && nameが存在<br>- objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br><br>  なおあくまでinterfaceなので、関数と同時にpropertiesも含む<br>  kind === 'function'<br>  && scope === 'instance'<br>- unknown(上記で判定不能)
 
-## <a href="#createSpec_top"><span id=""longname" naming rules">🧾 "longname" naming rules</span></a>
+## <a href="#createSpec_top"><span id=""longname" naming rules">🧾 docletType毎のlongname命名規則</span></a>
 
 - class: longnameそのまま使用<br>  "class: authClient"<br>- constructor: <br>  - [モジュール名].exports.[エクスポート名]#[メンバー名]<br>    "constructor: authClient.exports.authClient#constructor"<br>    "constructor: Schema.exports.Schema#constructor"<br>  - [モジュール名]#[エクスポート名]#[メンバー名]<br>    "constructor: cryptoClient#cryptoClient#constructor"<br>  - [エクスポート名]#[メンバー名]<br>    "constructor: DocletEx#constructor"<br>- description: @nameの文字列。英文表記が望ましい。longnameは空白ありだがanchorは'%20'に要変更<br>  "description: config information"<br>  "description: 開発工程・残課題"<br>- function: longnameそのまま使用<br>  "function: localFunc"<br>- innerFunc: 親関数~関数名<br>  "innerFunc: createSpec~listSource"<br>- method: クラス名[#\.]メソッド名(通常'#',staticは'.')<br>  "method: authClient#_withStore"<br>  "method: authClient#exec"<br>- objectFunc: 後掲「メソッド・内部関数内関数」参照<br>  ＠memberof 無し -> "innerFunc: <anonymous>~dummyFunc"<br>  ＠memberof encrypt -> "objectFunc: encrypt.dummyFunc"<br>  ＠memberof cryptoClient#encrypt -> "objectFunc: cryptoClient#encrypt.dummyFunc"<br>- typedef: [所属クラス名.]データ型名<br>  "typedef: authClientConfig"<br>  "typedef: Schema.TypeDef"<br><br># メソッド・内部関数内関数<br><br>- ＠memberof指定が無いと"<anonymous>"となる<br>- 適切に＠memberofを指定する<br>
 ```
