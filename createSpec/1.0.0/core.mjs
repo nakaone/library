@@ -1294,7 +1294,8 @@ async function createSpec(opt={}){
           v.list = [];
           for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
             v.c = this.map[v.d.children[v.i]];
-            if( v.c.docletType === 'unknown' ) continue;
+            // 解説記事またはdocletType不明はメソッド一覧から外す
+            if( ['description','unknown'].includes(v.c.docletType) ) continue;
             v.list.push({
               no:    v.i+1,
               name:  `<a href="#${v.c.familyTree}_top">${v.c.name}</a>`,
@@ -1320,7 +1321,7 @@ async function createSpec(opt={}){
           v.rv.push(v.r);
         }
 
-        dev.step(5); // 説明文
+        dev.step(5); // 説明文(concatenated)
         if( v.d.concatenated.length > 0 ){
           v.r = this.article({
             title: `🧾 ${v.d.name} 概説`,
@@ -1331,6 +1332,26 @@ async function createSpec(opt={}){
           });
           if( v.r instanceof Error ) throw v.r;
           v.rv.push(v.r);
+        }
+        // 解説記事(docletType="description")が子要素としてあれば追加
+        if( Object.hasOwn(v.d,'children') && v.d.children.length > 0 ){
+          // 一覧用のデータ作成
+          v.list = [];
+          for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
+            v.c = this.map[v.d.children[v.i]];
+            if( v.c.docletType === 'description' ){
+              // 記事の作成
+              v.r = this.article({
+                title: `🧾 ${v.c.name}`,
+                level: level+1,
+                url: `#${v.anchor}_top`,
+                anchor: v.c.name ?? '',
+                content: v.c.concatenated,
+              });
+              if( v.r instanceof Error ) throw v.r;
+              v.rv.push(v.r);
+            }
+          }
         }
 
         dev.step(6); // 引数
@@ -1378,7 +1399,8 @@ async function createSpec(opt={}){
         dev.step(8); // 個別メソッド、内部関数
         if( v.d.children && v.d.children.length > 0 ){
           for( v.i=0 ; v.i<v.d.children.length ; v.i++ ){
-            if( this.map[v.d.children[v.i]].docletType === 'unknown' ) continue;
+            // 解説記事またはdocletType不明は外す
+            if( ['description','unknown'].includes(this.map[v.d.children[v.i]].docletType) ) continue;
             v.r = this.makeDocletMD(v.d.children[v.i],level+1);
             if( v.r instanceof Error ) throw v.r;
             v.rv.push(v.r);
