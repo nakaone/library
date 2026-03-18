@@ -85,7 +85,7 @@ function detailedDesign {  # createSpecでJavaScriptソース(JSDoc)からMarkdo
   # ※ jsdoc実行時エラーを表示するため、標準エラー出力はリダイレクトしない
   node $createSpec $src/(client|common|server|lib)/**/*.(js|mjs) \
   -o $tmp/createSpec -r $tmp/DocletTree.json \
-  1> $tmp/createSpec.log 2> $tmp/createSpec.error.log
+  1> $tmp/createSpec/result.log 2> $tmp/createSpec/error.log
 
   # docルート直下文書用に相対パスを修正したheader.mdを用意
   cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/header.md

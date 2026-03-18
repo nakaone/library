@@ -12,9 +12,11 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - client/index.md: グローバル関数・クラス一覧のauthClientの概要がconcatenatedの1行目になっている
+  - lib/index.md 個別データ型定義Doclet.returns: DocletColDef型なのにリンクが無い
+  - lib/DocletEx.md メンバ一覧.properties: DocletColDef型なのにリンクが無い
   - common/authConfig.md: 継承元「Schema」にリンクが無い
   == 対応済 ==================================
+  - [bug] client/index.md: グローバル関数・クラス一覧のauthClientの概要がconcatenatedの1行目になっている
   - index.md: データ型定義のメンバ一覧、備考に設定値が無いのに列が表示される
   - 概要(label)先頭にある「名前：」は削除
   - クラス・グローバル関数の場所が分かりづらい

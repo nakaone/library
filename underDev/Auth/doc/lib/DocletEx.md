@@ -26,7 +26,7 @@
 
 # <span id="createSpec-DocletEx_top">🧩 DocletExクラス仕様書</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.382</p>jsdocから出力されるDocletに情報を付加したもの
+<p class="source">source: lib/createSpec.1_0_0.mjs line.415</p>jsdocから出力されるDocletに情報を付加したもの
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
 
@@ -38,7 +38,7 @@
 | uuid | string | 必須 | DocletExを一意に識別するためのUUID |
 | docletType | string | 必須 | Docletの種類。下記「docletTypeの判定ロジック」参照 |
 | parsed | Object.<string, string> | 必須 | Doclet内で定義されたタグの値<br>  例： parsed: {<br>    description:"method01: メソッドテスト", // string<br>    memberof:"class01", // string<br>    param:"{number} arg - method01の引数", // string<br>    returns:"{{qId:number,name:string}} NG: qId,name指定無しのObjectになる", // string<br>  } |
-| label | string | 必須 | 1行で簡潔に記述された概要説明<br>  ① JSDoc先頭の「/**」に続く文字列<br>  ② constructorは「(memberof.)constructor」<br>  ③ "＠name"に続く文字列<br>  ④ typdef, interface<br>  ⑤ description, classdescの先頭行(=concatenatedの先頭行)<br>  ⑥ v.doclet.longname<br>  ※ 上記に該当が無い場合、「(��ベル未設定)」 |
+| label | string | 必須 | 1行で簡潔に記述された概要説明<br>  ① JSDoc先頭の「/**」に続く文字列<br>  ② constructorは「(memberof.)constructor」<br>  ③ "＠name"に続く文字列<br>  ④ typdef, interface<br>  ⑤ description, classdescの先頭行(=concatenatedの先頭行)<br>  ⑥ v.doclet.longname<br>  ※ 上記に該当が無い場合、「(ラベル未設定)」 |
 | concatenated | string | 必須 | description,classdesc,exmapleを出現順に結合。MD出力用 |
 | properties | DocletColDef[] | 任意 | メンバ一覧 |
 | params | DocletColDef[] | 任意 | 引数。クラスの場合はconstructorの引数(※同上) |

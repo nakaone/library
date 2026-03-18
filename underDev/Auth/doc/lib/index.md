@@ -29,7 +29,7 @@
 | クラス/関数名 | 概要 |
 | :-- | :-- |
 | [ColumnDef](ColumnDef.md) | 論理テーブルに於ける項目定義 |
-| [createSpec](createSpec.md) | JavaScriptソース(JSDoc)からMarkdown仕様書を作成 |
+| [createSpec](createSpec.md) | JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成 |
 | [devTools](devTools.md) | 開発支援関係メソッド集 |
 | [DocletEx](DocletEx.md) | jsdocから出力されるDocletに情報を付加したもの |
 | [Schema](Schema.md) | DB・データ型構造定義オブジェクト |

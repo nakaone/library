@@ -8,37 +8,77 @@ import { devTools } from '../../devTools/3.2.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
 createSpec();
 
-/** 開発工程・残課題
- * @name 開発工程・残課題
- * @desc
- * 
- * - 埋込指示子対応：<!--::command::{JSON}::-->
- *   - setvalue: オブジェクトに設定する値の一覧
- *     {type:データ型名, value:{キー:値,...}}
- *     戻り値への値設定を想定。指定無しならdefaultvalueを表示
- *   - embed: 他ファイルの内容を埋め込み
- *     {file:パス＋ファイル名}
- * - commentを<details>タグで表示
- * 
- * - undocumentedチェックを追加
- * - 和文の他、英文のテンプレートも追加
- * - 文法チェック
- *   - ＠class の後に余計な文字列があればエラー
- * - createSpecはシェルの起動時パラメータを引数とする関数に変更
- * - 独自タグ「history」対応
- */
-
-/** createSpec: JavaScriptソース(JSDoc)からMarkdown仕様書を作成
- * @param {Object} opt 
+/** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
+ * - 使用方法はcf.useageに記載(オプション無し起動時にコンソール表示)
+ * @param {Object} [opt={}] - オプション設定
+ * @param {string} [opt.encode="utf-8"] - 入力ファイルのエンコード
+ * @param {string} [opt.jsdocJson="jsdoc.json"] - jsdocコマンド設定ファイル名
+ *   jsdoc.jsonとdummyフォルダはプログラム中で作成・削除される作業用。
+ *   詳細はDocletTree.execJSDoc参照
+ * @param {string} [opt.dummyDir="./dummy"] - jsdoc用の空フォルダ
  * @returns {void}
+ * 
+ * @prop {Object} pv - createSpec内の共有変数(public variables。class定義のメンバに相当)
+ *   `whois, arg, rv`はdevTools用、`r`他汎用変数は割愛
+ * @prop {string[]} pv.argv - `node createSpec`実行時の引数
+ * @prop {DocletTree} pv.tree - DocletTreeインスタンス
+ * @prop {Object} cf - createSpec動作設定情報(config)
+ *   command, useageの他、optのメンバを持つ(encode, jsdocJson, dummyDir)
+ * @prop {string} cf.command - jsdocコマンドへのパス文字列
+ * @prop {string} cf.useage - createSpec使用方法。起動時引数無しまたは'-h'指定時に表示
+ * 
+ * @description
+ * 
+ * # 用語集
+ * 
+ * - Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
+ *   `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
+ * - シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
+ * 
+ * # 参考資料
+ * 
+ * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
+ * 
+ * @history
+ * - rev.1.0.0 : 2026/01/31
+ *   specify.mjsを継承し、初版作成
  */
 async function createSpec(opt={}){
+
+  /** 開発工程・残課題
+   * @name Development process and remaining issues
+   * @memberof createSpec
+   * @desc
+   * 
+   * - 開発用スクリプトサンプル(test.sh等)
+   *   ```
+   *   node $createSpec $src/(client|common|server|lib)/**／*.(js|mjs) \
+   *                              最後のスラッシュは半角に戻す ^
+   *   -o $tmp/createSpec -r $tmp/DocletTree.json \
+   *   1> $tmp/createSpec/result.log 2> $tmp/createSpec/error.log
+   *   ```
+   * - 埋込指示子対応：<!--::command::{JSON}::-->
+   *   - setvalue: オブジェクトに設定する値の一覧
+   *     {type:データ型名, value:{キー:値,...}}
+   *     戻り値への値設定を想定。指定無しならdefaultvalueを表示
+   *   - embed: 他ファイルの内容を埋め込み
+   *     {file:パス＋ファイル名}
+   * - commentを<details>タグで表示
+   * 
+   * - undocumentedチェックを追加
+   * - 和文の他、英文のテンプレートも追加
+   * - 文法チェック
+   *   - ＠class の後に余計な文字列があればエラー
+   * - createSpecはシェルの起動時パラメータを引数とする関数に変更
+   * - 独自タグ「history」対応
+   */
+
   const pv = {whois:`createSpec`, arg:{}, rv:null};
   const cf = {  // jsdocコマンド動作環境整備関係(config)
-    encode: 'utf-8',  // 入力ファイルのエンコード
-    command: path.resolve('./node_modules/.bin/jsdoc'), // jsdocコマンド
+    encode: opt.encode ?? 'utf-8',  // 入力ファイルのエンコード
     jsdocJson: opt.jsdocJson ?? `jsdoc.json`,  // jsdocコマンド設定ファイル名
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
+    command: path.resolve('./node_modules/.bin/jsdoc'), // jsdocコマンド
     useage: `
       createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
       
@@ -496,7 +536,7 @@ async function createSpec(opt={}){
         }
         this.concatenated = this.concatenated.trim();
 
-        dev.step(6,{label:this.label,parsed:this.parsed});  // labelを設定
+        dev.step(6);  // labelを設定
         if( this.label !== '' ){
           dev.step(6.1);  // ① JSDoc先頭の「/**」に続く文字列(⇒step.5.11で設定済)
         } else if( this.docletType === 'constructor' ){
@@ -531,7 +571,7 @@ async function createSpec(opt={}){
         }
         this.label = this.label.trim();
 
-        dev.step(7,{label:this.label,parsed:this.parsed});  // properties
+        dev.step(7);  // properties
         if( Object.hasOwn(v.doclet,'properties') && v.doclet.properties.length > 0 ){
           v.doclet.properties.forEach(prop => {
             v.r = this.addRowToColumn(prop);
@@ -1703,6 +1743,7 @@ async function createSpec(opt={}){
 
       /**
        * @name 入力・出力・除外リスト作成
+       * @memberof listSource
        * @description
        * 
        * 起動時パラメータは以下の通り。
