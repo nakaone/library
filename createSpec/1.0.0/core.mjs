@@ -314,7 +314,7 @@ async function createSpec(opt={}){
    *   && meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
    *   && kindがtypedef/interface 以外
    *   && nameが存在
-   * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
+   * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照
    *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
    *   kind === 'function'
    *   && scope === 'instance'
@@ -455,7 +455,6 @@ async function createSpec(opt={}){
         dev.step(5);    // commentをパース、concatenatedを作成
         this.label = '';
         this.parsed = {};
-        this.concatenated = '';
         v.descTags = ['description','classdesc','example'];
         if( Object.hasOwn(doclet,'comment') && doclet.comment.length > 0 ){
           dev.step(5.1);  // ＠タグ毎に分割して{タグ名：内容}形式でv.tags配列に格納
@@ -485,29 +484,17 @@ async function createSpec(opt={}){
           }
 
           dev.step(5.2);  // 対象タグの説明文は出現順に、concatenatedに順次追加
-          v.text = '';
+          this.concatenated = '';
           v.tags.forEach(x => {
             // 出現したタグをthis.parsedに登録
             this.parsed[x.label] = (Object.hasOwn(this.parsed,x.label)
             ? (this.parsed[x.label] + '\n') : '') + x.text;
-            // 対象タグはv.textにも追加
-            if( v.descTags.includes(x.label) ) v.text += `\n${x.text}`;
+            // 対象タグはthis.concatenatedにも追加
+            if( v.descTags.includes(x.label) ) this.concatenated += `\n${x.text}`;
           });
 
-          dev.step(5.3);  // concatenatedの改行をbr化。但しソース部分は'\n'のままにする
-          v.lines = v.text.trim().split('\n');
-          this.concatenated = v.lines[0];
-          v.isSource = false; // ```〜```およびその内部ならtrue
-          for( v.i=1 ; v.i<v.lines.length ; v.i++ ){
-            if( /```/.test(v.lines[v.i]) ){
-              this.concatenated += '\n' + v.lines[v.i];
-              v.isSource = v.isSource ? false : true;
-            } else {
-              this.concatenated += (v.isSource ? '\n' : '<br>') + v.lines[v.i];
-            }
-          }
         } else {
-          dev.step(5.4);  // commentが無い場合、存在する@description,@classdesc,@example を設定
+          dev.step(5.3);  // commentが無い場合、存在する@description,@classdesc,@example を設定
           v.descTags.forEach(x => this.concatenated += (doclet[x] ?? ''));
         }
         this.concatenated = this.concatenated.trim();
@@ -1235,10 +1222,10 @@ async function createSpec(opt={}){
           level: level,
           url: '',
           anchor: `${v.anchor}_top`,
-          content: v.label,
+          content: v.label.trim(),
         });
         if( v.r instanceof Error ) throw v.r;
-        v.rv.push(v.r);
+        v.rv.push('',v.r);;
 
         dev.step(3); // メンバ一覧
         if( Object.hasOwn(v.d,'properties') && v.d.properties.length > 0 ){
@@ -1258,7 +1245,7 @@ async function createSpec(opt={}){
             content: v.r,
           });
           if( v.r instanceof Error ) throw v.r;
-          v.rv.push(v.r);
+          v.rv.push('',v.r);;
         }
 
         dev.step(4); // メソッド一覧
@@ -1291,20 +1278,30 @@ async function createSpec(opt={}){
             content: v.r,
           });
           if( v.r instanceof Error ) throw v.r;
-          v.rv.push(v.r);
+          v.rv.push('',v.r);;
         }
 
         dev.step(5); // 説明文(concatenated)
+        v.shiftLevel = str => {
+          v.lines = str.split('\n');
+          for( v.i=0 ; v.i<v.lines.length ; v.i++ ){
+            if( /^#/.test(v.lines[v.i]) ){
+              // Markdownのタイトル行のレベルをシフト
+              v.lines[v.i] = '#'.repeat(level+1) + v.lines[v.i];
+            }
+          }
+          return v.lines.join('\n').trim();
+        }
         if( v.d.concatenated.length > 0 ){
           v.r = this.article({
             title: `🧾 ${v.d.name} 概説`,
             level: level+1,
             url: `#${v.anchor}_top`,
             anchor: `${v.anchor}_desc`,
-            content: v.d.concatenated.trim(),
+            content: v.shiftLevel(v.d.concatenated),
           });
           if( v.r instanceof Error ) throw v.r;
-          v.rv.push(v.r);
+          v.rv.push('',v.r);;
         }
         // 解説記事(docletType="description")が子要素としてあれば追加
         if( Object.hasOwn(v.d,'children') && v.d.children.length > 0 ){
@@ -1319,10 +1316,10 @@ async function createSpec(opt={}){
                 level: level+1,
                 url: `#${v.anchor}_top`,
                 anchor: v.c.name ?? '',
-                content: v.c.concatenated,
+                content: v.shiftLevel(v.c.concatenated),
               });
               if( v.r instanceof Error ) throw v.r;
-              v.rv.push(v.r);
+              v.rv.push('',v.r);;
             }
           }
         }
@@ -1345,7 +1342,7 @@ async function createSpec(opt={}){
             content: v.r,
           });
           if( v.r instanceof Error ) throw v.r;
-          v.rv.push(v.r);
+          v.rv.push('',v.r);;
         }
 
         dev.step(7); // 戻り値
@@ -1366,7 +1363,7 @@ async function createSpec(opt={}){
             content: v.r,
           });
           if( v.r instanceof Error ) throw v.r;
-          v.rv.push(v.r);
+          v.rv.push('',v.r);;
         }
 
         dev.step(8); // 個別メソッド、内部関数
@@ -1376,12 +1373,12 @@ async function createSpec(opt={}){
             if( ['description','unknown'].includes(this.map[v.d.children[v.i]].docletType) ) continue;
             v.r = this.makeDocletMD(v.d.children[v.i],level+1);
             if( v.r instanceof Error ) throw v.r;
-            v.rv.push(v.r);
+            v.rv.push('',v.r);;
           }
         }
 
         dev.end();
-        return v.rv.join('\n').trim();
+        return v.rv.join('\n').replaceAll(/\n\n+/g,'\n\n').trim();
 
       } catch (e) { return dev.error(e); }
     }
@@ -1468,7 +1465,7 @@ async function createSpec(opt={}){
           content: v.r,
         });
         if( v.r instanceof Error ) throw v.r;
-        v.rv.push(v.r);
+        v.rv.push('',v.r);;
 
         dev.step(4);  // 個別データ型定義
         v.rv.push('',`# 個別データ型定義`)

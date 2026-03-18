@@ -251,6 +251,7 @@
 | [cryptoClient](cryptoClient.md) | クライアント側の暗号化・署名検証 |
 | [localFunc](localFunc.md) | 【開発用】処理要求発行 |
 
+
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |

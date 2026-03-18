@@ -51,6 +51,7 @@
 ## <a href="#cryptoServer_top"><span id="cryptoServer_desc">🧾 cryptoServer 概説</span></a>
 
 サーバ側の暗号化・署名検証
+
 ## <span id="cryptoServer-constructor_top">🧩 constructor()</span>
 
 constructor
@@ -60,6 +61,7 @@ constructor
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
 | cf | authServerConfig | 必須 | authServer設定値 |
+
 ## <span id="cryptoServer-encrypt_top">🧩 encrypt()</span>
 
 処理結果を暗号化＋署名
@@ -76,6 +78,7 @@ constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | encryptedResponse |  |
+
 ## <span id="cryptoServer-decrypt_top">🧩 decrypt()</span>
 
 暗号化された処理要求を復号・署名検証
@@ -92,6 +95,7 @@ constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | authRequest |  |
+
 ## <span id="cryptoServer-generateKeys_top">🧩 generateKeys()</span>
 
 PEM形式のRSA鍵ペアを生成
@@ -111,16 +115,19 @@ PEM形式のRSA鍵ペアを生成
 | データ型 | 説明 |
 | :-- | :-- |
 | Object | 生成された鍵ペア |
+
 ## <span id="cryptoServer-generateAndSave_top">🧩 generateAndSave()</span>
 
 鍵を生成し、直ちにScriptPropertiesに保存する
+
 ## <span id="cryptoServer-initialize_top">🧩 initialize()</span>
 
 cryptoServerインスタンス作成
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_desc">🧾 initialize 概説</span></a>
 
-- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
+- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_param">▶️ initialize 引数</span></a>
 

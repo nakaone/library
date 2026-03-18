@@ -51,6 +51,7 @@
 ## <a href="#authServer_top"><span id="authServer_desc">🧾 authServer 概説</span></a>
 
 サーバ側中核クラス
+
 ## <span id="authServer-constructor_top">🧩 constructor()</span>
 
 constructor
@@ -60,13 +61,15 @@ constructor
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
 | config | authConfig | 必須 | authClient/Server共通設定値オブジェクト |
+
 ## <span id="authServer-authLogger_top">🧩 authLogger()</span>
 
 監査ログ／エラーログを自動振り分けで出力
 
 ### <a href="#authServer-authLogger_top"><span id="authServer-authLogger_desc">🧾 authLogger 概説</span></a>
 
-- 監査ログ：authAuditLog型<br>- エラーログ：authErrorLog型
+- 監査ログ：authAuditLog型
+- エラーログ：authErrorLog型
 
 ### <a href="#authServer-authLogger_top"><span id="authServer-authLogger_param">▶️ authLogger 引数</span></a>
 
@@ -79,6 +82,7 @@ constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | authResponse |  |
+
 ## <span id="authServer-authResponse_top">🧩 authResponse()</span>
 
 authResponse型のオブジェクトを作成
@@ -94,16 +98,19 @@ authResponse型のオブジェクトを作成
 | データ型 | 説明 |
 | :-- | :-- |
 | authResponse |  |
+
 ## <span id="authServer-dumpProperties_top">🧩 dumpProperties()</span>
 
 ScriptPropertiesの登録状況をコンソールに表示 (開発用)
+
 ## <span id="authServer-initialize_top">🧩 initialize()</span>
 
 authServerインスタンス作成
 
 ### <a href="#authServer-initialize_top"><span id="authServer-initialize_desc">🧾 initialize 概説</span></a>
 
-- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
+- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
 
 ### <a href="#authServer-initialize_top"><span id="authServer-initialize_param">▶️ initialize 引数</span></a>
 
@@ -116,6 +123,7 @@ authServerインスタンス作成
 | データ型 | 説明 |
 | :-- | :-- |
 | authServer \| Error |  |
+
 ## <span id="authServer-exec_top">🧩 exec()</span>
 
 処理要求に対するサーバ側中核処理
@@ -131,6 +139,7 @@ authServerインスタンス作成
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="authServer-resetSPkey_top">🧩 resetSPkey()</span>
 
 緊急時、サーバ側鍵ペアを更新
@@ -150,6 +159,7 @@ authServerインスタンス作成
 | データ型 | 説明 |
 | :-- | :-- |
 | null |  |
+
 ## <span id="authServer-setupEnvironment_top">🧩 setupEnvironment()</span>
 
 初回実行時に必要なOAuth権限を一括取得

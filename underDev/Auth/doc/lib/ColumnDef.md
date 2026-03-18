@@ -50,6 +50,7 @@
 ## <a href="#ColumnDef_top"><span id="ColumnDef_desc">🧾 ColumnDef 概説</span></a>
 
 - name~defaultはインスタンス生成時に指定、allowedColumnTypes以下は自動生成
+
 ## <span id="ColumnDef-constructor_top">🧩 constructor()</span>
 
 ColumnDef.constructor

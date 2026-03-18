@@ -60,7 +60,18 @@
 
 ## <a href="#devTools_top"><span id="devTools_desc">🧾 devTools 概説</span></a>
 
-function xxx(o){<br>  const v = {whois:'xxx',arg:{o},rv:null};<br>  const dev = new devTools(v); // 従来のdev.startを代替<br>  try {<br>    dev.step(1);<br>    ...<br>    dev.end(); // 省略可<br>  } catch(e) {<br>    return dev.error(e);<br>  }<br>}
+function xxx(o){
+  const v = {whois:'xxx',arg:{o},rv:null};
+  const dev = new devTools(v); // 従来のdev.startを代替
+  try {
+    dev.step(1);
+    ...
+    dev.end(); // 省略可
+  } catch(e) {
+    return dev.error(e);
+  }
+}
+
 ## <span id="devTools-constructor_top">🧩 constructor()</span>
 
 constructor
@@ -71,9 +82,11 @@ constructor
 | :-- | :-- | :-- | :-- |
 | v | Object | {} | 関数・メソッド内汎用変数 |
 | opt | devToolsOpt | {} |  |
+
 ## <span id="devTools-devToolsError_top">🧩 devToolsError()</span>
 
 devTools専用拡張エラークラス
+
 ## <span id="devTools-end_top">🧩 end()</span>
 
 正常終了時処理
@@ -89,6 +102,7 @@ devTools専用拡張エラークラス
 | データ型 | 説明 |
 | :-- | :-- |
 | void |  |
+
 ## <span id="devTools-error_top">🧩 error()</span>
 
 異常終了時処理
@@ -104,13 +118,16 @@ devTools専用拡張エラークラス
 | データ型 | 説明 |
 | :-- | :-- |
 | Error |  |
+
 ## <span id="devTools-extract_top">🧩 extract()</span>
 
 オブジェクトまたはその配列から指定メンバを抽出したオブジェクトを作成
 
 ### <a href="#devTools-extract_top"><span id="devTools-extract_desc">🧾 extract 概説</span></a>
 
-- `dev.extract(doclet,"{longname}")`<br>- `dev.extract(doclet,"[x => Object.hasOwn(x,'kind') && x.kind === 'class']:"`<br><br>  `+ "{longname,properties:{type:{names}}}")`
+- `dev.extract(doclet,"{longname}")`
+- `dev.extract(doclet,"[x => Object.hasOwn(x,'kind') && x.kind === 'class']:"`<br>
+  `+ "{longname,properties:{type:{names}}}")`
 
 ### <a href="#devTools-extract_top"><span id="devTools-extract_param">▶️ extract 引数</span></a>
 
@@ -124,6 +141,7 @@ devTools専用拡張エラークラス
 | データ型 | 説明 |
 | :-- | :-- |
 | Object \| Object[] \| Error | 処理の結果新たに作成されたオブジェクト |
+
 ## <span id="devTools-finisher_top">🧩 finisher()</span>
 
 end/error共通の終了時処理
@@ -139,6 +157,7 @@ end/error共通の終了時処理
 | データ型 | 説明 |
 | :-- | :-- |
 | void |  |
+
 ## <span id="devTools-formatObject_top">🧩 formatObject()</span>
 
 オブジェクトの各メンバーを「メンバ名: 値 // データ型」の形式で再帰的に整形する
@@ -155,13 +174,32 @@ end/error共通の終了時処理
 | データ型 | 説明 |
 | :-- | :-- |
 | string | 整形された文字列 |
+
 ## <span id="devTools-parseStructure_top">🧩 parseStructure()</span>
 
 メンバ名・抽出条件指定文字列をオブジェクト化(extractの前処理)
 
 ### <a href="#devTools-parseStructure_top"><span id="devTools-parseStructure_desc">🧾 parseStructure 概説</span></a>
 
-- "{メンバ名＋抽出条件:{子要素}}"<br>- 子要素は上記パターンで再帰的に定義<br>- 親子関係だけに絞る({name,filter,children}形式にしない)<br>- 子要素が存在しない場合は空オブジェクト<br>- 抽出条件はメンバ名の後ろに"[〜]"で付記<br>- メンバ名・抽出条件には空白文字が存在<br><br><br>入力(文字列)："{longname,meta[x=>Object.hasOwn(x,'code')]:{range,type:{name}},kind}"<br>出力(オブジェクト)：<br>{<br>  "longname":{},<br>  "meta[x=>Object.hasOwn(x,'code')]": {<br>    "range": {},<br>    "type": {<br>      "name":{}<br>    }<br>  },<br>  "kind":{}<br>}
+- "{メンバ名＋抽出条件:{子要素}}"
+- 子要素は上記パターンで再帰的に定義
+- 親子関係だけに絞る({name,filter,children}形式にしない)
+- 子要素が存在しない場合は空オブジェクト
+- 抽出条件はメンバ名の後ろに"[〜]"で付記
+- メンバ名・抽出条件には空白文字が存在
+
+入力(文字列)："{longname,meta[x=>Object.hasOwn(x,'code')]:{range,type:{name}},kind}"
+出力(オブジェクト)：
+{
+  "longname":{},
+  "meta[x=>Object.hasOwn(x,'code')]": {
+    "range": {},
+    "type": {
+      "name":{}
+    }
+  },
+  "kind":{}
+}
 
 ### <a href="#devTools-parseStructure_top"><span id="devTools-parseStructure_param">▶️ parseStructure 引数</span></a>
 
@@ -174,13 +212,16 @@ end/error共通の終了時処理
 | データ型 | 説明 |
 | :-- | :-- |
 | Object.<string, Object> |  |
+
 ## <span id="devTools-step_top">🧩 step()</span>
 
 関数内の進捗状況管理＋変数のダンプ
 
 ### <a href="#devTools-step_top"><span id="devTools-step_desc">🧾 step 概説</span></a>
 
-123行目でClassNameが"cryptoClient"の場合のみv.hogeを表示<br>  dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');<br>  ※ 99はデバック、0.123は行番号の意で設定
+123行目でClassNameが"cryptoClient"の場合のみv.hogeを表示
+  dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');
+  ※ 99はデバック、0.123は行番号の意で設定
 
 ### <a href="#devTools-step_top"><span id="devTools-step_param">▶️ step 引数</span></a>
 
@@ -195,6 +236,7 @@ end/error共通の終了時処理
 | データ型 | 説明 |
 | :-- | :-- |
 | void |  |
+
 ## <span id="devTools-toLocale_top">🧩 toLocale()</span>
 
 ログ出力用時刻文字列整形

@@ -35,6 +35,7 @@
 | [Schema](Schema.md) | DB・データ型構造定義オブジェクト |
 | [TableDef](TableDef.md) | 論理テーブル構造定義 |
 
+
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
@@ -43,7 +44,7 @@
 | 2 | [Doclet](#Doclet) | `jsdoc -X`で配列で返されるオブジェクト |
 | 3 | [DocletColDef](#DocletColDef) | Doclet.properties/params/returnsの要素(メンバ)定義情報 |
 | 4 | [DocletColRow](#DocletColRow) | データ項目一覧作成用追加情報 |
-| 5 | [DocletTreeFile](#DocletTreeFile) | 個別入力ファイル情報 |
+| 5 | [DocletTreeFile](#DocletTreeFile) | ��別入力ファイル情報 |
 | 6 | [DocletTreeOpt](#DocletTreeOpt) | オプション設定値 |
 | 7 | [DocletTreeSource](#DocletTreeSource) | 統合版入力ファイル(JSソース)情報 |
 | 8 | [DocletTreeSymbol](#DocletTreeSymbol) | クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報 |

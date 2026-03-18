@@ -63,7 +63,11 @@
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_desc">🧾 DocletEx 概説</span></a>
 
-メンバ各値の設定箇所は以下の通り。<br>- opt    ~ returns   : DocletEx.constructor()<br>- parent ~ familyTree: DocletTree.linkage()<br>- unique ~ commentId : DocletTree.registration()
+メンバ各値の設定箇所は以下の通り。
+- opt    ~ returns   : DocletEx.constructor()
+- parent ~ familyTree: DocletTree.linkage()
+- unique ~ commentId : DocletTree.registration()
+
 ## <span id="createSpec-DocletEx-constructor_top">🧩 constructor()</span>
 
 DocletEx.constructor
@@ -74,6 +78,7 @@ DocletEx.constructor
 | :-- | :-- | :-- | :-- |
 | doclet | Doclet | 必須 |  |
 | opt | Object | {} | オプション設定値 |
+
 ## <span id="createSpec-DocletEx-addRowToColumn_top">🧩 addRowToColumn()</span>
 
 データ項目情報から一覧作成用情報を作成
@@ -93,6 +98,7 @@ DocletEx.constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | DocletColRow \| Error |  |
+
 ## <span id="createSpec-DocletEx-determineType_top">🧩 determineType()</span>
 
 Docletの型を判定
@@ -114,6 +120,7 @@ Docletの型を判定
 | データ型 | 説明 |
 | :-- | :-- |
 | string \| Error | 「docletTypeの判定ロジック」参照 |
+
 ### <span id="createSpec-DocletEx-determineType-dummyFunc_top">🧩 dummyFunc()</span>
 
 テスト用ダミー関数

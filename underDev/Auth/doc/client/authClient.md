@@ -53,7 +53,10 @@
 
 ## <a href="#authClient_top"><span id="authClient_desc">🧾 authClient 概説</span></a>
 
-- 初期化の際に非同期処理が必要なため、インスタンス作成は<br>  `new authClient()`ではなく`authClient.initialize()`で行う<br><br>**インスタンス作成のサンプル**
+- 初期化の際に非同期処理が必要なため、インスタンス作成は
+  `new authClient()`ではなく`authClient.initialize()`で行う
+
+**インスタンス作成のサンプル**
 ```js
 async function onLoad(){
   const v = {whois:`onLoad`, rv:null};
@@ -77,6 +80,7 @@ async function onLoad(){
   } catch (e) { return dev.error(e); }
 }
 ```
+
 ## <span id="authClient-constructor_top">🧩 constructor()</span>
 
 constructor
@@ -86,6 +90,7 @@ constructor
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
 | config | Object | 必須 | authClient/Server共通設定情報 |
+
 ## <span id="authClient-_exportIfCryptoKey_top">🧩 _exportIfCryptoKey()</span>
 
 CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
@@ -102,6 +107,7 @@ CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
 | データ型 | 説明 |
 | :-- | :-- |
 | string |  |
+
 ## <span id="authClient-_importIfCryptoKey_top">🧩 _importIfCryptoKey()</span>
 
 IndexedDBに保存されたRSA鍵をCryptoKey型に変換
@@ -118,6 +124,7 @@ IndexedDBに保存されたRSA鍵をCryptoKey型に変換
 | データ型 | 説明 |
 | :-- | :-- |
 | CryptoKey |  |
+
 ## <span id="authClient-_withStore_top">🧩 _withStore()</span>
 
 IndexedDB操作共通ラッパ
@@ -127,6 +134,7 @@ IndexedDB操作共通ラッパ
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
 | mode | 'readonly' \| 'readwrite' | 必須 | param {(store: IDBObjectStore)=>Promise<any>} fn |
+
 ## <span id="authClient-exec_top">🧩 exec()</span>
 
 ローカル関数の処理要求を処理
@@ -148,6 +156,7 @@ IndexedDB操作共通ラッパ
 | データ型 | 説明 |
 | :-- | :-- |
 | any \| Error | 処理結果 |
+
 ## <span id="authClient-fetch_top">🧩 fetch()</span>
 
 サーバ側APIの呼び出し
@@ -163,6 +172,7 @@ IndexedDB操作共通ラッパ
 | データ型 | 説明 |
 | :-- | :-- |
 | authResponse \| Error | 処理結果 |
+
 ## <span id="authClient-getIndexedDB_top">🧩 getIndexedDB()</span>
 
 IndexedDBの全てのキー・値をオブジェクト形式で取得
@@ -178,13 +188,15 @@ IndexedDBの全てのキー・値をオブジェクト形式で取得
 | データ型 | 説明 |
 | :-- | :-- |
 | Object.<string, any> | this.idbに格納したIndexedDBの内容({キー:値}形式) |
+
 ## <span id="authClient-initialize_top">🧩 initialize()</span>
 
 authClientインスタンス作成
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_desc">🧾 initialize 概説</span></a>
 
-- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行<br>- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
+- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
 
 ### <a href="#authClient-initialize_top"><span id="authClient-initialize_param">▶️ initialize 引数</span></a>
 
@@ -197,6 +209,7 @@ authClientインスタンス作成
 | データ型 | 説明 |
 | :-- | :-- |
 | authClient \| Error |  |
+
 ## <span id="authClient-setIndexedDB_top">🧩 setIndexedDB()</span>
 
 IndexedDBの更新(upsert)

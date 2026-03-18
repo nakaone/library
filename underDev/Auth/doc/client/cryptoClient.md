@@ -47,6 +47,7 @@
 ## <a href="#cryptoClient_top"><span id="cryptoClient_desc">🧾 cryptoClient 概説</span></a>
 
 クライアント側の暗号化・署名検証
+
 ## <span id="cryptoClient-constructor_top">🧩 constructor()</span>
 
 constructor
@@ -57,6 +58,7 @@ constructor
 | :-- | :-- | :-- | :-- | :-- |
 | idb | authIndexedDB | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数 | CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
 | RSAbits | number | 必須 | RSA鍵長 |  |
+
 ## <span id="cryptoClient-encrypt_top">🧩 encrypt()</span>
 
 処理要求を暗号化＋署名
@@ -78,6 +80,7 @@ constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | encryptedRequest |  |
+
 ### <span id="cryptoClient-encrypt-dummyFunc_top">🧩 dummyFunc()</span>
 
 テスト用ダミー
@@ -94,6 +97,7 @@ constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | number |  |
+
 ## <span id="cryptoClient-decrypt_top">🧩 decrypt()</span>
 
 暗号化された処理結果を復号・署名検証
@@ -109,6 +113,7 @@ constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | authResponse |  |
+
 ## <span id="cryptoClient-generateKeys_top">🧩 generateKeys()</span>
 
 RSA鍵ペアを生成

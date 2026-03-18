@@ -50,6 +50,7 @@
 ## <a href="#authConfig_top"><span id="authConfig_desc">🧾 authConfig 概説</span></a>
 
 クライアント・サーバ共通設定情報
+
 ## <span id="authConfig-constructor_top">🧩 constructor()</span>
 
 authConfig.constructor

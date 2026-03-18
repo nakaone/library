@@ -51,6 +51,7 @@
 ## <a href="#TableDef_top"><span id="TableDef_desc">🧾 TableDef 概説</span></a>
 
 - name~colsはインスタンス生成時に指定、header以下は自動生成
+
 ## <span id="TableDef-constructor_top">🧩 constructor()</span>
 
 TableDef.constructor
@@ -67,6 +68,7 @@ TableDef.constructor
 | データ型 | 説明 |
 | :-- | :-- |
 | TableDef \| Error |  |
+
 ## <span id="TableDef-factory_top">🧩 factory()</span>
 
 論理テーブル構造定義を基に実オブジェクトを生成

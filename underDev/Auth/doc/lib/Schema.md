@@ -48,7 +48,9 @@
 
 ## <a href="#Schema_top"><span id="Schema_desc">🧾 Schema 概説</span></a>
 
-- 各種アプリで使用するテーブル・データ型を宣言<br>- 各種アプリでは本クラスを拡張し、configとすることを想定<br><br>
+- 各種アプリで使用するテーブル・データ型を宣言
+- 各種アプリでは本クラスを拡張し、configとすることを想定
+
 ```
 {
   name: 'camp2025',
@@ -63,6 +65,7 @@
   },
 },
 ```
+
 ## <span id="Schema-constructor_top">🧩 constructor()</span>
 
 Schema.constructor

@@ -30,6 +30,7 @@
 | :-- | :-- |
 | [authConfig](authConfig.md) | クライアント・サーバ共通設定情報 |
 
+
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |

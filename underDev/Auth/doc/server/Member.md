@@ -47,6 +47,7 @@
 | 13 | <a href="#Member-setMember_top">setMember</a> | 指定メンバ情報をmemberListシートに保存 |
 | 14 | <a href="#Member-unfreeze_top">unfreeze</a> | 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除 |
 | 15 | <a href="#Member-updateCPkey_top">updateCPkey</a> | 対象メンバ・デバイスの公開鍵を更新 |
+
 ## <span id="Member-constructor_top">🧩 constructor()</span>
 
 該当メンバのMemberインスタンス作成
@@ -61,6 +62,7 @@
 | :-- | :-- | :-- | :-- |
 | config | authServerConfig | 必須 | authServerの設定値 |
 | request | authRequest | 必須 | 処理要求 |
+
 ## <span id="Member-addTrial_top">🧩 addTrial()</span>
 
 新しい試行を登録し、メンバにパスコード通知メールを発信
@@ -76,6 +78,7 @@
 | データ型 | 説明 |
 | :-- | :-- |
 | authResponse \| Error |  |
+
 ## <span id="Member-checkPasscode_top">🧩 checkPasscode()</span>
 
 認証時のパスコードチェック
@@ -95,6 +98,7 @@
 | データ型 | 説明 |
 | :-- | :-- |
 | authResponse \| Error |  |
+
 ## <span id="Member-getMember_top">🧩 getMember()</span>
 
 指定メンバの情報をmemberListシートから取得
@@ -110,13 +114,15 @@
 | データ型 | 説明 |
 | :-- | :-- |
 | Member \| Error | いまここ：元は"authResponse"だったが、"Member"の方がベター？ |
+
 ## <span id="Member-judgeMember_top">🧩 judgeMember()</span>
 
 加入審査画面から審査結果入力＋結果通知
 
 ### <a href="#Member-judgeMember_top"><span id="Member-judgeMember_desc">🧾 judgeMember 概説</span></a>
 
-加入審査画面を呼び出し、管理者が記入した結果をmemberListに登録、審査結果をメンバに通知<br>memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
+加入審査画面を呼び出し、管理者が記入した結果をmemberListに登録、審査結果をメンバに通知
+memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
 
 ### <a href="#Member-judgeMember_top"><span id="Member-judgeMember_param">▶️ judgeMember 引数</span></a>
 
@@ -129,6 +135,7 @@
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="Member-judgeStatus_top">🧩 judgeStatus()</span>
 
 指定メンバ・デバイスの状態を状態決定表により判定
@@ -144,15 +151,19 @@
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="Member-MemberDevice_top">🧩 MemberDevice()</span>
 
 Member#MemberDevice
+
 ## <span id="Member-MemberLog_top">🧩 MemberLog()</span>
 
 Member#MemberLog
+
 ## <span id="Member-MemberProfile_top">🧩 MemberProfile()</span>
 
 Member#MemberProfile
+
 ## <span id="Member-reissuePasscode_top">🧩 reissuePasscode()</span>
 
 パスコードを再発行する
@@ -168,6 +179,7 @@ Member#MemberProfile
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="Member-removeMember_top">🧩 removeMember()</span>
 
 登録中メンバをアカウント削除、または加入禁止にする
@@ -187,6 +199,7 @@ Member#MemberProfile
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="Member-restoreMember_top">🧩 restoreMember()</span>
 
 加入禁止(論理削除)されているメンバを復活させる
@@ -206,6 +219,7 @@ Member#MemberProfile
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="Member-setMember_top">🧩 setMember()</span>
 
 指定メンバ情報をmemberListシートに保存
@@ -225,13 +239,16 @@ Member#MemberProfile
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="Member-unfreeze_top">🧩 unfreeze()</span>
 
 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除
 
 ### <a href="#Member-unfreeze_top"><span id="Member-unfreeze_desc">🧾 unfreeze 概説</span></a>
 
-- 引数でmemberIdが指定されなかった場合、凍結中デバイス一覧の要求と看做す<br>- deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス全てを対象とする<br>- memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
+- 引数でmemberIdが指定されなかった場合、凍結中デバイス一覧の要求と看做す
+- deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス全てを対象とする
+- memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
 
 ### <a href="#Member-unfreeze_top"><span id="Member-unfreeze_param">▶️ unfreeze 引数</span></a>
 
@@ -244,6 +261,7 @@ Member#MemberProfile
 | データ型 | 説明 |
 | :-- | :-- |
 | null \| Error | 戻り値 |
+
 ## <span id="Member-updateCPkey_top">🧩 updateCPkey()</span>
 
 対象メンバ・デバイスの公開鍵を更新
