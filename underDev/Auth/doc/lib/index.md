@@ -35,7 +35,6 @@
 | [Schema](Schema.md) | DB・データ型構造定義オブジェクト |
 | [TableDef](TableDef.md) | 論理テーブル構造定義 |
 
-
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
@@ -51,8 +50,9 @@
 
 # 個別データ型定義
 
-
 ## <a href="#typedefList"><span id="devToolsOpt">"devToolsOpt" データ型定義</span></a>
+
+<p class="source">source: lib/devTools.3_2_0.mjs line.1</p>
 
 オプション設定値
 
@@ -63,8 +63,9 @@
 | footer | boolean | false | 実行結果(startTime,endTime,elaps)を出力するならtrue |
 | maxDepth | number | 10 | 再帰呼出時の最深階層数 |
 
-
 ## <a href="#typedefList"><span id="Doclet">"Doclet" データ型定義</span></a>
+
+<p class="source">source: lib/createSpec.1_0_0.mjs line.175</p>
 
 `jsdoc -X`で配列で返されるオブジェクト
 
@@ -108,8 +109,9 @@
 | type | Object | 必須 | ＠type/＠param/＠returns/＠property等から得られた型情報<br>  プリミティブ・Union・配列・オブジェクトなど |
 | type.names | string[] | 必須 | データ型名の配列<br>  `{number\|string}`等、'\|'で区切られたUnion型の場合は複数になる |
 
-
 ## <a href="#typedefList"><span id="DocletColDef">"DocletColDef" データ型定義</span></a>
+
+<p class="source">source: lib/createSpec.1_0_0.mjs line.153</p>
 
 Doclet.properties/params/returnsの要素(メンバ)定義情報
 
@@ -127,8 +129,9 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 | optional | boolean | 必須 | trueの場合は任意項目 |
 | row | <a href="../lib/index.md#DocletColRow">DocletColRow</a> | 必須 | DocletEx.addRowToColumnで追加される項目情報 |
 
-
 ## <a href="#typedefList"><span id="DocletColRow">"DocletColRow" データ型定義</span></a>
+
+<p class="source">source: lib/createSpec.1_0_0.mjs line.144</p>
 
 データ項目一覧作成用追加情報
 
@@ -140,8 +143,9 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 | desc | string | 必須 | 説明 |
 | note | string | 必須 | 備考 |
 
-
 ## <a href="#typedefList"><span id="DocletTreeFile">"DocletTreeFile" データ型定義</span></a>
+
+<p class="source">source: lib/createSpec.1_0_0.mjs line.676</p>
 
 個別入力ファイル情報
 
@@ -153,8 +157,9 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 | content | string | 必須 | ファイルの内容 |
 | jsdoc | <a href="../lib/index.md#Doclet">Doclet</a>[] | 必須 | `jsdoc -X`の実行結果オブジェクト |
 
-
 ## <a href="#typedefList"><span id="DocletTreeOpt">"DocletTreeOpt" データ型定義</span></a>
+
+<p class="source">source: lib/createSpec.1_0_0.mjs line.711</p>
 
 オプション設定値
 
@@ -169,8 +174,9 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 | dummyDir | string | "./dummy" | ダミーディレクトリ名 |
 | jsdocTarget | string | ".+\\.(js|mjs|gs|txt)$" | jsdoc処理対象ファイル名の正規表現 |
 
-
 ## <a href="#typedefList"><span id="DocletTreeSource">"DocletTreeSource" データ型定義</span></a>
+
+<p class="source">source: lib/createSpec.1_0_0.mjs line.686</p>
 
 統合版入力ファイル(JSソース)情報
 
@@ -182,8 +188,9 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 | files | <a href="../lib/index.md#DocletTreeFile">DocletTreeFile</a>[] | [] | 対象ファイルの情報 |
 | research | string | 任意 | 調査結果ファイル名(=DocletTreeのJSON) |
 
-
 ## <a href="#typedefList"><span id="DocletTreeSymbol">"DocletTreeSymbol" データ型定義</span></a>
+
+<p class="source">source: lib/createSpec.1_0_0.mjs line.703</p>
 
 クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
 

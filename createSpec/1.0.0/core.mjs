@@ -1373,8 +1373,9 @@ async function createSpec(opt={}){
           }
         }
 
-        dev.end();
-        return v.rv.join('\n').replaceAll(/\n\n+/g,'\n\n').trim();
+        v.rv = v.rv.join('\n').replaceAll(/\n\n+/g,'\n\n').trim();
+        dev.end(); // 終了処理
+        return v.rv;
 
       } catch (e) { return dev.error(e); }
     }
@@ -1486,9 +1487,22 @@ async function createSpec(opt={}){
           v.r = DocletTree.makeTable(v.data,v.opt);
           if( v.r instanceof Error ) throw v.r;
 
-          dev.step(3.2);  // 説明文を追加
-          if( Object.hasOwn(doclet,'label') && doclet.label.length > 0 )
-            v.r = doclet.label + '\n\n' + v.r;
+          dev.step(3.2);  // 説明文・出典を追加
+          v.content = `<p class="source">source: ${
+            doclet.unique ?? ''}${
+            doclet.meta?.filename ?? doclet.basename} ${
+            typeof doclet.meta?.lineno === 'number' ? `line.${doclet.meta.lineno}` : ''
+          }</p>\n\n${doclet.label ? (doclet.label+'\n') : ''}\n${v.r}\n\n`;
+          /*
+          v.content = (doclet.label ? (doclet.label+'\n') : '')
+          + `<p class="source">source: ${
+            doclet.unique ?? ''}${
+            doclet.meta?.filename ?? doclet.basename} ${
+            typeof doclet.meta?.lineno === 'number' ? `line.${doclet.meta.lineno}` : ''
+          }</p>\n\n` + v.r;
+          */
+          //if( Object.hasOwn(doclet,'label') && doclet.label.length > 0 )
+          //  v.content = doclet.label + '\n\n' + v.r;
 
           dev.step(3.3);  // 記事作成
           v.r = this.article({
@@ -1496,13 +1510,13 @@ async function createSpec(opt={}){
             level: 2,
             url: '#typedefList',
             anchor: `${doclet.name}`,
-            content: v.r,
+            content: v.content,
           });
           if( v.r instanceof Error ) throw v.r;
           v.rv.push('',v.r);
         });
 
-        v.rv = v.rv.join('\n');
+        v.rv = v.rv.join('\n').replaceAll(/\n\n+/g,'\n\n').trim();
         dev.end(); // 終了処理
         return v.rv;
       } catch (e) { return dev.error(e); }

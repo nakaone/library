@@ -264,7 +264,6 @@ const menu22 = () => asv.resetSPkey();
 | [cryptoServer](cryptoServer.md) | サーバ側の暗号化・署名検証 |
 | [Member](Member.md) | Member |
 
-
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
@@ -283,8 +282,9 @@ const menu22 = () => asv.resetSPkey();
 
 # 個別データ型定義
 
-
 ## <a href="#typedefList"><span id="authAuditLog">"authAuditLog" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.25</p>
 
 authServerの監査ログをシートに出力
 
@@ -298,8 +298,9 @@ authServerの監査ログをシートに出力
 | result | string | 'success' | サーバ側処理結果 |
 | note | string | 任意 | 備考 |
 
-
 ## <a href="#typedefList"><span id="authErrorLog">"authErrorLog" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.46</p>
 
 authServerのエラーログをシートに出力
 
@@ -312,8 +313,9 @@ authServerのエラーログをシートに出力
 | message | string | 任意 | サーバ側からのエラーメッセージnormal時はundefined |
 | stack | string | 任意 | エラー発生時のスタックトレース本項目は管理者への通知メール等、シート以外には出力不可 |
 
-
 ## <a href="#typedefList"><span id="authRequestLog">"authRequestLog" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.65</p>
 
 重複チェック用のリクエスト履歴
 
@@ -322,8 +324,9 @@ authServerのエラーログをシートに出力
 | timestamp | number | Date.now() | リクエストを受けたサーバ側日時 |
 | nonce | string | 必須 | クライアント側で採番されたリクエスト識別子UUIDv4 |
 
-
 ## <a href="#typedefList"><span id="authScriptProperties">"authScriptProperties" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.76</p>
 
 サーバ側ScriptPropertiesに保存する情報
 
@@ -340,8 +343,9 @@ authServerのエラーログをシートに出力
 | oldSPkeyEnc | string | 必須 | バックアップ用暗号化用公開鍵(PEM形式) |
 | requestLog | string | 必須 | 重複チェック用のリクエスト履歴。{authRequestLog[]}のJSON |
 
-
 ## <a href="#typedefList"><span id="authServerConfig">"authServerConfig" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.270</p>
 
 this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 
@@ -367,8 +371,9 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | udSendInvitation | boolean | false | 開発中の加入承認通知メール送信<br>  開発中に加入承認通知メール送信を抑止するならtrue |
 | typeDef | schemaDef | 必須 | データ型定義 |
 
-
 ## <a href="#typedefList"><span id="authServerFuncDef">"authServerFuncDef" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.89</p>
 
 サーバ側関数設定オブジェクト
 
@@ -377,8 +382,9 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | func.authority | number | 0 | サーバ側関数の所要権限<br>  サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限<br>  ex. authServerConfig.func.authority === 0 |
 | func.do | function | 必須 | 実行するサーバ側関数 |
 
-
 ## <a href="#typedefList"><span id="MemberDevice">"MemberDevice" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.146</p>
 
 メンバが使用する通信機器の情報
 
@@ -391,8 +397,9 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | CPkeyUpdated | number | Date.now() | 最新のCPkeyが登録された日時 |
 | trial | <a href="../server/index.md#MemberTrial">MemberTrial</a>[] | [ | ログイン試行関連情報。オブジェクトシート上はJSON文字列 |
 
-
 ## <a href="#typedefList"><span id="MemberLog">"MemberLog" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.169</p>
 
 メンバの各種要求・状態変化の時刻
 
@@ -409,8 +416,9 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | joiningExpiration | number | 0 | 加入有効期限<br>  加入承認日時＋加入有効期間 |
 | unfreezeDenial | number | 0 | 加入禁止期限<br>  加入否認日時＋加入禁止期間 |
 
-
 ## <a href="#typedefList"><span id="MemberProfile">"MemberProfile" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.205</p>
 
 メンバの属性情報
 
@@ -418,8 +426,9 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | :-- | :-- | :-- | :-- |
 | authority | number | 必須 | メンバの持つ権限<br>  authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
 
-
 ## <a href="#typedefList"><span id="MemberTrial">"MemberTrial" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.215</p>
 
 ログイン試行情報の管理・判定
 
@@ -429,8 +438,9 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | created | number | Date.now() | パスコード生成日時≒パスコード通知メール発信日時 |
 | log | <a href="../server/index.md#MemberTrialLog">MemberTrialLog</a>[] | [ | 試行履歴常に最新が先頭(unshift()使用)<br>  保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
 
-
 ## <a href="#typedefList"><span id="MemberTrialLog">"MemberTrialLog" データ型定義</span></a>
+
+<p class="source">source: server/authServer.mjs line.230</p>
 
 パスコード入力単位の試行記録
 

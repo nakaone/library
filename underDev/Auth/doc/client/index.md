@@ -251,7 +251,6 @@
 | [cryptoClient](cryptoClient.md) | クライアント側の暗号化・署名検証 |
 | [localFunc](localFunc.md) | 【開発用】処理要求発行 |
 
-
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
@@ -261,8 +260,9 @@
 
 # 個別データ型定義
 
-
 ## <a href="#typedefList"><span id="authClientConfig">"authClientConfig" データ型定義</span></a>
+
+<p class="source">source: client/authClient.mjs line.91</p>
 
 共通設定情報にauthClient特有項目を追加
 
@@ -273,8 +273,9 @@
 | storeName | string | "config" | IndexedDBのストア名 |
 | dbVersion | number | 1 | IndexedDBのバージョン |
 
-
 ## <a href="#typedefList"><span id="authIndexedDB">"authIndexedDB" データ型定義</span></a>
+
+<p class="source">source: client/authClient.mjs line.65</p>
 
 IndexedDBに保存する内容(=this.idb)
 

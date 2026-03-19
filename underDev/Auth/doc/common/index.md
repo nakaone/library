@@ -30,7 +30,6 @@
 | :-- | :-- |
 | [authConfig](authConfig.md) | クライアント・サーバ共通設定情報 |
 
-
 # <span id="typedefList">データ型定義一覧</span>
 
 | No | データ型名 | 概要 |
@@ -42,8 +41,9 @@
 
 # 個別データ型定義
 
-
 ## <a href="#typedefList"><span id="authRequest">"authRequest" データ型定義</span></a>
+
+<p class="source">source: common/authConfig.mjs line.31</p>
 
 authClientからauthServerへの処理要求(平文)
 
@@ -58,8 +58,9 @@ authClientからauthServerへの処理要求(平文)
 | arguments | any[] | [] | サーバ側関数に渡す引数の配列 |
 | nonce | string | UUIDv4 | 要求の識別子UUIDv4 |
 
-
 ## <a href="#typedefList"><span id="authResponse">"authResponse" データ型定義</span></a>
+
+<p class="source">source: common/authConfig.mjs line.54</p>
 
 authServerからauthClientへの処理結果(平文)
 
@@ -82,8 +83,9 @@ authServerからauthClientへの処理結果(平文)
 | message | string | "" | メッセージ(statusの補足) |
 | decrypt | string | "success" | クライアント側での復号処理結果<br>  "success":正常、それ以外はエラーメッセージ |
 
-
 ## <a href="#typedefList"><span id="encryptedRequest">"encryptedRequest" データ型定義</span></a>
+
+<p class="source">source: common/authConfig.mjs line.103</p>
 
 暗号化された処理要求
 
@@ -100,8 +102,9 @@ authServerからauthClientへの処理結果(平文)
 | meta.rsabits | number | 必須 | 暗号化に使用したRSA鍵長 |
 | meta.keyProvisioning | boolean | false | 鍵配布・鍵更新目的ならtrue<br>  「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。<br>  通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。 |
 
-
 ## <a href="#typedefList"><span id="encryptedResponse">"encryptedResponse" データ型定義</span></a>
+
+<p class="source">source: common/authConfig.mjs line.129</p>
 
 暗号化された処理結果
 
