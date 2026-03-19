@@ -4,15 +4,23 @@
 
 # <span id="log"><a href="#top">変更履歴</a></span>
 
-- build0011: SPkey取得
+- build0012: SPkey取得
   - authClientでauthRequest(SPkey要求)作成
   - authServerで受信、内容確認
   - authServerでauthResponse作成
   - authClientで受信、内容確認、格納
 
-- build0010: createSpec関係バグ修正
+- build0011: クラス・グローバル関数の枠組み作成
   == いまここ ================================
+  - common/authConfig.mjs
+  - client/authClient.mjs
+  - client/cryptoClient.mjs
+  - server/authServer.mjs
+  - server/cryptoServer.mjs
+  - server/Member.mjs
   == 対応済 ==================================
+
+- build0010: createSpec関係バグ修正
   - client/index.md: 「グローバル関数・クラス一覧」「データ型定義一覧」にアンカー設定
     index.md先頭でサブメニュー表示を可能にする
   - [bug] lib/index.md devToolsOpt.mode: 表内説明欄のMDテーブルがテキストとして表示

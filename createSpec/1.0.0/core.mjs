@@ -1578,7 +1578,7 @@ async function createSpec(opt={}){
             v.str = String(d[h.key]);
             // セル文字列にMarkdownテーブルが含まれる場合はHTML化
             // ※ Markdownテーブル内セルにMarkdownテーブルが記述されていると崩れる
-            if( v.str.includes(':--') ){
+            if( v.str.includes(':--') || v.str.includes('--:') ){
               v.str = marked(v.str.replaceAll(/\\/g,'').replaceAll(/<br>/g,'\n'))
                 .trim().replaceAll(/\n/g,'');
             }
