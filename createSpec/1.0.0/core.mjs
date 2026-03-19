@@ -4,6 +4,7 @@ import process from 'process';
 import { createHash, randomUUID } from 'crypto';
 import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { marked } from "marked";
 import { devTools } from '../../devTools/3.2.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
 createSpec();
@@ -1573,7 +1574,13 @@ async function createSpec(opt={}){
         data.forEach(d => {
           v.line = [];
           opt.header.forEach(h => {
-            v.str = d[h.key];
+            v.str = String(d[h.key]);
+            // セル文字列にMarkdownテーブルが含まれる場合はHTML化
+            // ※ Markdownテーブル内セルにMarkdownテーブルが記述されていると崩れる
+            if( v.str.includes(':--') ){
+              v.str = marked(v.str.replaceAll(/\\/g,'').replaceAll(/<br>/g,'\n'))
+                .trim().replaceAll(/\n/g,'');
+            }
             // データ型欄のクラス・グローバル関数・データ型定義にリンクを設定
             if( h.key === 'type' && v.depth > 0 && typeof v.str === 'string' ){
               for( let x in DocletTree.symbols){

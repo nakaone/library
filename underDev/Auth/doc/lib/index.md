@@ -58,14 +58,14 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| mode | string | 'pipe' | 出力モード<br>  \| mode     \| エラー \| 開始・終了 \| step \| 用途・備考    \|<br>  \| :--      \| :--:  \| :--:     \| :--:      \| :--          \|<br>  \| "none"   \| ❌    \| ❌        \| ❌        \| 出力無し      \|<br>  \| "error"  \| ⭕    \| ❌        \| ❌        \| エラーのみ出力 \|<br>  \| "normal" \| ⭕    \| ⭕        \| ❌        \| 本番用        \|<br>  \| "dev"    \| ⭕    \| ⭕        \| ⭕        \| 開発用        \|<br>  \| "pipe"   \| ⭕    \| ❌        \| ⭕        \| パイプ処理用   \| |
+| mode | string | 'pipe' | <p>出力モード</p><table><thead><tr><th align="left">mode</th><th align="center">エラー</th><th align="center">開始・終了</th><th align="center">step</th><th align="left">用途・備考</th></tr></thead><tbody><tr><td align="left">&quot;none&quot;</td><td align="center">❌</td><td align="center">❌</td><td align="center">❌</td><td align="left">出力無し</td></tr><tr><td align="left">&quot;error&quot;</td><td align="center">⭕</td><td align="center">❌</td><td align="center">❌</td><td align="left">エラーのみ出力</td></tr><tr><td align="left">&quot;normal&quot;</td><td align="center">⭕</td><td align="center">⭕</td><td align="center">❌</td><td align="left">本番用</td></tr><tr><td align="left">&quot;dev&quot;</td><td align="center">⭕</td><td align="center">⭕</td><td align="center">⭕</td><td align="left">開発用</td></tr><tr><td align="left">&quot;pipe&quot;</td><td align="center">⭕</td><td align="center">❌</td><td align="center">⭕</td><td align="left">パイプ処理用</td></tr></tbody></table> |
 | digit | number | 4 | 処理順(seq)をログ出力する際の桁数 |
 | footer | boolean | false | 実行結果(startTime,endTime,elaps)を出力するならtrue |
 | maxDepth | number | 10 | 再帰呼出時の最深階層数 |
 
 ## <a href="#typedefList"><span id="Doclet">"Doclet" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.175</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.176</p>
 
 `jsdoc -X`で配列で返されるオブジェクト
 
@@ -111,7 +111,7 @@
 
 ## <a href="#typedefList"><span id="DocletColDef">"DocletColDef" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.153</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.154</p>
 
 Doclet.properties/params/returnsの要素(メンバ)定義情報
 
@@ -131,7 +131,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletColRow">"DocletColRow" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.144</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.145</p>
 
 データ項目一覧作成用追加情報
 
@@ -145,7 +145,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeFile">"DocletTreeFile" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.676</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.677</p>
 
 個別入力ファイル情報
 
@@ -159,7 +159,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeOpt">"DocletTreeOpt" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.711</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.712</p>
 
 オプション設定値
 
@@ -176,7 +176,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeSource">"DocletTreeSource" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.686</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.687</p>
 
 統合版入力ファイル(JSソース)情報
 
@@ -190,7 +190,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeSymbol">"DocletTreeSymbol" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.703</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.704</p>
 
 クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
 
