@@ -13,6 +13,12 @@
 - build0011: クラス・グローバル関数の枠組み作成
   == いまここ ================================
   - common/authConfig.mjs
+    - config.mjsの作り替え：「設定は一箇所で・埋め込みは必要な分だけ」
+      現状だとクライアント側にサーバ側のconfig情報も含まれてしまう。
+      build.shでクライアント・サーバそれぞれの専用configを作れるようにする。
+      現状xxxx.20260319.mjsとして残す。
+      - 現状：config.mjsからimport/export文を削除してtmp/config.jsを作成、src/client/index.html, src/server/code.jsに埋め込み
+      - 改善：config.mjsを実行してtmp/config.client.js, tmp/config.server.jsを作成、src/client/index.html, src/server/code.jsに埋め込み
   - client/authClient.mjs
   - client/cryptoClient.mjs
   - server/authServer.mjs
