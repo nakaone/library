@@ -24,6 +24,13 @@
 
 </div>
 
+<p id="top" class="l1">独自ライブラリ仕様書</p>
+<div class="submenu">
+
+[関数・クラス](#funclassList) | [データ型](#typedefList)
+
+</div>
+
 # <a href="#top"><span id="funclassList">グローバル関数・クラス一覧</span></a>
 
 | クラス/関数名 | 概要 |

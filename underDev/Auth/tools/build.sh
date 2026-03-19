@@ -114,21 +114,30 @@ function overviewDesign {  # readme/index.md他の全体的な仕様書
   echo "== overviewDesign start."
   # 図表
   cp $src/doc/*.svg $doc/img/
+
+  # -- doc直下
   # 総説
   cat $tmp/header.md $src/doc/readme.md | awk 1 | node $embed -src:$src -tmp:$tmp > $doc/readme.md
   # 暗号化・署名方式
   cat $tmp/header.md $src/doc/crypto.md > $doc/crypto.md
   # メンバ・デバイス管理
   cat $tmp/header.md $src/doc/Member.md > $doc/Member.md
+  # 開発仕様
+  cat $tmp/header.md  $src/doc/dev.md > $doc/dev.md
 
+  # -- doc/xxx
+  # クライアント・サーバ共通
+  cat $src/doc/header.md $src/doc/common.md $tmp/createSpec/common/index.md | awk 1 | \
+  node $embed -src:$src -tmp:$tmp > $doc/common/index.md
   # クライアント側
   cat $src/doc/header.md $src/doc/client.md $tmp/createSpec/client/index.md | awk 1 | \
   node $embed -src:$src -tmp:$tmp > $doc/client/index.md
   # サーバ側
   cat $src/doc/header.md $src/doc/server.md $tmp/createSpec/server/index.md | awk 1 | \
   node $embed -src:$src -tmp:$tmp > $doc/server/index.md
-  # 開発仕様
-  cat $tmp/header.md  $src/doc/dev.md > $doc/dev.md
+  # 独自ライブラリ
+  cat $src/doc/header.md $src/doc/lib.md $tmp/createSpec/lib/index.md | awk 1 | \
+  node $embed -src:$src -tmp:$tmp > $doc/lib/index.md
 }
 
 function deploy {  # ソースをdeployに作成、clasp実行
