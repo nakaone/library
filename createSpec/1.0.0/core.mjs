@@ -1443,7 +1443,6 @@ async function createSpec(opt={}){
         dev.step(2.1);  // データ型定義(folder.typedef)を配列化
         v.list = Object.keys(folder.typedef).map(x => this.map[x])
         .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })});
-        dev.step(99.1446,v.list);
 
         dev.step(2.2);  // テーブル用データ作成
         v.data = [];
@@ -1480,8 +1479,10 @@ async function createSpec(opt={}){
         v.rv.push('',`# 個別データ型定義`)
         // v.list {DocletEx[]} - 配列化されたデータ型定義
         v.list.forEach(doclet => {
+          dev.step(99.1482,doclet);
+
           dev.step(3.1);  // 項目一覧
-          v.data = this.map[doclet.uuid].properties.map(x => x.row);
+          v.data = doclet.properties.map(x => x.row);
           v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader)),doclet:doclet};
           // 全項目(prop)の備考欄が空白なら割愛
           if( v.data.map(x => x.note).every(x => x === '') ){
@@ -1496,10 +1497,10 @@ async function createSpec(opt={}){
 
           dev.step(3.3);  // 記事作成
           v.r = this.article({
-            title: `"${this.map[doclet.uuid].name}" データ型定義`,
+            title: `"${doclet.name}" データ型定義`,
             level: 2,
             url: '#typedefList',
-            anchor: `${this.map[doclet.uuid].name}`,
+            anchor: `${doclet.name}`,
             content: v.r,
           });
           if( v.r instanceof Error ) throw v.r;
@@ -1860,7 +1861,7 @@ async function createSpec(opt={}){
     pv.r = pv.tree.output();
     if( pv.r instanceof Error ) throw pv.r;
 
-    dev.step(4,DocletTree.symbols);  // 【開発用】調査結果ファイルの出力
+    dev.step(4);  // 【開発用】調査結果ファイルの出力
     /* 例：JSON.stringify(
       pv.tree.doclet
       .filter(x => typeof x.familyTree !== 'undefined')

@@ -38,11 +38,10 @@
 
 - build0010: createSpec関係バグ修正
   == いまここ ================================
-  - lib/index.md Doclet.params: DocletColDef型なのにリンクが無い
-  - lib/index.md Doclet.returns: DocletColDef型なのにリンクが無い
-  - lib/DocletEx.md メンバ一覧.properties: DocletColDef型なのにリンクが無い
+  - [bug] lib/index.md Doclet.params他: DocletColDef型なのにリンクが無い
   - common/authConfig.md: 継承元「Schema」にリンクが無い
   - lib/index.md devToolsOpt.mode: 表内説明欄のMDテーブルがテキストとして表示
+  - lib/index.md 個別データ型定義でラベル行先頭にデータ型名が重複して表示
   == 対応済 ==================================
   - devTools.step: RegExp型toString対応
   - メソッド・内部関数一覧は要素が無い場合(typedef/interfaceの場合)割愛
