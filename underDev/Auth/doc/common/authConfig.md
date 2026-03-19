@@ -26,7 +26,7 @@
 
 # <span id="authConfig_top">🧩 authConfigクラス仕様書</span>
 
-継承元：<a href="../lib/Schema.md">Schema</a><br><p class="source">source: common/authConfig.mjs line.17</p>クライアント・サーバ共通設定情報
+継承元：<a href="../lib/Schema.md">Schema</a>
 
 ## <a href="#authConfig_top"><span id="authConfig_prop">🔢 authConfig メンバ一覧</span></a>
 

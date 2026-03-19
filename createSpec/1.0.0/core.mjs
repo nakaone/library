@@ -1173,37 +1173,16 @@ async function createSpec(opt={}){
         dev.step(1);  // 事前準備
         v.d = this.map[uuid];
         v.anchor = v.d.familyTree;
+        // v.depth: 呼出元Docletのフォルダ階層の深さ
+        // データ型定義等へのリンク設定時、この分だけ"../"を付けてルートまで遡上させる
+        v.depth = !Object.hasOwn(v.d,'unique') ? 0 : (
+          v.d.unique === '/' ? 1
+          : v.d.unique.replace(/\/$/,'').split('/').length
+        );
 
         dev.step(2);  // ヘッダ部
         v.label = '';
-        dev.step(2.1);  // 継承が有った場合、継承元情報を付記
-        if( Object.hasOwn(v.d,'augments') ){
-          v.augments = [];
-          v.d.augments.forEach(augment => {
-            // 継承元へのURLを取得
-            v.extended = Object.hasOwn(this.map,augment) && this.map[augment] !== null
-            ? this.map[augment] : null;
-            if( v.extended === null ){
-              // URL取得不能の場合はリンクを設定しない
-              v.augments.push(augment);
-            } else {
-              // リンク先URLの作成
-              // function or class -> 固有パス＋name.md
-              // typedef or interface -> 固有パス＋index.md＋#name
-              v.depth = v.extended.unique === '/' ? 1
-                : v.extended.unique.replace(/\/$/,'').split('/').length;
-              v.url = '../'.repeat(v.depth) + v.extended.unique + (
-                ['function','class'].includes(v.extended.docletType)
-                ? v.extended.name + '.md'
-                : this.opt.indexMd + '#' + v.extended.name
-              );
-              v.augments.push(`<a href="${v.url}">${augment}</a>`);
-            }
-          });
-          v.label = `継承元：${v.augments.join(', ')}<br>`
-        }
-
-        dev.step(2.2);  // 出典(ソースファイルの位置)
+        dev.step(2.1);  // 出典(ソースファイルの位置)
         if( ['function','class','typedef','interface'].includes(v.d.docletType) ){
           v.label += `<p class="source">source: ${
             v.d.unique ?? ''}${
@@ -1212,8 +1191,25 @@ async function createSpec(opt={}){
           }</p>`;
         }
 
-        dev.step(2.3);  // ラベル文字列
-        v.label += v.d.label;
+        dev.step(2.2);  // ラベル文字列
+        v.label += `${v.d.label}\n`;
+
+        dev.step(2.3);  // 継承が有った場合、継承元情報を付記
+        if( Object.hasOwn(v.d,'augments') ){
+          v.augments = [];
+          for( v.i=0 ; v.i<v.d.augments.length ; v.i++ ){
+            v.augment = v.d.augments[v.i];
+            if( Object.hasOwn(DocletTree.symbols,v.augment) ){
+              // 継承元が独自定義データ型だった場合、リンクを設定
+              // ※ replaceAllではなくreplaceで十分だが、DocletTree.makeTableで実績有るコードを準用
+              v.augment = v.augment.replaceAll(DocletTree.symbols[v.augment].rex,
+                `<a href="${'../'.repeat(v.depth)+DocletTree.symbols[v.augment].link
+                }">${DocletTree.symbols[v.augment].name}</a>`);
+            }
+            v.augments.push(v.augment);
+          }
+          v.label = `\n\n継承元：${v.augments.join(', ')}\n`
+        }
 
         dev.step(2.4);  // 記事作成
         v.r = this.article({
@@ -1479,7 +1475,6 @@ async function createSpec(opt={}){
         v.rv.push('',`# 個別データ型定義`)
         // v.list {DocletEx[]} - 配列化されたデータ型定義
         v.list.forEach(doclet => {
-          dev.step(99.1482,doclet);
 
           dev.step(3.1);  // 項目一覧
           v.data = doclet.properties.map(x => x.row);
