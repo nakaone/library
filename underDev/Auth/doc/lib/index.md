@@ -24,7 +24,7 @@
 
 </div>
 
-# グローバル関数・クラス一覧
+# <a href="#top"><span id="funclassList">グローバル関数・クラス一覧</span></a>
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
@@ -35,7 +35,7 @@
 | [Schema](Schema.md) | DB・データ型構造定義オブジェクト |
 | [TableDef](TableDef.md) | 論理テーブル構造定義 |
 
-# <span id="typedefList">データ型定義一覧</span>
+# <a href="#top"><span id="typedefList">データ型定義一覧</span></a>
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |

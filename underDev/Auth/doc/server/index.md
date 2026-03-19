@@ -256,7 +256,7 @@ const menu22 = () => asv.resetSPkey();
   | 未登録 | 登録済 | CPkey重複 | 通常あり得ない。攻撃？ |
   | 登録済 | 未登録 | SPkey配布 | 手違いで二重要求？許容 |
   | 登録済 | 登録済 | CPkey重複 | 通常あり得ない。攻撃？ |
-# グローバル関数・クラス一覧
+# <a href="#top"><span id="funclassList">グローバル関数・クラス一覧</span></a>
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
@@ -264,7 +264,7 @@ const menu22 = () => asv.resetSPkey();
 | [cryptoServer](cryptoServer.md) | サーバ側の暗号化・署名検証 |
 | [Member](Member.md) | Member |
 
-# <span id="typedefList">データ型定義一覧</span>
+# <a href="#top"><span id="typedefList">データ型定義一覧</span></a>
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |

@@ -1,6 +1,11 @@
 <p id="top" class="l1">"auth"サーバ側仕様書</p>
+<div class="submenu">
 
-# 実装イメージ
+[実装イメージ](#implement) | [分岐先決定手順](#procedure) | [関数・クラス](#funclassList) | [データ型](#typedefList)
+
+</div>
+
+# <a href="#top"><span id="implement">実装イメージ</span></a>
 
 ```js
 // ライブラリ関数定義
@@ -42,6 +47,6 @@ const menu21 = () => asv.setupEnvironment();
 const menu22 = () => asv.resetSPkey();
 ```
 
-# サーバ側処理分岐先決定手順
+# <a href="#top"><span id="procedure">サーバ側処理分岐先決定手順</span></a>
 
 <!--::$src/doc/decisionTable.server.md::-->

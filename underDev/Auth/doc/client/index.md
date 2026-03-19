@@ -25,8 +25,13 @@
 </div>
 
 <p id="top" class="l1">"auth"クライアント側仕様書</p>
+<div class="submenu">
 
-# 実装イメージ
+[実装イメージ](#implement) | [分岐先決定手順](#procedure) | [関数・クラス](#funclassList) | [データ型](#typedefList)
+
+</div>
+
+# <a href="#top"><span id="implement">実装イメージ</span></a>
 
 ```html
 <input type="text" id="testval" value="設定値" />
@@ -79,7 +84,7 @@
 </script>
 ```
 
-# クライアント側処理分岐先決定手順
+# <a href="#top"><span id="procedure">クライアント側処理分岐先決定手順</span></a>
 
 <style>#xf618826c-114a-4294-9d5a-164c9ad7c0aa td {vertical-align: top;}</style>
 <table id="xf618826c-114a-4294-9d5a-164c9ad7c0aa">
@@ -242,7 +247,7 @@
 - [E03]デバイス未登録：SPkey配布時に仮IDは登録済⇒不正操作
 - [E04]CPkey未登録：SPkey配布時にCPkeyは登録済。期限切れなら「CPkey更新」⇒不正操作
 - [W05]通知メール送信：ダイアログで「メールでパスコード送付済」表示
-# グローバル関数・クラス一覧
+# <a href="#top"><span id="funclassList">グローバル関数・クラス一覧</span></a>
 
 | クラス/関数名 | 概要 |
 | :-- | :-- |
@@ -251,7 +256,7 @@
 | [cryptoClient](cryptoClient.md) | クライアント側の暗号化・署名検証 |
 | [localFunc](localFunc.md) | 【開発用】処理要求発行 |
 
-# <span id="typedefList">データ型定義一覧</span>
+# <a href="#top"><span id="typedefList">データ型定義一覧</span></a>
 
 | No | データ型名 | 概要 |
 | --: | :-- | :-- |

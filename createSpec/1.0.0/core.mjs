@@ -1405,6 +1405,7 @@ async function createSpec(opt={}){
     }
 
     /** makeIndexMD: フォルダ単位のクラス・グローバル関数一覧＋データ型定義のMarkdownを作成
+     * - 「グローバル関数・クラス一覧」⇒ "funclassList"、「データ型定義一覧」⇒ "typedefList"のアンカー設定
      * @memberof DocletTree
      * @param {DocletTreeFolder} folder
      * @returns {string|Error}
@@ -1417,7 +1418,7 @@ async function createSpec(opt={}){
         // -------------------------------------------------------------
         dev.step(1); // グローバル関数・クラス一覧
         // -------------------------------------------------------------
-        v.rv.push(`# グローバル関数・クラス一覧`);
+        v.rv.push(`# <a href="#top"><span id="funclassList">グローバル関数・クラス一覧</span></a>`);
         v.data = [];
         Object.keys(folder.funclass).map(x => this.map[x])  // 配列化して名前順に並べ替え
         .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })})
@@ -1464,7 +1465,7 @@ async function createSpec(opt={}){
         v.r = this.article({
           title: `データ型定義一覧`,
           level: 1,
-          url: '',
+          url: '#top',
           anchor: `typedefList`,
           content: v.r,
         });

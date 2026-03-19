@@ -1,6 +1,11 @@
 <p id="top" class="l1">"auth"クライアント側仕様書</p>
+<div class="submenu">
 
-# 実装イメージ
+[実装イメージ](#implement) | [分岐先決定手順](#procedure) | [関数・クラス](#funclassList) | [データ型](#typedefList)
+
+</div>
+
+# <a href="#top"><span id="implement">実装イメージ</span></a>
 
 ```html
 <input type="text" id="testval" value="設定値" />
@@ -53,6 +58,6 @@
 </script>
 ```
 
-# クライアント側処理分岐先決定手順
+# <a href="#top"><span id="procedure">クライアント側処理分岐先決定手順</span></a>
 
 <!--::$src/doc/decisionTable.client.md::-->
