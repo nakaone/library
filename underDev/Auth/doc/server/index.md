@@ -358,7 +358,7 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 | storageDaysOfErrorLog | number | 604800000 | エラーログの保存日数<br>  単位はミリ秒。既定値は7日分 |
 | auditLog | string | "auditLog" | 監査ログのシート名 |
 | storageDaysOfAuditLog | number | 604800000 | 監査ログの保存日数<br>  単位はミリ秒。既定値は7日分 |
-| func | authServerFuncDef | {} | サーバ側関数設定<br><br>ログイン試行関係の設定値 |
+| func | <a href="../server/index.md#authServerFuncDef">authServerFuncDef</a> | {} | サーバ側関数設定<br><br>ログイン試行関係の設定値 |
 | passcodeLength | number | 6 | パスコードの桁数 |
 | maxTrial | number | 3 | パスコード入力の最大試行回数 |
 | passcodeLifeTime | number | 600000 | パスコードの有効期間。既定値は10分 |
@@ -389,7 +389,7 @@ MemberDevice: メンバが使用する通信機器の情報
 | CPkeySign | string | 必須 | デバイスの署名用公開鍵 |
 | CPkeyEnc | string | 必須 | デバイスの暗号化用公開鍵 |
 | CPkeyUpdated | number | Date.now() | 最新のCPkeyが登録された日時 |
-| trial | MemberTrial[] | [ | ログイン試行関連情報。オブジェクトシート上はJSON文字列 |
+| trial | <a href="../server/index.md#MemberTrial">MemberTrial</a>[] | [ | ログイン試行関連情報。オブジェクトシート上はJSON文字列 |
 
 
 ## <a href="#typedefList"><span id="MemberLog">"MemberLog" データ型定義</span></a>
@@ -427,7 +427,7 @@ MemberTrial: ログイン試行情報の管理・判定
 | :-- | :-- | :-- | :-- |
 | passcode | string | 必須 | 設定されているパスコード最初の認証試行で作成<br>  初期値はauthServerConfig.passcodeLengthで指定された桁数の数値 |
 | created | number | Date.now() | パスコード生成日時≒パスコード通知メール発信日時 |
-| log | MemberTrialLog[] | [ | 試行履歴常に最新が先頭(unshift()使用)<br>  保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
+| log | <a href="../server/index.md#MemberTrialLog">MemberTrialLog</a>[] | [ | 試行履歴常に最新が先頭(unshift()使用)<br>  保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
 
 
 ## <a href="#typedefList"><span id="MemberTrialLog">"MemberTrialLog" データ型定義</span></a>

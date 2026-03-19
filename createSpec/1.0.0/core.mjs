@@ -6,7 +6,6 @@ import { spawn } from "node:child_process";
 import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { devTools } from '../../devTools/3.2.0/core.mjs';
 import { mergeDeeply } from '../../mergeDeeply/2.0.0/core.mjs';
-import { before } from 'node:test';
 createSpec();
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
@@ -1231,7 +1230,7 @@ async function createSpec(opt={}){
         if( Object.hasOwn(v.d,'properties') && v.d.properties.length > 0 ){
           v.data = v.d.properties.map(x => x.row);
           v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader)),doclet:v.d};
-          // 備考欄が全て空白なら割愛
+          // 全項目(prop)の備考欄が空白なら割愛
           if( v.data.map(x => x.note).every(x => x === '') ){
             v.opt.header = v.opt.header.filter(x => x.key !== 'note');
           }
@@ -1417,7 +1416,9 @@ async function createSpec(opt={}){
       const dev = new devTools(v,{mode:'pipe'});
       try {
 
+        // -------------------------------------------------------------
         dev.step(1); // グローバル関数・クラス一覧
+        // -------------------------------------------------------------
         v.rv.push(`# グローバル関数・クラス一覧`);
         v.data = [];
         Object.keys(folder.funclass).map(x => this.map[x])  // 配列化して名前順に並べ替え
@@ -1436,12 +1437,15 @@ async function createSpec(opt={}){
         if( v.r instanceof Error ) throw v.r;
         v.rv.push('',v.r);
 
-        dev.step(2);  // データ型定義(folder.typedef)を配列化
+        // -------------------------------------------------------------
+        dev.step(2);  // データ型定義一覧
+        // -------------------------------------------------------------
+        dev.step(2.1);  // データ型定義(folder.typedef)を配列化
         v.list = Object.keys(folder.typedef).map(x => this.map[x])
         .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })});
+        dev.step(99.1446,v.list);
 
-        dev.step(3);  // データ型定義一覧
-        dev.step(3.1);  // テーブル用データ作成
+        dev.step(2.2);  // テーブル用データ作成
         v.data = [];
         for( v.i=0 ; v.i<v.list.length ; v.i++ ){
           v.data.push({
@@ -1450,14 +1454,16 @@ async function createSpec(opt={}){
             label: v.list[v.i].label,
           });
         }
-        dev.step(3.2);  // Markdownテーブル作成
+
+        dev.step(2.3);  // Markdownテーブル作成
         v.r = DocletTree.makeTable(v.data,{header:[
           {key:'no',label:'No',align:'--:'},
           {key:'name',label:'データ型名',align:':--'},
           {key:'label',label:'概要',align:':--'},
         ]});
         if( v.r instanceof Error ) throw v.r;
-        dev.step(3.3);  // 記事作成
+
+        dev.step(2.4);  // 記事作成
         v.r = this.article({
           title: `データ型定義一覧`,
           level: 1,
@@ -1468,22 +1474,27 @@ async function createSpec(opt={}){
         if( v.r instanceof Error ) throw v.r;
         v.rv.push('',v.r);;
 
-        dev.step(4);  // 個別データ型定義
+        // -------------------------------------------------------------
+        dev.step(3);  // 個別データ型定義
+        // -------------------------------------------------------------
         v.rv.push('',`# 個別データ型定義`)
+        // v.list {DocletEx[]} - 配列化されたデータ型定義
         v.list.forEach(doclet => {
-          dev.step(4.1);  // 項目一覧
+          dev.step(3.1);  // 項目一覧
           v.data = this.map[doclet.uuid].properties.map(x => x.row);
-          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader))};
-          // 備考欄が全て空白なら割愛
+          v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader)),doclet:doclet};
+          // 全項目(prop)の備考欄が空白なら割愛
           if( v.data.map(x => x.note).every(x => x === '') ){
             v.opt.header = v.opt.header.filter(x => x.key !== 'note');
           }
           v.r = DocletTree.makeTable(v.data,v.opt);
           if( v.r instanceof Error ) throw v.r;
-          dev.step(4.2);  // 説明文を追加
+
+          dev.step(3.2);  // 説明文を追加
           if( Object.hasOwn(doclet,'description') && doclet.description.length > 0 )
             v.r = doclet.description + '\n\n' + v.r;
-          dev.step(4.3);  // 記事作成
+
+          dev.step(3.3);  // 記事作成
           v.r = this.article({
             title: `"${this.map[doclet.uuid].name}" データ型定義`,
             level: 2,

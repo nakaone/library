@@ -92,9 +92,9 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 | meta.code.paramnames | string[] | 必須 | 関数・メソッドの引数名一覧 |
 | meta.vars | Object.<string, string> | 必須 | スコープ内で参照される変数名とその値（簡易マップ） |
 | name | string | 必須 | 対象の短い名前(関数名・クラス名・プロパティ名など) |
-| params | DocletColDef[] | 必須 | ＠paramタグから生成された引数情報の配列 |
-| properties | DocletColDef[] | 必須 | ＠propertyタグから生成されたメンバ定義情報 |
-| returns | DocletColDef[] | 必須 | ＠returns/＠returnタグから生成された戻り値情報<br>  returnsはparams/propertiesと以下の点で異なる。<br>  1. 配列だが単一<br>  2. name/optional/defaultvalueは無い<br>  3. nullable,nullableTypeが付くことがある |
+| params | <a href="../lib/index.md#DocletColDef">DocletColDef</a>[] | 必須 | ＠paramタグから生成された引数情報の配列 |
+| properties | <a href="../lib/index.md#DocletColDef">DocletColDef</a>[] | 必須 | ＠propertyタグから生成されたメンバ定義情報 |
+| returns | <a href="../lib/index.md#DocletColDef">DocletColDef</a>[] | 必須 | ＠returns/＠returnタグから生成された戻り値情報<br>  returnsはparams/propertiesと以下の点で異なる。<br>  1. 配列だが単一<br>  2. name/optional/defaultvalueは無い<br>  3. nullable,nullableTypeが付くことがある |
 | scope | string | 必須 | スコープ種別<br>  global,static,instance,innerなど、メンバの可視性・所属を示す |
 | tags | Object[] | 必須 | JSDoc上に記述されたタグのうち、専用フィールドに変換されなかった生タグ情報<br>  独自タグ、JSDocが意味解釈しないタグ、情報落ちしないよう保持された生情報 |
 | tags.meta | Object | 必須 | タグが記述されているソース位置情報 |
@@ -125,7 +125,7 @@ DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
 | meta | Object | 必須 | プロパティ定義が存在するソース位置情報<br>  param/returnsには出ないがpropertiesには出ることがある |
 | defaultvalue | string | 必須 | 既定値(文字列表現。ex.'[]') |
 | optional | boolean | 必須 | trueの場合は任意項目 |
-| row | DocletColRow | 必須 | DocletEx.addRowToColumnで追加される項目情報 |
+| row | <a href="../lib/index.md#DocletColRow">DocletColRow</a> | 必須 | DocletEx.addRowToColumnで追加される項目情報 |
 
 
 ## <a href="#typedefList"><span id="DocletColRow">"DocletColRow" データ型定義</span></a>
@@ -151,7 +151,7 @@ DocletTreeFile: 個別入力ファイル情報
 | unique | string | 必須 | 固有パス(フルパス−共通部分)<br>  ルートは'/'、子孫が有る場合先頭の'/'無し・末尾'/'有り(ex."common/subtest/") |
 | basename | string | 必須 | ファイル名 |
 | content | string | 必須 | ファイルの内容 |
-| jsdoc | Doclet[] | 必須 | `jsdoc -X`の実行結果オブジェクト |
+| jsdoc | <a href="../lib/index.md#Doclet">Doclet</a>[] | 必須 | `jsdoc -X`の実行結果オブジェクト |
 
 
 ## <a href="#typedefList"><span id="DocletTreeOpt">"DocletTreeOpt" データ型定義</span></a>
@@ -179,7 +179,7 @@ DocletTreeSource: 統合版入力ファイル(JSソース)情報
 | common | string | '' | フルパスの共通部分 |
 | outDir | string | '' | 出力先フォルダ名(フルパス) |
 | num | number | 0 | 対象ファイルの個数 |
-| files | DocletTreeFile[] | [] | 対象ファイルの情報 |
+| files | <a href="../lib/index.md#DocletTreeFile">DocletTreeFile</a>[] | [] | 対象ファイルの情報 |
 | research | string | 任意 | 調査結果ファイル名(=DocletTreeのJSON) |
 
 
