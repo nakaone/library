@@ -286,7 +286,7 @@ const menu22 = () => asv.resetSPkey();
 
 ## <a href="#typedefList"><span id="authAuditLog">"authAuditLog" データ型定義</span></a>
 
-authAuditLog: authServerの監査ログをシートに出力
+authServerの監査ログをシートに出力
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -301,7 +301,7 @@ authAuditLog: authServerの監査ログをシートに出力
 
 ## <a href="#typedefList"><span id="authErrorLog">"authErrorLog" データ型定義</span></a>
 
-authErrorLog: authServerのエラーログをシートに出力
+authServerのエラーログをシートに出力
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -315,7 +315,7 @@ authErrorLog: authServerのエラーログをシートに出力
 
 ## <a href="#typedefList"><span id="authRequestLog">"authRequestLog" データ型定義</span></a>
 
-authRequestLog: 重複チェック用のリクエスト履歴
+重複チェック用のリクエスト履歴
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -325,7 +325,7 @@ authRequestLog: 重複チェック用のリクエスト履歴
 
 ## <a href="#typedefList"><span id="authScriptProperties">"authScriptProperties" データ型定義</span></a>
 
-authScriptProperties: サーバ側ScriptPropertiesに保存する情報
+サーバ側ScriptPropertiesに保存する情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -370,7 +370,7 @@ this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
 
 ## <a href="#typedefList"><span id="authServerFuncDef">"authServerFuncDef" データ型定義</span></a>
 
-authServerFuncDef: サーバ側関数設定オブジェクト
+サーバ側関数設定オブジェクト
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -380,7 +380,7 @@ authServerFuncDef: サーバ側関数設定オブジェクト
 
 ## <a href="#typedefList"><span id="MemberDevice">"MemberDevice" データ型定義</span></a>
 
-MemberDevice: メンバが使用する通信機器の情報
+メンバが使用する通信機器の情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -394,7 +394,7 @@ MemberDevice: メンバが使用する通信機器の情報
 
 ## <a href="#typedefList"><span id="MemberLog">"MemberLog" データ型定義</span></a>
 
-MemberLog: メンバの各種要求・状態変化の時刻
+メンバの各種要求・状態変化の時刻
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -412,7 +412,7 @@ MemberLog: メンバの各種要求・状態変化の時刻
 
 ## <a href="#typedefList"><span id="MemberProfile">"MemberProfile" データ型定義</span></a>
 
-MemberProfile: メンバの属性情報
+メンバの属性情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -421,7 +421,7 @@ MemberProfile: メンバの属性情報
 
 ## <a href="#typedefList"><span id="MemberTrial">"MemberTrial" データ型定義</span></a>
 
-MemberTrial: ログイン試行情報の管理・判定
+ログイン試行情報の管理・判定
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -432,7 +432,7 @@ MemberTrial: ログイン試行情報の管理・判定
 
 ## <a href="#typedefList"><span id="MemberTrialLog">"MemberTrialLog" データ型定義</span></a>
 
-MemberTrialLog: パスコード入力単位の試行記録
+パスコード入力単位の試行記録
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |

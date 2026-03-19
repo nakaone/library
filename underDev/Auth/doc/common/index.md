@@ -45,7 +45,7 @@
 
 ## <a href="#typedefList"><span id="authRequest">"authRequest" データ型定義</span></a>
 
-authRequest: authClientからauthServerへの処理要求(平文)
+authClientからauthServerへの処理要求(平文)
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -61,10 +61,7 @@ authRequest: authClientからauthServerへの処理要求(平文)
 
 ## <a href="#typedefList"><span id="authResponse">"authResponse" データ型定義</span></a>
 
-authResponse: authServerからauthClientへの処理結果(平文)
-- memberId〜nonce : authClient設定項目(authRequestからの転記項目) : 
-- SPkeySign〜message : authServer内での追加項目
-- decrypt〜 : authClient設定項目(authServerからの返信を受け、authClient内で追加)
+authServerからauthClientへの処理結果(平文)
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -88,7 +85,7 @@ authResponse: authServerからauthClientへの処理結果(平文)
 
 ## <a href="#typedefList"><span id="encryptedRequest">"encryptedRequest" データ型定義</span></a>
 
-encryptedRequest: 暗号化された処理要求
+暗号化された処理要求
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -106,7 +103,7 @@ encryptedRequest: 暗号化された処理要求
 
 ## <a href="#typedefList"><span id="encryptedResponse">"encryptedResponse" データ型定義</span></a>
 
-encryptedResponse: 暗号化された処理結果
+暗号化された処理結果
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |

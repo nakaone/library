@@ -54,7 +54,7 @@
 
 ## <a href="#typedefList"><span id="devToolsOpt">"devToolsOpt" データ型定義</span></a>
 
-devToolsOpt: オプション設定値
+オプション設定値
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -66,7 +66,7 @@ devToolsOpt: オプション設定値
 
 ## <a href="#typedefList"><span id="Doclet">"Doclet" データ型定義</span></a>
 
-Doclet: `jsdoc -X`で配列で返されるオブジェクト
+`jsdoc -X`で配列で返されるオブジェクト
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -111,7 +111,7 @@ Doclet: `jsdoc -X`で配列で返されるオブジェクト
 
 ## <a href="#typedefList"><span id="DocletColDef">"DocletColDef" データ型定義</span></a>
 
-DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
+Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -130,7 +130,7 @@ DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletColRow">"DocletColRow" データ型定義</span></a>
 
-DocletColRow: データ項目一覧作成用追加情報
+データ項目一覧作成用追加情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -143,7 +143,7 @@ DocletColRow: データ項目一覧作成用追加情報
 
 ## <a href="#typedefList"><span id="DocletTreeFile">"DocletTreeFile" データ型定義</span></a>
 
-DocletTreeFile: 個別入力ファイル情報
+個別入力ファイル情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -156,7 +156,7 @@ DocletTreeFile: 個別入力ファイル情報
 
 ## <a href="#typedefList"><span id="DocletTreeOpt">"DocletTreeOpt" データ型定義</span></a>
 
-DocletTreeOpt: オプション設定値
+オプション設定値
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -172,7 +172,7 @@ DocletTreeOpt: オプション設定値
 
 ## <a href="#typedefList"><span id="DocletTreeSource">"DocletTreeSource" データ型定義</span></a>
 
-DocletTreeSource: 統合版入力ファイル(JSソース)情報
+統合版入力ファイル(JSソース)情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -185,8 +185,7 @@ DocletTreeSource: 統合版入力ファイル(JSソース)情報
 
 ## <a href="#typedefList"><span id="DocletTreeSymbol">"DocletTreeSymbol" データ型定義</span></a>
 
-DocletTreeSymbol: クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
-- 作成はDocletTree.registration内で行う
+クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |

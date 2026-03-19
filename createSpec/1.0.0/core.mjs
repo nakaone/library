@@ -1492,8 +1492,8 @@ async function createSpec(opt={}){
           if( v.r instanceof Error ) throw v.r;
 
           dev.step(3.2);  // 説明文を追加
-          if( Object.hasOwn(doclet,'description') && doclet.description.length > 0 )
-            v.r = doclet.description + '\n\n' + v.r;
+          if( Object.hasOwn(doclet,'label') && doclet.label.length > 0 )
+            v.r = doclet.label + '\n\n' + v.r;
 
           dev.step(3.3);  // 記事作成
           v.r = this.article({

@@ -264,7 +264,7 @@
 
 ## <a href="#typedefList"><span id="authClientConfig">"authClientConfig" データ型定義</span></a>
 
-authClientConfig: 共通設定情報にauthClient特有項目を追加
+共通設定情報にauthClient特有項目を追加
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -276,7 +276,7 @@ authClientConfig: 共通設定情報にauthClient特有項目を追加
 
 ## <a href="#typedefList"><span id="authIndexedDB">"authIndexedDB" データ型定義</span></a>
 
-authIndexedDB: IndexedDBに保存する内容(=this.idb)
+IndexedDBに保存する内容(=this.idb)
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
