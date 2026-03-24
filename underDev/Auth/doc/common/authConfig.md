@@ -26,7 +26,7 @@
 
 # <span id="authConfig_top">🧩 authConfigクラス仕様書</span>
 
-継承元：<a href="../lib/Schema.md">Schema</a>
+継承元：<a href="../Schema.md">Schema</a>
 
 ## <a href="#authConfig_top"><span id="authConfig_prop">🔢 authConfig メンバ一覧</span></a>
 
@@ -59,4 +59,4 @@ authConfig.constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| arg | <a href="../common/authConfig.md">authConfig</a> | 必須 | 設定情報(既定値からの変更部分) |
+| arg | <a href="../authConfig.<a href="../index.md#md">md</a>">authConfig</a> | 必須 | 設定情報(既定値からの変更部分) |

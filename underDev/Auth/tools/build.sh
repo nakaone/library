@@ -116,6 +116,7 @@ function overviewDesign {  # readme/index.md他の全体的な仕様書
   cp $src/doc/*.svg $doc/img/
 
   # -- doc直下
+  echo "od: doc直下"
   # 総説
   cat $tmp/header.md $src/doc/readme.md | awk 1 | node $embed -src:$src -tmp:$tmp > $doc/readme.md
   # 暗号化・署名方式
@@ -127,15 +128,19 @@ function overviewDesign {  # readme/index.md他の全体的な仕様書
 
   # -- doc/xxx
   # クライアント・サーバ共通
+  echo "od: common"
   cat $src/doc/header.md $src/doc/common.md $tmp/createSpec/common/index.md | awk 1 | \
   node $embed -src:$src -tmp:$tmp > $doc/common/index.md
   # クライアント側
+  echo "od: client"
   cat $src/doc/header.md $src/doc/client.md $tmp/createSpec/client/index.md | awk 1 | \
   node $embed -src:$src -tmp:$tmp > $doc/client/index.md
   # サーバ側
+  echo "od: server"
   cat $src/doc/header.md $src/doc/server.md $tmp/createSpec/server/index.md | awk 1 | \
   node $embed -src:$src -tmp:$tmp > $doc/server/index.md
   # 独自ライブラリ
+  echo "od: lib"
   cat $src/doc/header.md $src/doc/lib.md $tmp/createSpec/lib/index.md | awk 1 | \
   node $embed -src:$src -tmp:$tmp > $doc/lib/index.md
 }

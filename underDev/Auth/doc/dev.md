@@ -30,15 +30,57 @@
 
 # <span id="log"><a href="#top">変更履歴</a></span>
 
-- build0011: SPkey取得
+- build0012: SPkey取得
   - authClientでauthRequest(SPkey要求)作成
   - authServerで受信、内容確認
   - authServerでauthResponse作成
   - authClientで受信、内容確認、格納
 
-- build0010: createSpec関係バグ修正
+- build0011: クラス・グローバル関数の枠組み作成
   == いまここ ================================
+  - [bug] userSettings.mjsの解説文が出力されない
+  - src/doc/specDef.mjs : 定義済情報がソースに反映されているか確認
+    - authConfig
+      - authConfig
+      - authRequest
+      - authResponse
+      - encryptedRequest
+      - encryptedResponse
+    - authClient
+      - authClient
+      - authClientConfig
+      - authIndexedDB
+      - LocalRequest
+      - LocalResponse
+    - cryptoClient
+    - authServer
+      - authAuditLog
+      - authErrorLog
+      - authRequestLog
+      - authScriptProperties
+      - authServer
+      - authServerConfig
+    - cryptoServer
+    - Member
+      - Member
+      - MemberDevice
+      - MemberLog
+      - MemberProfile
+      - MemberTrial
+      - MemberTrialLog
+
+      - dtError -> ???
+  - common/authConfig.mjs
+  - client/authClient.mjs
+  - client/cryptoClient.mjs
+  - server/authServer.mjs
+  - server/cryptoServer.mjs
+  - server/Member.mjs
   == 対応済 ==================================
+  - common/config.mjs -> userSettings.mjs : ユーザ必須指定項目を一元化
+    「設定は一箇所で・埋め込みは必要な分だけ」
+
+- build0010: createSpec関係バグ修正
   - client/index.md: 「グローバル関数・クラス一覧」「データ型定義一覧」にアンカー設定
     index.md先頭でサブメニュー表示を可能にする
   - [bug] lib/index.md devToolsOpt.mode: 表内説明欄のMDテーブルがテキストとして表示

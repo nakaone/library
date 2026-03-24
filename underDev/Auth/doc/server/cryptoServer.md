@@ -32,9 +32,9 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定情報 |
+| cf | <a href="../index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定情報 |
 | prop | ScriptProperties | 必須 | PropertiesService.getScriptProperties() |
-| keys | <a href="../server/index.md#authScriptProperties">authScriptProperties</a> | 必須 | ScriptPropertiesに保存された鍵ペア情報 |
+| keys | <a href="../index.md#authScriptProperties">authScriptProperties</a> | 必須 | ScriptPropertiesに保存された鍵ペア情報 |
 | keyList | string[] | 必須 | ScriptPropertiesに保存された項目名の一覧 |
 
 ## <a href="#cryptoServer_top"><span id="cryptoServer_func">🧱 cryptoServer メソッド・内部関数一覧</span></a>
@@ -60,7 +60,7 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定値 |
+| cf | <a href="../index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定値 |
 
 ## <span id="cryptoServer-encrypt_top">🧩 encrypt()</span>
 
@@ -70,14 +70,14 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| response | <a href="../common/index.md#authResponse">authResponse</a> | 必須 | 処理結果 |
+| response | <a href="../index.<a href="../index.md#md">md</a>#authResponse">authResponse</a> | 必須 | 処理結果 |
 | CPkeySign | string | 必須 | クライアント側署名用公開鍵 |
 
 ### <a href="#cryptoServer-encrypt_top"><span id="cryptoServer-encrypt_return">◀️ encrypt 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../common/index.md#encryptedResponse">encryptedResponse</a> |  |
+| <a href="../index.<a href="../index.md#md">md</a>#encryptedResponse">encryptedResponse</a> |  |
 
 ## <span id="cryptoServer-decrypt_top">🧩 decrypt()</span>
 
@@ -87,14 +87,14 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| request | <a href="../common/index.md#encryptedRequest">encryptedRequest</a> | 必須 | 暗号化されたサーバ側処理結果 |
+| request | <a href="../index.<a href="../index.md#md">md</a>#encryptedRequest">encryptedRequest</a> | 必須 | 暗号化されたサーバ側処理結果 |
 | CPkeySign | string | 必須 | クライアント側署名用公開鍵 |
 
 ### <a href="#cryptoServer-decrypt_top"><span id="cryptoServer-decrypt_return">◀️ decrypt 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../common/index.md#authRequest">authRequest</a> |  |
+| <a href="../index.<a href="../index.md#md">md</a>#authRequest">authRequest</a> |  |
 
 ## <span id="cryptoServer-generateKeys_top">🧩 generateKeys()</span>
 
@@ -133,10 +133,10 @@ cryptoServerインスタンス作成
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| cf | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定値 |
+| cf | <a href="../index.md#authServerConfig">authServerConfig</a> | 必須 | authServer設定値 |
 
 ### <a href="#cryptoServer-initialize_top"><span id="cryptoServer-initialize_return">◀️ initialize 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../server/cryptoServer.md">cryptoServer</a> \| Error |  |
+| <a href="../cryptoServer.md">cryptoServer</a> \| Error |  |

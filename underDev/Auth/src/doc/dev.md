@@ -12,19 +12,61 @@
 
 - build0011: クラス・グローバル関数の枠組み作成
   == いまここ ================================
+  - createSpec: 解説文の出力
+    - [bug] userSettings.mjsの解説文が出力されない
+    - [bug] "@memberof createSpec"が指定されているのに開発工程・残課題の解説文が
+      createSpecではなくlib/index.mdに出力される
+    - [bug] 解説文のDocletEx.nameに和文が含まれている(createSpec.mjs)
+    - [bug] lib/index.md > Docletデータ型定義に解説文「meta.code.typeの内容」が無い
+      ※ 当該解説文は"memberof Doclet"
+    - [bug] lib/index.md > 解説文集に「meta.code.typeの内容」が含まれている
+    - □クラス・グローバル関数・データ型定義内部の解説文が拾われているか確認
+    - □特定のクラス・グローバル関数に含まれるデータ型定義もindex.mdに含まれているか確認
+      ※ 探すのが大変なので、内部定義のデータ型も一覧には載せたい
+    - □解説文の@nameに①スペースが入った場合、②和文が含まれる場合、正常に遷移するか確認
+    - □解説文にHTMLテーブルが含まれる場合、正常に表示されるか確認
+      NGならmakeIndexMD step.1.3のmarkedを有効化する
+
+  - src/doc/specDef.mjs : 定義済情報がソースに反映されているか確認
+    - authConfig
+      - authConfig
+      - authRequest
+      - authResponse
+      - encryptedRequest
+      - encryptedResponse
+    - authClient
+      - authClient
+      - authClientConfig
+      - authIndexedDB
+      - LocalRequest
+      - LocalResponse
+    - cryptoClient
+    - authServer
+      - authAuditLog
+      - authErrorLog
+      - authRequestLog
+      - authScriptProperties
+      - authServer
+      - authServerConfig
+    - cryptoServer
+    - Member
+      - Member
+      - MemberDevice
+      - MemberLog
+      - MemberProfile
+      - MemberTrial
+      - MemberTrialLog
+
+      - dtError -> ???
   - common/authConfig.mjs
-    - config.mjsの作り替え：「設定は一箇所で・埋め込みは必要な分だけ」
-      現状だとクライアント側にサーバ側のconfig情報も含まれてしまう。
-      build.shでクライアント・サーバそれぞれの専用configを作れるようにする。
-      現状xxxx.20260319.mjsとして残す。
-      - 現状：config.mjsからimport/export文を削除してtmp/config.jsを作成、src/client/index.html, src/server/code.jsに埋め込み
-      - 改善：config.mjsを実行してtmp/config.client.js, tmp/config.server.jsを作成、src/client/index.html, src/server/code.jsに埋め込み
   - client/authClient.mjs
   - client/cryptoClient.mjs
   - server/authServer.mjs
   - server/cryptoServer.mjs
   - server/Member.mjs
   == 対応済 ==================================
+  - common/config.mjs -> userSettings.mjs : ユーザ必須指定項目を一元化
+    「設定は一箇所で・埋め込みは必要な分だけ」
 
 - build0010: createSpec関係バグ修正
   - client/index.md: 「グローバル関数・クラス一覧」「データ型定義一覧」にアンカー設定

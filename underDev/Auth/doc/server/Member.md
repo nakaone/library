@@ -60,8 +60,8 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| config | <a href="../server/index.md#authServerConfig">authServerConfig</a> | 必須 | authServerの設定値 |
-| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求 |
+| config | <a href="../index.md#authServerConfig">authServerConfig</a> | 必須 | authServerの設定値 |
+| request | <a href="../index.<a href="../index.md#md">md</a>#authRequest">authRequest</a> | 必須 | 処理要求 |
 
 ## <span id="Member-addTrial_top">🧩 addTrial()</span>
 
@@ -71,13 +71,13 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求 |
+| request | <a href="../index.<a href="../index.md#md">md</a>#authRequest">authRequest</a> | 必須 | 処理要求 |
 
 ### <a href="#Member-addTrial_top"><span id="Member-addTrial_return">◀️ addTrial 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../common/index.md#authResponse">authResponse</a> \| Error |  |
+| <a href="../index.<a href="../index.md#md">md</a>#authResponse">authResponse</a> \| Error |  |
 
 ## <span id="Member-checkPasscode_top">🧩 checkPasscode()</span>
 
@@ -91,13 +91,13 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求 |
+| request | <a href="../index.<a href="../index.md#md">md</a>#authRequest">authRequest</a> | 必須 | 処理要求 |
 
 ### <a href="#Member-checkPasscode_top"><span id="Member-checkPasscode_return">◀️ checkPasscode 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../common/index.md#authResponse">authResponse</a> \| Error |  |
+| <a href="../index.<a href="../index.md#md">md</a>#authResponse">authResponse</a> \| Error |  |
 
 ## <span id="Member-getMember_top">🧩 getMember()</span>
 
@@ -113,7 +113,7 @@
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../server/Member.md">Member</a> \| Error | いまここ：元は"authResponse"だったが、"Member"の方がベター？ |
+| <a href="../Member.md">Member</a> \| Error | いまここ：元は"authResponse"だったが、"Member"の方がベター？ |
 
 ## <span id="Member-judgeMember_top">🧩 judgeMember()</span>
 

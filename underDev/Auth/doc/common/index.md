@@ -31,6 +31,12 @@
 
 </div>
 
+## <a href="#top"><span id="userSettings">ユーザ指定が必要な設定情報</span></a>
+
+- authClient/Server, cryptoClient/Server, Member関係各クラスで【ユーザ指定が必須】の項目集
+- 各クラスの設定項目が多く「どの項目はユーザ指定が必要？」というのが分かりづらいため分離
+- ここでの設定値は各クラスのconstructorに渡す(不要項目は廃棄)
+- クライアント側に秘匿する情報はここで設定せず、別途サーバ側で対処する
 # <a href="#top"><span id="funclassList">グローバル関数・クラス一覧</span></a>
 
 | クラス/関数名 | 概要 |

@@ -59,7 +59,7 @@ async function createSpec(opt={}){
    *   -o $tmp/createSpec -r $tmp/DocletTree.json \
    *   1> $tmp/createSpec/result.log 2> $tmp/createSpec/error.log
    *   ```
-   * - 埋込指示子対応：<!--：：command：：{JSON}：：-->
+   * - 埋込指示子対応：<!--::command::{JSON}::-->
    *   - setvalue: オブジェクトに設定する値の一覧
    *     {type:データ型名, value:{キー:値,...}}
    *     戻り値への値設定を想定。指定無しならdefaultvalueを表示
@@ -694,17 +694,16 @@ async function createSpec(opt={}){
    * @prop {string} [research] - 調査結果ファイル名(=DocletTreeのJSON)
    */
   /** DocletTreeFolder: パス毎の所属Doclet管理(フォルダ管理)
-   * @typedef {Object} DocletTreeFolder
+   * @class DocletTreeFolder
    * @memberof createSpec
    * @prop {string} folderName
-   * @prop {Object.<string, DocletEx>} description - 解説文(key=DocletEx.uuid)
    * @prop {Object.<string, DocletEx>} funclass - グローバル関数・クラス定義(key=DocletEx.uuid)
    * @prop {Object.<string, DocletEx>} typedef - データ型定義(key=DocletEx.uuid)
    * @prop {Object.<string, DocletTreeFolder>} children - 子フォルダ。キーはフォルダ名
    */
   /** DocletTreeSymbol: クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
    * - 作成はDocletTree.registration内で行う
-   * @typedef {Object} DocletTreeSymbol
+   * @interface DocletTreeSymbol
    * @memberof createSpec
    * @prop {string} name - クラス・グローバル関数名・データ型定義名
    * @prop {RegExp} rex - 名称を含むかを判定する正規表現
@@ -1394,7 +1393,6 @@ async function createSpec(opt={}){
 
         v.rv = {
           folderName: folderName,
-          description: {},
           funclass: {},
           typedef: {},
           children: {},
@@ -1415,73 +1413,10 @@ async function createSpec(opt={}){
     makeIndexMD(folder){
       const v = {whois:`${this.constructor.name}.makeIndexMD`, arg:{folder}, rv:[]};
       const dev = new devTools(v,{mode:'pipe'});
-      /** index.mdの構成
-       * @name Structure of index.md
-       * @memberof makeIndexMD
-       * @desc
-       * - 解説文
-       *   特定のグローバル関数・クラスに属さない解説文(name+desc)をまとめて掲載。
-       *   解説文全体のタイトル行はid="descriptions"
-       *   個々の解説文はid=DocletEx.name
-       * - グローバル関数・クラス一覧(id="funclassList")
-       *   フォルダ配下のソースに含まれるグローバル関数・クラスの一覧。
-       *   ソースは不問、別ファイルでも同一フォルダなら並べて表示。
-       * - データ型定義一覧(id="typedefList")
-       *   フォルダ配下のソースに含まれるデータ型定義の一覧。
-       * - 個別データ型定義(id=DocletEx.name)
-       *   データ型定義一覧に掲載されたデータ型毎に詳細情報を表示。
-       */
       try {
 
         // -------------------------------------------------------------
-        dev.step(1);  // 解説文
-        // -------------------------------------------------------------
-        v.fd = folder.description;
-        v.list = Object.keys(v.fd);
-        if( v.list.length > 0 ){
-          dev.step(1.1);  // 記事を①prefix(フォルダ＋ファイル名)、②lineno順に並べる
-          v.list.sort((a, b) => {
-            if (v.fd[a].prefix !== undefined && v.fd[b].prefix !== undefined) {
-              if (v.fd[a].prefix < v.fd[b].prefix) return -1;
-              if (v.fd[a].prefix > v.fd[b].prefix) return 1;
-            }
-            if (v.fd[a].meta?.lineno !== undefined && v.fd[b].meta?.lineno !== undefined) {
-              if (v.fd[a].meta?.lineno < v.fd[b].meta?.lineno) return -1;
-              if (v.fd[a].meta?.lineno > v.fd[b].meta?.lineno) return 1;
-            }
-            return 0;
-          });
-
-          dev.step(1.2);  // 解説文が複数有れば解説文全体のタイトル行と個々の解説文一覧作成
-          if( v.list.length > 1 ){
-            // 解説文全体のタイトル行作成
-            v.rv.push(`# <a href="#top"><span id="descriptions">${folder.name}関係補足説明</span></a>\n\n`);
-            // 個々の解説文一覧作成：「ファイル名：ラベル(一行の概説)」形式
-            v.list.forEach(l => v.rv.push(`- ${v.fd[l].prefix}: [${v.fd[l].label}](#${v.fd[l].name})`));
-            v.rv.push('\n\n');
-          }
-
-          dev.step(1.3);  // 個々の記事作成
-          v.list.forEach(l => {
-            v.r = this.article({
-              title: v.fd[l].label,
-              level: 2,
-              url: '#top',
-              anchor: v.fd[l].name,
-              content: // 解説文中にタイトル行があればレベルシフト(+2レベル)
-                v.fd[l].concatenated.split('\n').map(x => x.substr(0,1) === '#'
-                ? '##'+x : x).join('\n'),
-                // セル文字列にMarkdownテーブルが含まれる場合はHTML化 <= 要る？
-                ///(:--|--:)/.test(v.fd[l].concatenated)
-                //? marked(v.fd[l].concatenated) : v.fd[l].concatenated,
-            });
-            if( v.r instanceof Error ) throw v.r;
-            v.rv.push('',v.r);;
-          });
-        }
-
-        // -------------------------------------------------------------
-        dev.step(2); // グローバル関数・クラス一覧
+        dev.step(1); // グローバル関数・クラス一覧
         // -------------------------------------------------------------
         v.rv.push(`# <a href="#top"><span id="funclassList">グローバル関数・クラス一覧</span></a>`);
         v.data = [];
@@ -1502,13 +1437,13 @@ async function createSpec(opt={}){
         v.rv.push('',v.r);
 
         // -------------------------------------------------------------
-        dev.step(3);  // データ型定義一覧
+        dev.step(2);  // データ型定義一覧
         // -------------------------------------------------------------
-        dev.step(3.1);  // データ型定義(folder.typedef)を配列化
+        dev.step(2.1);  // データ型定義(folder.typedef)を配列化
         v.list = Object.keys(folder.typedef).map(x => this.map[x])
         .sort((a,b) => {return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })});
 
-        dev.step(3.2);  // テーブル用データ作成
+        dev.step(2.2);  // テーブル用データ作成
         v.data = [];
         for( v.i=0 ; v.i<v.list.length ; v.i++ ){
           v.data.push({
@@ -1518,7 +1453,7 @@ async function createSpec(opt={}){
           });
         }
 
-        dev.step(3.3);  // Markdownテーブル作成
+        dev.step(2.3);  // Markdownテーブル作成
         v.r = DocletTree.makeTable(v.data,{header:[
           {key:'no',label:'No',align:'--:'},
           {key:'name',label:'データ型名',align:':--'},
@@ -1526,7 +1461,7 @@ async function createSpec(opt={}){
         ]});
         if( v.r instanceof Error ) throw v.r;
 
-        dev.step(3.4);  // 記事作成
+        dev.step(2.4);  // 記事作成
         v.r = this.article({
           title: `データ型定義一覧`,
           level: 1,
@@ -1538,13 +1473,13 @@ async function createSpec(opt={}){
         v.rv.push('',v.r);;
 
         // -------------------------------------------------------------
-        dev.step(4);  // 個別データ型定義
+        dev.step(3);  // 個別データ型定義
         // -------------------------------------------------------------
         v.rv.push('',`# 個別データ型定義`)
         // v.list {DocletEx[]} - 配列化されたデータ型定義
         v.list.forEach(doclet => {
 
-          dev.step(4.1);  // 項目一覧
+          dev.step(3.1);  // 項目一覧
           v.data = doclet.properties.map(x => x.row);
           v.opt = {header:JSON.parse(JSON.stringify(this.opt.propHeader)),doclet:doclet};
           // 全項目(prop)の備考欄が空白なら割愛
@@ -1554,14 +1489,24 @@ async function createSpec(opt={}){
           v.r = DocletTree.makeTable(v.data,v.opt);
           if( v.r instanceof Error ) throw v.r;
 
-          dev.step(4.2);  // 説明文・出典を追加
+          dev.step(3.2);  // 説明文・出典を追加
           v.content = `<p class="source">source: ${
             doclet.unique ?? ''}${
             doclet.meta?.filename ?? doclet.basename} ${
             typeof doclet.meta?.lineno === 'number' ? `line.${doclet.meta.lineno}` : ''
           }</p>\n\n${doclet.label ? (doclet.label+'\n') : ''}\n${v.r}\n\n`;
+          /*
+          v.content = (doclet.label ? (doclet.label+'\n') : '')
+          + `<p class="source">source: ${
+            doclet.unique ?? ''}${
+            doclet.meta?.filename ?? doclet.basename} ${
+            typeof doclet.meta?.lineno === 'number' ? `line.${doclet.meta.lineno}` : ''
+          }</p>\n\n` + v.r;
+          */
+          //if( Object.hasOwn(doclet,'label') && doclet.label.length > 0 )
+          //  v.content = doclet.label + '\n\n' + v.r;
 
-          dev.step(4.3);  // 記事作成
+          dev.step(3.3);  // 記事作成
           v.r = this.article({
             title: `"${doclet.name}" データ型定義`,
             level: 2,
@@ -1686,7 +1631,7 @@ async function createSpec(opt={}){
         });
 
         dev.step(3);  // トップシート(index.md)の作成
-        if( ["funclass", "typedef", "description"].some(key => Object.keys(folder[key]).length > 0)){
+        if( Object.keys(folder.funclass).length > 0 || Object.keys(folder.typedef).length > 0 ){
           v.r = this.makeIndexMD(folder);
           if( v.r instanceof Error ) throw v.r;
           writeFileSync(`${v.path}/${this.opt.indexMd}`,v.r);
@@ -1780,43 +1725,8 @@ async function createSpec(opt={}){
             });
           }
 
-          dev.step(5);  // 解説文、グローバル関数・クラスまたはデータ型定義の場合、登録
-          if( ['typedef','interface','class','function','description'].includes(doclet.docletType) ){
-            v.o = { // DocletTree.symbols登録用プロトタイプ
-              name: doclet.name,
-              rex: new RegExp(`${doclet.name}\\b`,'g'),
-              link: null,
-            };
-            switch( doclet.docletType ){
-              case 'function':
-              case 'class':
-                // 所属フォルダのfunclassに登録
-                v.folder.funclass[doclet.uuid] = doclet;
-                // グローバル関数・クラスのリンク先は個別ファイル
-                v.o.link = doclet.name + '.md';
-                break;
-              case 'typedef':
-              case 'interface':
-                // 所属フォルダのtypedefに登録
-                v.folder.typedef[doclet.uuid] = doclet;
-                // データ型定義のリンク先はフォルダ別トップシート(index.md)内ローカルリンク
-                v.o.link = this.opt.indexMd + '#' + doclet.name;
-                break;
-              case 'description':
-                // 所属フォルダのdescriptionに登録
-                v.folder.description[doclet.uuid] = doclet;
-                // データ型定義のリンク先はフォルダ別トップシート(index.md)内ローカルリンク
-                v.o.link = this.opt.indexMd + '#' + doclet.name;
-                break;
-            };
-
-            // シンボル名(クラス・グローバル関数名、データ型名)でDocletTree.mapに登録
-            this.map[doclet.name] = Object.hasOwn(this.map,doclet.name) ? null : doclet;
-
-            // クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報を登録
-            DocletTree.symbols[doclet.name]
-            = Object.hasOwn(DocletTree.symbols,doclet.name) ? null : v.o;
-            /*
+          dev.step(5);  // グローバル関数・クラスまたはデータ型定義の場合、登録
+          if( ['typedef','interface','class','function'].includes(doclet.docletType) ){
             dev.step(5.1);  // 所属フォルダのfunclass/typedefに登録
             v.f = ['function','class'].includes(doclet.docletType) ? 'funclass' : 'typedef';
             v.folder[v.f][doclet.uuid] = doclet;
@@ -1839,7 +1749,6 @@ async function createSpec(opt={}){
             }
             DocletTree.symbols[doclet.name]
             = Object.hasOwn(DocletTree.symbols,doclet.name) ? null : v.o;
-            */
           }
         }
 

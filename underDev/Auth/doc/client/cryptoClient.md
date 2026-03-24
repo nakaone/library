@@ -32,7 +32,7 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| idb | <a href="../client/index.md#authIndexedDB">authIndexedDB</a> | 必須 | authClient.idb(IndexedDB)のコピー |
+| idb | <a href="../index.<a href="../index.md#md">md</a>#authIndexedDB">authIndexedDB</a> | 必須 | authClient.idb(IndexedDB)のコピー |
 | RSAbits | string | 必須 | RSA鍵長(=authConfig.RSAbits) |
 
 ## <a href="#cryptoClient_top"><span id="cryptoClient_func">🧱 cryptoClient メソッド・内部関数一覧</span></a>
@@ -56,7 +56,7 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| idb | <a href="../client/index.md#authIndexedDB">authIndexedDB</a> | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数<br>  CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
+| idb | <a href="../index.<a href="../index.md#md">md</a>#authIndexedDB">authIndexedDB</a> | 必須 | IndexedDBの内容を保持するauthClientのメンバ変数<br>  CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在 |
 | RSAbits | number | 必須 | RSA鍵長 |
 
 ## <span id="cryptoClient-encrypt_top">🧩 encrypt()</span>
@@ -73,13 +73,13 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| request | <a href="../common/index.md#authRequest">authRequest</a> | 必須 | 処理要求 |
+| request | <a href="../index.<a href="../index.md#md">md</a>#authRequest">authRequest</a> | 必須 | 処理要求 |
 
 ### <a href="#cryptoClient-encrypt_top"><span id="cryptoClient-encrypt_return">◀️ encrypt 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../common/index.md#encryptedRequest">encryptedRequest</a> |  |
+| <a href="../index.<a href="../index.md#md">md</a>#encryptedRequest">encryptedRequest</a> |  |
 
 ### <span id="cryptoClient-encrypt-dummyFunc_top">🧩 dummyFunc()</span>
 
@@ -106,13 +106,13 @@ constructor
 
 | 項目名 | データ型 | 要否/既定値 | 説明 |
 | :-- | :-- | :-- | :-- |
-| response | <a href="../common/index.md#encryptedResponse">encryptedResponse</a> | 必須 | 暗号化されたサーバ側処理結果 |
+| response | <a href="../index.<a href="../index.md#md">md</a>#encryptedResponse">encryptedResponse</a> | 必須 | 暗号化されたサーバ側処理結果 |
 
 ### <a href="#cryptoClient-decrypt_top"><span id="cryptoClient-decrypt_return">◀️ decrypt 戻り値</span></a>
 
 | データ型 | 説明 |
 | :-- | :-- |
-| <a href="../common/index.md#authResponse">authResponse</a> |  |
+| <a href="../index.<a href="../index.md#md">md</a>#authResponse">authResponse</a> |  |
 
 ## <span id="cryptoClient-generateKeys_top">🧩 generateKeys()</span>
 
