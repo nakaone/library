@@ -4,14 +4,15 @@ export const utils = {
    * @param {any} arg - 判定対象
    * @returns {boolean} オブジェクトならtrue
    * @history
+   * - rev.1.0.1 : 2026/03/26
+   *   - 配列・constructor判定をgetPrototypeOfに統合
    * - rev.1.0.0 : 2026/03/07 - 初版
    */
   isObject: arg => {
     return typeof arg !== 'undefined'
       && arg !== null
       && typeof arg === 'object'
-      && !Array.isArray(arg)
-      && arg.constructor === Object;
+      && Object.getPrototypeOf(obj) === Object.prototype;
   },
 
   /** isJSON: JSON文字列か判定

@@ -13,84 +13,20 @@ v.rl.on("close", () => {
  * @returns {null|Error} 戻り値
  */
 function createSpec(arg) {
-  const pv = {whois:`createSpec`,doclets:[],map:{}};
+  const v = {whois:`createSpec`, arg:{arg}, rv:null};
+  const dev = new devTools(v,{mode:'pipe'});
+  try {
 
-  /** main: createSpec主処理
-   * @memberof createSpec
-   * @param {string} arg - `jsdoc -X`の実行結果(テキスト)
-   * @returns {null|Error} 戻り値
-   */
-  function main(arg) {
-    const v = {whois:`${pv.whois}.main`, arg:{arg}, rv:null};
-    const dev = new devTools(v,{mode:'pipe'});
-    try {
+    dev.step(1);
+    v.r = new DocletTree(arg);
+    if( v.r instanceof Error ) throw v.r;
 
-      dev.step(1); // Doclet単独で設定可能な項目を追加
-      v.r = preprocess(arg);
-      if( v.r instanceof Error ) throw v.r;
+    dev.step(99,v.r);
 
-      dev.step(99,pv.doclets);
-      dev.end(); // 終了処理
-      return v.rv;
+    dev.end(); // 終了処理
+    return v.rv;
 
-    } catch (e) { return dev.error(e); }
-  }
-
-  /** preprocess: Doclet単独で設定可能な項目を追加
-   * @memberof createSpec
-   * @param {string} arg - 引数
-   * @returns {null|Error} 戻り値
-   */
-  function preprocess(arg) {
-    const v = {whois:`${pv.whois}.preprocess`, arg:{arg}, rv:null};
-    const dev = new devTools(v,{mode:'pipe'});
-    try {
-
-      v.doclets = JSON.parse(arg);
-      dev.step(0.1,v.doclets.filter(x => typeof x.longname !== 'string'));
-      for( v.i=0 ; v.i<v.doclets.length ; v.i++ ){
-        v.d = v.doclets[v.i];
-
-        dev.step(1.1);  // packageは対象外
-        if( v.d.kind === 'package' ) continue;
-
-        dev.step(1.2);  // comment, meta.path, meta.filename の存否チェック
-        if( typeof v.d.meta?.path !== 'string' )
-          throw new Error(`Invalid meta.path: ${JSON.stringify(v.d,null,2)}`);
-        if( typeof v.d.meta?.filename !== 'string' )
-          throw new Error(`Invalid meta.filename: ${JSON.stringify(v.d,null,2)}`);
-        if( typeof v.d.meta?.lineno !== 'number' )
-          throw new Error(`Invalid meta.lineno: ${JSON.stringify(v.d,null,2)}`);
-        if( typeof v.d.comment !== 'string' )
-          throw new Error(`Invalid comment: ${JSON.stringify(v.d,null,2)}`);
-        if( typeof v.d.longname !== 'string' )
-          throw new Error(`Invalid longname: ${JSON.stringify(v.d,null,2)}`);
-
-        dev.step(1.3);  // 改行コードを'\\n'に修正(∵ダンプ時の視認性向上)
-        /* properties.description, tags[].text等、漏れが多いので断念
-        v.rep = str => str.trim().replaceAll(/\n/g,'\\n');
-        ['comment','description','classdesc','examples'].forEach(p => {
-          if( Object.hasOwn(v.d,p) ){
-            v.d[p] = Array.isArray(v.d[p]) ? v.d[p].map(x => v.rep(x)) : v.rep(v.d[p]);
-          }
-        });*/        
-
-        dev.step(2);  // UUIDを採番
-        v.d.uuid = randomUUID();
-
-        // fullname = unique + meta.filename + 
-        // 単一のファイルを対象に`jsdoc -X`で出力されたJSONで、longnameが重複する可能性はあるか？
-        pv.doclets.push(v.d);
-      }
-
-      
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
-
-  return main(arg);
+  } catch (e) { return dev.error(e); }
 }
 
 /** DocletColRow: データ項目一覧作成用追加情報
@@ -414,8 +350,96 @@ class DocletEx {
    * ```
    */
 
+  /**
+   * @constructor
+   * @memberof DocletEx
+   * @param {Doclet} doclet - 引数
+   * @returns {DocletEx|null|Error} 戻り値
+   *   null: kind="package"等、処理対象外のdoclet
+   */
+  constructor(doclet) {
+    const v = {whois:`DocletEx.constructor`, arg:{doclet}, rv:null};
+    const dev = new devTools(v,{mode:'pipe'});
+    try {
+
+      dev.step(1.1);  // 処理対象のdocletか判定
+      if( doclet.kind === 'package' ){
+        dev.end(); // 終了処理
+        return v.rv;
+      }
+
+      dev.step(1.2);  // comment, meta.path, meta.filename の存否チェック
+      v.errorMsg = [];  // 個別チェック項目を一通りチェックしてからエラーを出せるよう配列化
+      if( typeof doclet.meta?.path !== 'string' ) v.errorMsg.push(`Invalid meta.path`);
+      if( typeof doclet.meta?.filename !== 'string' ) v.errorMsg.push(`Invalid meta.filename`);
+      if( typeof doclet.meta?.lineno !== 'number' ) v.errorMsg.push(`Invalid meta.lineno`);
+      if( typeof doclet.comment !== 'string' ) v.errorMsg.push(`Invalid comment`);
+      if( typeof doclet.longname !== 'string' ) v.errorMsg.push(`Invalid longname`);
+
+      if( v.errorMsg.length > 0 ){
+        // チェック項目のいずれかでエラーが有った場合、後続処理はスキップ
+        throw new Error(v.errorMsg.join('\n')+JSON.stringify(doclet,null,2));
+      }
+
+      dev.step(2);  // docletをDocletExのメンバとして登録
+      v.cloneValue = value => {
+        if (Array.isArray(value)) {
+          return value.map(x => v.cloneValue(x));
+        } else if (value !== null && typeof value === "object") {
+          const obj = {};
+          for (const k of Object.keys(value)) {
+            obj[k] = v.cloneValue(value[k]);
+          }
+          return obj;
+        } else {
+          // 開発時にダンプした際の視認性向上のため、改行を'\\n'に置換
+          return typeof value !== 'string' ? value :
+            value.trim().replaceAll(/\n/g,'\\n');
+        }
+      }
+
+      for( v.key of Object.keys(doclet) ){
+        this[v.key] = v.cloneValue(doclet[v.key]);
+      }
+
+      dev.step(2.1);  // UUIDを採番
+      doclet.uuid = randomUUID();
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
 }
 
 class DocletTree {
-  
+  /**
+   * @constructor
+   * @memberof DocletTree
+   * @param {string} arg - `jsdoc -X`の実行結果(テキスト)
+   * @returns {DocletTree|Error} 戻り値
+   */
+  constructor(arg) {
+    const v = {whois:`DocletTree.constructor`, arg:{arg}, rv:null};
+    const dev = new devTools(v,{mode:'pipe'});
+    try {
+
+      dev.step(1);
+      v.doclets = JSON.parse(arg);
+      this.doclets = [];
+      v.errorLog = [];  // 全docletsを一通りチェックしてからエラーを出せるよう配列化
+      for( v.i=0 ; v.i<v.doclets.length ; v.i++ ){
+        v.r = new DocletEx(v.doclets[v.i]);
+        if( v.r instanceof Error ) v.errorLog.push(v.r.message);
+        else if( v.r !== null ) this.doclets.push(v.r);
+      }
+
+      dev.step(1.1);
+      if( v.errorLog.length > 0 ) throw new Error(v.errorLog.join('\n'));
+
+      dev.end(); // 終了処理
+    } catch (e) { return dev.error(e); }
+  }
+
 }
