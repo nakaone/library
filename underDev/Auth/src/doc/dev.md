@@ -2,31 +2,60 @@
 
 | [変更履歴](#log) | [実装方針](#policy) | [フォルダ構成](#folder) | [build.sh](#build) | [GCP Prj作成](#GCP) | [GASデプロイ](#GASdeploy) |
 
+# <span id="currentTask"><a href="#top">createSpec修正</a></span>
+
+## 要確認事項
+
+## 項目の役割見直し
+
+- name
+- longname
+
+- unique -> folder
+- basename -> filename : 拡張子付きならbasenameは不適切
+- prefix = unique + basenameなら割愛可
+- url: 新設候補。「一つのことは一箇所で記述」なら特定可能なはず
+
+- DocletTreeにおいてsymbolsとthis.mapを統合して不都合は無いか？
+
+- [bug] userSettings.mjsの解説文が出力されない
+- [bug] "@memberof createSpec"が指定されているのに開発工程・残課題の解説文が
+  createSpecではなくlib/index.mdに出力される
+- [bug] 解説文のDocletEx.nameに和文が含まれている(createSpec.mjs)
+- [bug] lib/index.md > Docletデータ型定義に解説文「meta.code.typeの内容」が無い
+  ※ 当該解説文は"memberof Doclet"
+- [bug] lib/index.md > 解説文集に「meta.code.typeの内容」が含まれている
+- [bug] グローバルな解説文も"parent=null"になってない(parent=自分.name)
+- □クラス・グローバル関数・データ型定義内部の解説文が拾われているか確認
+- □特定のクラス・グローバル関数に含まれるデータ型定義もindex.mdに含まれているか確認
+  ※ 探すのが大変なので、内部定義のデータ型も一覧には載せたい
+- □解説文の@nameに①スペースが入った場合、②和文が含まれる場合、正常に遷移するか確認
+- □解説文にHTMLテーブルが含まれる場合、正常に表示されるか確認
+  NGならmakeIndexMD step.1.3のmarkedを有効化する
+- familyTreeの使われ方は？　必要なのか？
+  nameに半角スペースが入っているとfamilyTeeの区切りと判別できない
+  name設定時に'_'に置換する？
+- [bug] MemberDeviceが入ってない
+- 調査結果ファイルはコンソール出力で代用可能 ⇒ 不要
+- MemberDeviceのparent=nullになっている
+  本来はauthServerになるべき
+- name: constructorの場合のみ固定値"constructor"に変更しているが、必要か？
+- longname: constructorの場合のみ"#constructor"を追加しているが、必要か？
+- rangeId, linenoId, commentIdは使われているのか？
+  同一JSDocから複数のdocletが作成されることがある。
+  一つのdocletにまとめるためのキーとして使用。
+- this.mapは{キー文字列:uuid}のみでいんじゃね？
+  実態持たせない方がダンプ出力が見やすくなる
+
 # <span id="log"><a href="#top">変更履歴</a></span>
 
-- build0012: SPkey取得
+- build0013: SPkey取得
   - authClientでauthRequest(SPkey要求)作成
   - authServerで受信、内容確認
   - authServerでauthResponse作成
   - authClientで受信、内容確認、格納
 
-- build0011: クラス・グローバル関数の枠組み作成
-  == いまここ ================================
-  - createSpec: 解説文の出力
-    - [bug] userSettings.mjsの解説文が出力されない
-    - [bug] "@memberof createSpec"が指定されているのに開発工程・残課題の解説文が
-      createSpecではなくlib/index.mdに出力される
-    - [bug] 解説文のDocletEx.nameに和文が含まれている(createSpec.mjs)
-    - [bug] lib/index.md > Docletデータ型定義に解説文「meta.code.typeの内容」が無い
-      ※ 当該解説文は"memberof Doclet"
-    - [bug] lib/index.md > 解説文集に「meta.code.typeの内容」が含まれている
-    - □クラス・グローバル関数・データ型定義内部の解説文が拾われているか確認
-    - □特定のクラス・グローバル関数に含まれるデータ型定義もindex.mdに含まれているか確認
-      ※ 探すのが大変なので、内部定義のデータ型も一覧には載せたい
-    - □解説文の@nameに①スペースが入った場合、②和文が含まれる場合、正常に遷移するか確認
-    - □解説文にHTMLテーブルが含まれる場合、正常に表示されるか確認
-      NGならmakeIndexMD step.1.3のmarkedを有効化する
-
+- build0012: クラス・グローバル関数の枠組み作成
   - src/doc/specDef.mjs : 定義済情報がソースに反映されているか確認
     - authConfig
       - authConfig
@@ -64,6 +93,11 @@
   - server/authServer.mjs
   - server/cryptoServer.mjs
   - server/Member.mjs
+
+- build0011: createSpec修正
+  == いまここ ================================
+  - createSpec: 解説文の出力
+
   == 対応済 ==================================
   - common/config.mjs -> userSettings.mjs : ユーザ必須指定項目を一元化
     「設定は一箇所で・埋め込みは必要な分だけ」

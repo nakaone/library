@@ -382,6 +382,7 @@ async function createSpec(opt={}){
    * - opt    ~ returns   : DocletEx.constructor()
    * - parent ~ familyTree: DocletTree.linkage()
    * - unique ~ commentId : DocletTree.registration()
+   *   なおrangeId,linenoId,commentIdは同一Docletの重複登録回避に使用
    * 
    * @prop {string} name - 【書換】constructorの場合のみ固定値"constructor"に変更
    * @prop {string} longname - 【書換】constructorの場合のみ"#constructor"を追加
@@ -418,6 +419,7 @@ async function createSpec(opt={}){
    * @prop {string} [basename] - ファイル名
    * @prop {string} [prefix] - 固有パス＋ファイル名
    *   以下の各種IDの共通部分(固有パスの先頭・末尾の'/'有無処理済)
+   * 
    * @prop {string} [rangeId] - 固有パス＋ファイル名＋':R'＋meta.range[0]
    *   ※ Doclet以外のファイル情報が必要なため、DocletTree側で追加される項目
    * @prop {string} [linenoId] - 固有パス＋ファイル名＋':N'＋meta.lineno ※同上
@@ -1984,8 +1986,21 @@ async function createSpec(opt={}){
     */
     if( pv.tree.source.research ){
       //writeFileSync(pv.tree.source.research,JSON.stringify(DocletTree.symbols,null,2));
-      writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree.doclet,null,2));
+      //writeFileSync(pv.tree.source.research,JSON.stringify(pv.tree.doclet,null,2));
+      writeFileSync(pv.tree.source.research,JSON.stringify(
+        pv.tree.doclet.filter(x => 
+          //['class','function','typedef','interface','description'].includes(x.docletType)
+          (x.comment ?? '').includes('MemberDevice')
+        ).map(x => {return {
+          id: x.linenoId,
+          label: x.label,
+          type: x.docletType,
+          parent: x.parent,
+          familyTree: x.familyTree,
+        }})
+      ,null,2));
     }
+    console.log(JSON.stringify(pv.tree.doclet,null,2));
 
     dev.end();
     return pv.rv;

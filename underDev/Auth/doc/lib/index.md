@@ -55,7 +55,7 @@
 - 埋込指示子対応：<!--：：command：：{JSON}：：-->
   - setvalue: オブジェクトに設定する値の一覧
     {type:データ型名, value:{キー:値,...}}
-    戻り値への値設定を想定。指定無しならdefaultvalueを表示
+    戻り値への値設定を想定。指���無しならdefaultvalueを表示
   - embed: 他ファイルの内容を埋め込み
     {file:パス＋ファイル名}
 - commentをdetailsタグで表示
@@ -109,7 +109,7 @@
 
 | 記号 | 意味 | 用途 |
 | :-- | :-- | :-- |
-| . | 名前空間 / 静的・構造的所属 | オブジェ���ト・typedef |
+| . | 名前空間 / 静的・構��的所属 | オブジェクト・typedef |
 | # | インスタンスメンバ | クラスの instance |
 | ~ | 内部（inner）要素 | クロージャ・内部関数 |
 | : | モジュール修飾子 | module 指定 |
@@ -381,7 +381,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeFile">"DocletTreeFile" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.677</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.679</p>
 
 個別入力ファイル情報
 
@@ -395,7 +395,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeFolder">"DocletTreeFolder" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.696</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.698</p>
 
 パス毎の所属Doclet管理(フォルダ管理)
 
@@ -409,7 +409,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeOpt">"DocletTreeOpt" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.713</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.715</p>
 
 オプション設定値
 
@@ -426,7 +426,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeSource">"DocletTreeSource" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.687</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.689</p>
 
 統合版入力ファイル(JSソース)情報
 
@@ -440,7 +440,7 @@ Doclet.properties/params/returnsの要素(メンバ)定義情報
 
 ## <a href="#typedefList"><span id="DocletTreeSymbol">"DocletTreeSymbol" データ型定義</span></a>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.705</p>
+<p class="source">source: lib/createSpec.1_0_0.mjs line.707</p>
 
 クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
 

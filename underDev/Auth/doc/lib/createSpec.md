@@ -80,7 +80,7 @@
 - 埋込指示子対応：<!--：：command：：{JSON}：：-->
   - setvalue: オブジェクトに設定する値の一覧
     {type:データ型名, value:{キー:値,...}}
-    戻り値への値設定を想定。指定無しならdefaultvalueを表示
+    戻り値への値設定を想定。指���無しならdefaultvalueを表示
   - embed: 他ファイルの内容を埋め込み
     {file:パス＋ファイル名}
 - commentをdetailsタグで表示
@@ -202,14 +202,14 @@
 
 | 記号 | 意味 | 用途 |
 | :-- | :-- | :-- |
-| . | 名前空間 / 静的・構造的所属 | オブジェ���ト・typedef |
+| . | 名前空間 / 静的・構��的所属 | オブジェクト・typedef |
 | # | インスタンスメンバ | クラスの instance |
 | ~ | 内部（inner）要素 | クロージャ・内部関数 |
 | : | モジュール修飾子 | module 指定 |
 
 ## <span id="createSpec-DocletEx_top">🧩 DocletExクラス仕様書</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.427</p>jsdocから出力されるDocletに情報を付加したもの
+<p class="source">source: lib/createSpec.1_0_0.mjs line.429</p>jsdocから出力されるDocletに情報を付加したもの
 
 ### <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
 
@@ -250,6 +250,7 @@
 - opt    ~ returns   : DocletEx.constructor()
 - parent ~ familyTree: DocletTree.linkage()
 - unique ~ commentId : DocletTree.registration()
+  なおrangeId,linenoId,commentIdは同一Docletの重複登録回避に使用
 
 ### <span id="createSpec-DocletEx-constructor_top">🧩 constructor()</span>
 
@@ -323,7 +324,7 @@ Docletの型を判定
 
 ## <span id="createSpec-DocletTreeFile_top">🧩 DocletTreeFileデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.677</p>個別入力ファイル情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.679</p>個別入力ファイル情報
 
 ### <a href="#createSpec-DocletTreeFile_top"><span id="createSpec-DocletTreeFile_prop">🔢 DocletTreeFile メンバ一覧</span></a>
 
@@ -337,7 +338,7 @@ Docletの型を判定
 
 ## <span id="createSpec-DocletTreeSource_top">🧩 DocletTreeSourceデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.687</p>統合版入力ファイル(JSソース)情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.689</p>統合版入力ファイル(JSソース)情報
 
 ### <a href="#createSpec-DocletTreeSource_top"><span id="createSpec-DocletTreeSource_prop">🔢 DocletTreeSource メンバ一覧</span></a>
 
@@ -351,7 +352,7 @@ Docletの型を判定
 
 ## <span id="createSpec-DocletTreeFolder_top">🧩 DocletTreeFolderデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.696</p>パス毎の所属Doclet管理(フォルダ管理)
+<p class="source">source: lib/createSpec.1_0_0.mjs line.698</p>パス毎の所属Doclet管理(フォルダ管理)
 
 ### <a href="#createSpec-DocletTreeFolder_top"><span id="createSpec-DocletTreeFolder_prop">🔢 DocletTreeFolder メンバ一覧</span></a>
 
@@ -365,7 +366,7 @@ Docletの型を判定
 
 ## <span id="createSpec-DocletTreeSymbol_top">🧩 DocletTreeSymbolデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.705</p>クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
+<p class="source">source: lib/createSpec.1_0_0.mjs line.707</p>クラス・グローバル関数名・データ型定義名から参照先URLへの変換情報
 
 ### <a href="#createSpec-DocletTreeSymbol_top"><span id="createSpec-DocletTreeSymbol_prop">🔢 DocletTreeSymbol メンバ一覧</span></a>
 
@@ -381,7 +382,7 @@ Docletの型を判定
 
 ## <span id="createSpec-DocletTreeOpt_top">🧩 DocletTreeOptデータ型定義</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.713</p>オプション設定値
+<p class="source">source: lib/createSpec.1_0_0.mjs line.715</p>オプション設定値
 
 ### <a href="#createSpec-DocletTreeOpt_top"><span id="createSpec-DocletTreeOpt_prop">🔢 DocletTreeOpt メンバ一覧</span></a>
 

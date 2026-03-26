@@ -26,7 +26,7 @@
 
 # <span id="createSpec-DocletEx_top">🧩 DocletExクラス仕様書</span>
 
-<p class="source">source: lib/createSpec.1_0_0.mjs line.427</p>jsdocから出力されるDocletに情報を付加したもの
+<p class="source">source: lib/createSpec.1_0_0.mjs line.429</p>jsdocから出力されるDocletに情報を付加したもの
 
 ## <a href="#createSpec-DocletEx_top"><span id="createSpec-DocletEx_prop">🔢 DocletEx メンバ一覧</span></a>
 
@@ -67,6 +67,7 @@
 - opt    ~ returns   : DocletEx.constructor()
 - parent ~ familyTree: DocletTree.linkage()
 - unique ~ commentId : DocletTree.registration()
+  なおrangeId,linenoId,commentIdは同一Docletの重複登録回避に使用
 
 ## <span id="createSpec-DocletEx-constructor_top">🧩 constructor()</span>
 
