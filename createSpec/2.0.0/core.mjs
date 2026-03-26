@@ -21,7 +21,11 @@ function createSpec(arg) {
     v.r = new DocletTree(arg);
     if( v.r instanceof Error ) throw v.r;
 
-    dev.step(99,v.r);
+    dev.step(99,{
+      doclets:v.r.doclets.filter(x=>x.comment !== '')
+        .map(x => {return {comment:x.comment,path:x.meta?.path}}),
+      commonPath:v.r.commonPath,
+    });
 
     dev.end(); // 終了処理
     return v.rv;
@@ -82,7 +86,7 @@ function createSpec(arg) {
  * @prop {string}   meta.filename - 対象が定義されているソースファイル名
  * @prop {number}   meta.lineno - 対象定義の開始行番号
  * @prop {number}   meta.columnno - 対象定義の開始列番号
- * @prop {string}   meta.path - ソースファイルが存在するディレクトリパス
+ * @prop {string}   meta.path - ソースファイルが存在するディレクトリのフルパス。ファイル名は含まず
  * @prop {Object}   meta.code - Doclet対象となったコード要素の構造情報
  * @prop {string}   meta.code.id - コード要素の内部識別子(AST由来、存在しない場合あり)
  * @prop {string}   meta.code.name - コード要素の名前（関数名・クラス名・変数名など）
@@ -192,7 +196,7 @@ function createSpec(arg) {
  *   }
  * ], // Array
  */
-/** 調査：commentが出力されないdoclet
+/** commentが出力されないdoclet
  * @name patterns of no comment doclet
  * @description
  * - コードに JSDoc コメントが付いていない場合
@@ -354,19 +358,16 @@ class DocletEx {
    * @constructor
    * @memberof DocletEx
    * @param {Doclet} doclet - 引数
-   * @returns {DocletEx|null|Error} 戻り値
-   *   null: kind="package"等、処理対象外のdoclet
+   * @returns {DocletEx|{}|Error} 戻り値
+   *   {}: kind="package"等、DocletTree登録対象外のdoclet
    */
   constructor(doclet) {
-    const v = {whois:`DocletEx.constructor`, arg:{doclet}, rv:null};
+    const v = {whois:`DocletEx.constructor`, arg:{doclet}, rv:{}};
     const dev = new devTools(v,{mode:'pipe'});
     try {
 
       dev.step(1.1);  // 処理対象のdocletか判定
-      if( doclet.kind === 'package' ){
-        dev.end(); // 終了処理
-        return v.rv;
-      }
+      if( doclet.kind === 'package' ) return v.rv;
 
       dev.step(1.2);  // comment, meta.path, meta.filename の存否チェック
       v.errorMsg = [];  // 個別チェック項目を一通りチェックしてからエラーを出せるよう配列化
@@ -380,6 +381,19 @@ class DocletEx {
         // チェック項目のいずれかでエラーが有った場合、後続処理はスキップ
         throw new Error(v.errorMsg.join('\n')+JSON.stringify(doclet,null,2));
       }
+
+      dev.step(2.1);  // docletTypeを判定
+      v.r = this.determineType(doclet);
+      if( v.r instanceof Error ) throw v.r;
+      if( v.r === 'unknown' ) return v.rv;
+
+      dev.step(2.2);  // UUIDを採番
+      doclet.uuid = randomUUID();
+
+      // label(1行で簡潔に記述された概要説明)を作成
+
+      // concatenatedを作成
+      // description,classdesc,exmapleを出現順に結合。MD出力用
 
       dev.step(2);  // docletをDocletExのメンバとして登録
       v.cloneValue = value => {
@@ -402,15 +416,58 @@ class DocletEx {
         this[v.key] = v.cloneValue(doclet[v.key]);
       }
 
-      dev.step(2.1);  // UUIDを採番
-      doclet.uuid = randomUUID();
-
       dev.end(); // 終了処理
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** determineType: Docletの型を判定
+   * @memberof DocletEx
+   * @param {Object} doclet - 判定対象のdoclet
+   * @returns {string|Error}
+   */
+  determineType(doclet) {
+    const v = {whois:`${this.constructor.name}.determineType`, arg:{doclet}, rv:'unknown'};
+    const dev = new devTools(v,{mode:'pipe'});
+    try {
+
+      dev.step(1);  // 原文が無い場合は判定不能
+      // 原文が無い場合については「commentが出力されないdoclet」参照
+      // これらは使用する可能性がほぼ無いので'unknown'とする。
+      if( typeof doclet.comment === 'undefined' || doclet.comment.length === 0 )
+        return 'unknown';
+
+      dev.step(2);  // 「docletTypeの判定ロジック」参照
+      switch( doclet.kind ){
+        case 'typedef': case 'interface': v.rv = doclet.kind; break;
+        case 'class':
+          v.rv = ( doclet.meta?.code?.type ?? null ) === null ? 'unknown' : (
+            /^Class(Declaration|Expression)/.test(doclet.meta.code.type) ? 'class' : (
+              doclet.meta.code.type === 'MethodDefinition' ? 'constructor' : 'unknown'
+            )
+          );
+          break;
+        case 'function':
+          switch( doclet.scope ){
+            case 'global': v.rv = 'function'; break;
+            case 'inner': v.rv = 'innerFunc'; break;
+            case 'instance':
+            case 'static': v.rv =
+              doclet.meta?.code?.type === 'MethodDefinition' ? 'method' : 'objectFunc';
+              break;
+            default: 'unknown';
+          }
+          break;
+        default:
+          v.rv = Object.keys(doclet.meta?.code ?? {}).length === 0
+          && (typeof doclet.meta?.code?.name === 'undefined')
+          && doclet.name ? 'description' : 'unknown';
+      }
+
+      dev.end();
       return v.rv;
 
     } catch (e) { return dev.error(e); }
   }
-
 }
 
 class DocletTree {
@@ -428,14 +485,25 @@ class DocletTree {
       dev.step(1);
       v.doclets = JSON.parse(arg);
       this.doclets = [];
+      this.commonPath = null;
+      v.commonPrefix = (a, b) => { // 文字列a,bの先頭から一致する部分文字列を返す
+        if( b === null ) return a;
+        const len = Math.min(a.length, b.length);
+        let i = 0; while (i < len && a[i] === b[i]) i++;
+        return a.slice(0, i);
+      }
+
+      dev.step(2);  // DocletExインスタンス作成
       v.errorLog = [];  // 全docletsを一通りチェックしてからエラーを出せるよう配列化
       for( v.i=0 ; v.i<v.doclets.length ; v.i++ ){
         v.r = new DocletEx(v.doclets[v.i]);
         if( v.r instanceof Error ) v.errorLog.push(v.r.message);
-        else if( v.r !== null ) this.doclets.push(v.r);
+        else if( Object.keys(v.r).length > 0 ){
+          this.doclets.push(v.r);
+          // パスの共通部分を更新
+          this.commonPath = v.commonPrefix(v.r.meta.path,this.commonPath);
+        }
       }
-
-      dev.step(1.1);
       if( v.errorLog.length > 0 ) throw new Error(v.errorLog.join('\n'));
 
       dev.end(); // 終了処理

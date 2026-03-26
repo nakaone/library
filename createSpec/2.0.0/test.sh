@@ -81,7 +81,7 @@ function ending { # 終了時処理
 
 function doTest {
   auth="$lib/underDev/Auth"
-  jsdoc -X {"../","$auth/src"}/**/*.(js|mjs) > $prj/jsdocx.json
+  jsdoc -X {../,$auth/src}/**/*.(js|mjs) > $prj/jsdocx.json
   cat $prj/jsdocx.json | node $prj/core.mjs abc "def" 1> result.txt 2> error.txt
 }
 
