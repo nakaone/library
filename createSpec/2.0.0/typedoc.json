@@ -1,0 +1,125 @@
+{
+	"schemaVersion": "2.0",
+	"id": 0,
+	"name": "Documentation",
+	"variant": "project",
+	"kind": 1,
+	"flags": {},
+	"children": [
+		{
+			"id": 3,
+			"name": "Doclet",
+			"variant": "declaration",
+			"kind": 2097152,
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "core.mjs",
+					"line": 68,
+					"character": 21,
+					"url": "https://github.com/nakaone/library/blob/ba62753d056115d771744720503e0c26823c7cad/createSpec/2.0.0/core.mjs#L68"
+				}
+			],
+			"type": {
+				"type": "reference",
+				"target": {
+					"packageName": "typescript",
+					"packagePath": "lib/lib.es5.d.ts",
+					"qualifiedName": "Object"
+				},
+				"name": "Object",
+				"package": "typescript"
+			}
+		},
+		{
+			"id": 2,
+			"name": "DocletColDef",
+			"variant": "declaration",
+			"kind": 2097152,
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "core.mjs",
+					"line": 46,
+					"character": 21,
+					"url": "https://github.com/nakaone/library/blob/ba62753d056115d771744720503e0c26823c7cad/createSpec/2.0.0/core.mjs#L46"
+				}
+			],
+			"type": {
+				"type": "reference",
+				"target": {
+					"packageName": "typescript",
+					"packagePath": "lib/lib.es5.d.ts",
+					"qualifiedName": "Object"
+				},
+				"name": "Object",
+				"package": "typescript"
+			}
+		},
+		{
+			"id": 1,
+			"name": "DocletColRow",
+			"variant": "declaration",
+			"kind": 2097152,
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "core.mjs",
+					"line": 37,
+					"character": 21,
+					"url": "https://github.com/nakaone/library/blob/ba62753d056115d771744720503e0c26823c7cad/createSpec/2.0.0/core.mjs#L37"
+				}
+			],
+			"type": {
+				"type": "reference",
+				"target": {
+					"packageName": "typescript",
+					"packagePath": "lib/lib.es5.d.ts",
+					"qualifiedName": "Object"
+				},
+				"name": "Object",
+				"package": "typescript"
+			}
+		}
+	],
+	"groups": [
+		{
+			"title": "Type Aliases",
+			"children": [
+				3,
+				2,
+				1
+			]
+		}
+	],
+	"symbolIdMap": {
+		"0": {
+			"packageName": "<unknown>",
+			"packagePath": "/Users/ena.kaon/Desktop/GitHub/library/createSpec/2.0.0/core.mjs",
+			"qualifiedName": ""
+		},
+		"1": {
+			"packageName": "<unknown>",
+			"packagePath": "/Users/ena.kaon/Desktop/GitHub/library/createSpec/2.0.0/core.mjs",
+			"qualifiedName": "DocletColRow"
+		},
+		"2": {
+			"packageName": "<unknown>",
+			"packagePath": "/Users/ena.kaon/Desktop/GitHub/library/createSpec/2.0.0/core.mjs",
+			"qualifiedName": "DocletColDef"
+		},
+		"3": {
+			"packageName": "<unknown>",
+			"packagePath": "/Users/ena.kaon/Desktop/GitHub/library/createSpec/2.0.0/core.mjs",
+			"qualifiedName": "Doclet"
+		}
+	},
+	"files": {
+		"entries": {
+			"1": "core.mjs"
+		},
+		"reflections": {
+			"1": 0
+		}
+	}
+}
