@@ -1,3 +1,5 @@
+import { devTools } from "../../devTools/3.2.0/core.mjs";
+
 /** 日時を指定形式の文字列にして返す
  * @param {string|Date} arg=null - 変換元の日時。nullなら現在日時
  * @param {Object} opt - オプション。文字列型ならformat指定と看做す
