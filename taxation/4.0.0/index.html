@@ -1,9 +1,80 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <style type="text/css">
+    html {line-height: 1.5rem;}
+    h1,h2,h3,h4,h5,h6 {
+      font-weight: normal;
+      margin: 0;
+      padding: 0;
+    }
+    /*デザイン*/
+    h1 {
+      position: relative;
+      font-size: 1.6rem;
+      font-weight: bold;
+      padding: 30px;
+      margin-bottom: 1em;
+    }
+    h1::before {
+      position: absolute;
+      content: '';
+      left: 0;
+      bottom: 0;
+      width: 100px;
+      height: 10px;
+      background: #25ad0d;
+      z-index: 1;
+    }
+    h1::after {
+      position: absolute;
+      content: '';
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 10px;
+      background: #d6ffca;
+    }
+    h2 {
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 5px 20px;
+      margin-bottom: 1em;
+      border-left: 8px solid #25ad0d;
+    }
+    .l1 { /* トップレベル(level.1)のタイトル */
+      padding: 1rem 2rem;
+      border-left: 5px solid #25ad0d;
+      background: #d6ffca;
+      font-size: 2.4rem;
+      font-weight: 900;
+    }
+
+    div[data-json] {
+      display: grid;
+      gap: 1rem;
+      margin: 1rem;
+    }
+    .c12 {grid-template-columns: repeat(12, 1fr);}
+    .c06 {grid-template-columns: repeat( 6, 1fr);}
+    .c02 {grid-template-columns: repeat( 2, 1fr);}
+    th, td {
+      padding: 0.2rem 0.5rem;
+      border-left: solid 1px #d6ffca;
+      border-right: solid 1px #25ad0d;
+      border-top: solid 1px #d6ffca;
+      border-bottom: solid 1px #25ad0d;
+      vertical-align: top;
+    }
+    th {background: #d6ffca;}
+    td {background: #fff;}
+    ul {list-style: none;}
+    li {margin-bottom: 0.5rem;}
+
+
   </style>
 </head>
 <body>
+  <p class="l1">ena.kaon 税務定期作業</p>
   <p id="today" style="text-align: right;padding-right: 2rem;"></p>
 
   <div class="navi">
@@ -54,10 +125,10 @@
         <div data-json='{"table":"transport","cols":{"date":"日付","dest":"行先","purpose":"目的","path":"経路","num":"人数","price":"金額","note":"備考"}}'></div>
       </div>
       <div><h2>参考資料</h2>
-        <div data-json='{"type":"参考資料"}'>※ 特に無し</div>
+        <div data-json='{"li":"reference"}'>※ 特に無し</div>
       </div>
       <div><h2>特記事項</h2>
-        <ol data-json='{"type":"特記事項"}'>※ 特に無し</ol>
+        <div data-json='{"li":"topix"}'>※ 特に無し</div>
       </div>
     </div>
   </div>
@@ -75,8 +146,7 @@ window.onload = function() {
   // メイン処理の実行
   main(data);
 };
-</script>
-<script type="text/javascript">
+
 function main (data){
   // 1. 事前準備
   // 1.1 dataの明細それぞれに使用済フラグ(used=false)を設定
@@ -93,13 +163,16 @@ function main (data){
   document.getElementById('notFilled').style.display = 'none';
 
 
-  // ブロック単位の処理
+  // 2. ブロック単位の処理
+  //   ※「ブロック」とは`[data-json]`を持つ要素を指す
   for( const blockDiv of document.querySelectorAll('[data-json]') ){
 
     // data-jsonを持つ要素を順次読込、オブジェクト化
     const def = JSON.parse(blockDiv.dataset.json);
 
-    if( Object.hasOwn(def,'replace') ){  // 金融関係、レントロール等、ブロック型の表示項目
+    if( Object.hasOwn(def,'replace') ){
+
+      // 金融関係・レントロール等、子要素がDIVの項目
       const rex = new RegExp(def.replace[0]);
       const list = data.files.filter(x => rex.test(x.name))
       .sort((a,b) => a.name.localeCompare(b.name))
@@ -110,7 +183,10 @@ function main (data){
         blockDiv.appendChild(div);
         return div.innerHTML;
       });
-    } else if( Object.hasOwn(def,'table') ){ // 電子証憑、交通費等、テーブル型の表示項目
+
+    } else if( Object.hasOwn(def,'table') ){
+
+      // 電子証憑・交通費等、テーブル型の表示項目
       // ヘッダ行
       const thead = '<thead><tr>'
         + Object.keys(def.cols).map(col => `<th>${def.cols[col]}</th>`).join('')
@@ -130,6 +206,20 @@ function main (data){
         + '</tbody>';
       const div = document.createElement("table");  // 子要素を追加
       div.innerHTML = thead + tbody;
+      blockDiv.appendChild(div);
+
+    } else if( Object.hasOwn(def,'li') && data[def.li].length > 0 ){
+
+      // 参考資料・特記事項等、箇条書き型の表示項目
+      const li = data[def.li].map(row => `<li>${
+        new Date(row.date).toLocaleString().replace(/^(.+)\s.+$/,"$1")
+      } : <b>${
+        row.url ? `<a href="${row.url}" target="_blank">${row.title}</a>` : row.title
+      }</b><br>${row.note}</li>`).join('');
+
+      const div = document.createElement("ul");  // 子要素を追加
+      div.innerHTML = li;
+      blockDiv.innerHTML = '';
       blockDiv.appendChild(div);
     }
   }
