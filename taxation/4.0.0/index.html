@@ -1,47 +1,10 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-  <title>underdev</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <style type="text/css">
-    html {line-height: 1.5rem;}
-    h1 {
-      font-size: 1.6rem;
-      color: #fff;
-      background-color: #aaa;
-      border: solid 3px #888;
-      padding: 0.5rem;
-    }
-    h2 {font-size: 1.2rem;}
-    div.navi {
-      width: 800px;
-      margin: 0 auto;
-      background-color: #ccc;
-      padding: 1rem;
-    }
-    div[data-json] {
-      display: grid;
-      
-      gap: 1rem;
-      margin: 1rem;
-    }
-    .c12 {grid-template-columns: repeat(12, 1fr);}
-    .c06 {grid-template-columns: repeat( 6, 1fr);}
-    .c02 {grid-template-columns: repeat( 2, 1fr);}
-    th, td {
-      padding: 0.2rem 0.5rem;
-      border-left: solid 1px #fff;
-      border-right: solid 1px #888;
-      border-top: solid 1px #fff;
-      border-bottom: solid 1px #888;
-      vertical-align: top;
-    }
-    th {background: #ddd;}
-    td {background: #fff;}
-    ul {list-style: none;}
-    li {margin-bottom: 0.5rem;}
   </style>
 </head>
 <body>
-  <p id="today" style="text-align: right;padding-right: 2rem;">2026/05/14</p>
+  <p id="today" style="text-align: right;padding-right: 2rem;"></p>
 
   <div class="navi">
 
@@ -98,34 +61,24 @@
       </div>
     </div>
   </div>
-  <div id="storage" style="display: none;"></div>
 </body>
 <script type="text/javascript">
 window.onload = function() {
-  // GAS側の exportJSON 関数を呼び出す
-  google.script.run
-    .withSuccessHandler(onSuccess) // 成功時に実行する関数を指定
-    .withFailureHandler(onFailure) // 失敗時に実行する関数を指定
-    .exportJSON();
-};
+  document.getElementById('today').innerText = new Date().toLocaleString();
 
-function onSuccess(data) {
-  if (!data || data.length === 0) {
-    window.alert("データがありません。");
-  } else {
-    document.getElementById('storage').innerText = JSON.stringify(data);
-    main(); // 正常にデータをセットできたらメイン処理呼出
+  const data = <?!= JSON.stringify(data) ?>;
+  console.log("Data loaded from template.",data);
+  if (!data) {
+    window.alert("データが読み込めませんでした。");
+    return;
   }
-}
-
-function onFailure(e) {
-  window.alert(e.message);
-}
+  // メイン処理の実行
+  main(data);
+};
 </script>
 <script type="text/javascript">
-function main (){
+function main (data){
   // 1. 事前準備
-  data = JSON.parse(document.getElementById('storage').innerText);
   // 1.1 dataの明細それぞれに使用済フラグ(used=false)を設定
   data.files.forEach(x => x.used = false);
   // 1.2 電子証憑：摘要にURLリンク設定
@@ -142,18 +95,6 @@ function main (){
 
   // ブロック単位の処理
   for( const blockDiv of document.querySelectorAll('[data-json]') ){
-
-    // ブロックの表示/非表示制御
-    blockDiv.style.display = 'none';  // 最初は全項目非表示
-    // タイトルのクリックで表示/非表示切替
-    blockDiv.parentElement.addEventListener('click',element => {
-      // クリックされた要素のクリック時点の表示/非表示を保存
-      const d = element.target.parentElement.querySelector('[data-json]').style.display;
-      // ナビ領域のリストは隠蔽
-      document.querySelectorAll('[data-json]').forEach(o => o.style.display = 'none');
-      // クリックされたナビメニューの下の明細を表示
-      element.target.parentElement.querySelector('[data-json]').style.display = d === 'none' ? '' : 'none';
-    });
 
     // data-jsonを持つ要素を順次読込、オブジェクト化
     const def = JSON.parse(blockDiv.dataset.json);
