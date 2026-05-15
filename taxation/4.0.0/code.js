@@ -1,10 +1,26 @@
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  var menu = ui.createMenu('道具箱');
+  menu.addItem('提出用HTML出力', 'menuItem1');
+  menu.addItem('作業手順書', 'menuItem2');
+  menu.addToUi();
+}
+
+const menuItem1 = () => downloadPrintableHtml();
+const menuItem2 = () => {
+  const html = HtmlService.createHtmlOutputFromFile('help')
+    .setWidth(800)
+    .setHeight(600);
+  SpreadsheetApp.getUi().showModalDialog(html, '作業手順書');
+};
+
 function doGet() {
   return getBuiltHtml()
   .setTitle('税務作業・確認用')
   .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// HTML側から呼び出されるデータ取得関数
+/** exportJSON: HTML側から呼び出されるデータ取得関数 */
 function exportJSON() {
   try {
     const rv = JSON.parse(JSON.stringify({
@@ -74,8 +90,7 @@ function getFileList() {
   return v.rv;
 }
 
-/** getBuiltHtml: データ埋め込み済みのHTMLを生成する
- */
+/** getBuiltHtml: データ埋め込み済みのHTMLを生成する */
 function getBuiltHtml() {
   const data = exportJSON(); // 既存のデータ取得関数
   const template = HtmlService.createTemplateFromFile('index');
@@ -85,8 +100,7 @@ function getBuiltHtml() {
   return template.evaluate();
 }
 
-/** downloadPrintableHtml: 提出用HTMLの作成＋DL */
-/**
+/** downloadPrintableHtml: 提出用HTMLの作成＋DL
  * HTMLをBase64エンコードして、ブラウザ側で復元・ダウンロードさせる
  * これにより、文字列内の特殊記号によるJSの構文エラーを完全に防ぎます。
  */
@@ -98,7 +112,7 @@ function downloadPrintableHtml() {
   const base64Content = Utilities.base64Encode(htmlContent, Utilities.Charset.UTF_8);
   
   // 3. ファイル名を作成
-  const fileName = "tax_report_" + Utilities.formatDate(new Date(), "JST", "yyyyMMdd") + ".html";
+  const fileName = "ena.kaon." + Utilities.formatDate(new Date(), "JST", "yyyyMMdd") + ".html";
 
   // 4. ダウンロード実行用スクリプト（Base64をデコードしてBlob化）
   const script = `
