@@ -1,11 +1,19 @@
-function test(){
-  exportJSON({
+// Webアプリとしてアクセスした際に実行される
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('index') // index.htmlを読み込む
+    .setTitle('税務定期作業')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+// HTML側から呼び出されるデータ取得関数
+function exportJSON() {
+  return {
     files: getFileList(),
     ee: getSheetDataAsObjects('電子証憑'),
     transport: getSheetDataAsObjects('交通費'),
     reference: getSheetDataAsObjects('参考資料'),
     topix: getSheetDataAsObjects('特記事項'),
-  });
+  }
 }
 
 /**
@@ -69,42 +77,4 @@ function getFileList() {
     }
   }
   return v.rv;
-}
-
-/** exportJSON: 引数をJSON化、ダウンロード
- * @param {Object} obj - ダウンロードするデータ
- * @returns {void}
- */
-function exportJSON(obj) {
-  // HTMLをコード内で定義
-  const html = HtmlService.createHtmlOutput(`
-    <html>
-      <head><base target="_top"></head>
-      <body>
-        <p>JSONファイルのダウンロードを開始しています...</p>
-        <script>
-          const data = ${JSON.stringify(obj)};
-
-          // JSONとしてファイルを生成して自動ダウンロード
-          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'data.json';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(url);
-
-          // ダイアログを自動的に閉じる（少し待ってから）
-          setTimeout(() => {
-            google.script.host.close();
-          }, 1000);
-        </script>
-      </body>
-    </html>
-  `).setWidth(300).setHeight(100);
-
-  // ダイアログの表示
-  SpreadsheetApp.getUi().showModalDialog(html, 'JSONをダウンロード中');
 }
